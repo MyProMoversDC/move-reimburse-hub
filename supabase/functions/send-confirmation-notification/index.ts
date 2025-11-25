@@ -24,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
     const loginUrl = `${req.headers.get('origin')}/auth`;
 
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers <onboarding@resend.dev>",
+      from: "MyProMovers <reimbursements@mypromovers.com>",
       to: ["mark@mypromovers.com"],
       subject: `Reimbursement Request #${data.reimbursementNumber} Approved`,
       html: `
