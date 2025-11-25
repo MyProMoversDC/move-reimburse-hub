@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReimbursementDetails from "./ReimbursementDetails";
+import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
 interface Reimbursement {
   id: string;
@@ -38,12 +39,15 @@ interface ReimbursementHistoryProps {
   refreshKey?: number;
   userRole: "mover" | "admin" | "accountant";
   onUpdate?: () => void;
+  language: DashboardLanguage;
 }
 
-const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate }: ReimbursementHistoryProps) => {
+const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language }: ReimbursementHistoryProps) => {
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
+  
+  const t = dashboardTranslations[language];
 
   useEffect(() => {
     fetchReimbursements();
@@ -81,10 +85,16 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate }: Reimbu
       confirmed: "default",
       paid: "default",
     };
+    
+    const statusLabels: Record<string, string> = {
+      pending: t.pending,
+      confirmed: t.statusConfirmed,
+      paid: t.paid,
+    };
 
     return (
       <Badge variant={variants[status] || "default"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {statusLabels[status] || status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
@@ -94,7 +104,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate }: Reimbu
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{t.loading}</div>;
   }
 
   return (
@@ -103,20 +113,20 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate }: Reimbu
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Request #</TableHead>
-              <TableHead>Date</TableHead>
-              {userRole !== "mover" && <TableHead>Mover</TableHead>}
-              <TableHead>Job #</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t.reimbursementNumber}</TableHead>
+              <TableHead>{t.date}</TableHead>
+              {userRole !== "mover" && <TableHead>{t.name}</TableHead>}
+              <TableHead>{t.job}</TableHead>
+              <TableHead>{t.total}</TableHead>
+              <TableHead>{t.status}</TableHead>
+              <TableHead>{t.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {reimbursements.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  No reimbursements found
+                  {t.noReimbursements}
                 </TableCell>
               </TableRow>
             ) : (
@@ -152,7 +162,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate }: Reimbu
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Reimbursement #{selectedReimbursement && String(selectedReimbursement.reimbursement_number).padStart(5, "0")}
+              {t.reimbursementNumber} #{selectedReimbursement && String(selectedReimbursement.reimbursement_number).padStart(5, "0")}
             </DialogTitle>
           </DialogHeader>
           {selectedReimbursement && (
@@ -164,6 +174,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate }: Reimbu
                 if (onUpdate) onUpdate();
               }}
               onClose={() => setSelectedReimbursement(null)}
+              language={language}
             />
           )}
         </DialogContent>
