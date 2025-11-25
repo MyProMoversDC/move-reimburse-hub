@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers Reimbursements <onboarding@resend.dev>",
+      from: "MyProMovers Reimbursements <reimbursements@mypromovers.com>",
       to: ["mark@mypromovers.com"],
       subject: `New Reimbursement Request #${data.reimbursementNumber} - ${data.moverFullName}`,
       html: `
