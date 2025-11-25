@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
+import { translations, Language } from "@/lib/translations";
+import { Languages } from "lucide-react";
 
 const signupSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100),
@@ -28,6 +31,9 @@ const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(true);
+  const [language, setLanguage] = useState<Language>('en');
+  
+  const t = translations[language];
 
   // Signup form
   const [firstName, setFirstName] = useState("");
@@ -61,7 +67,16 @@ const Auth = () => {
     e.preventDefault();
     
     try {
-      const validated = signupSchema.parse({
+      const signupSchemaWithMessages = z.object({
+        firstName: z.string().trim().min(1, t.firstNameRequired).max(100),
+        lastName: z.string().trim().min(1, t.lastNameRequired).max(100),
+        email: z.string().trim().email(t.invalidEmail).max(255),
+        username: z.string().trim().min(3, t.usernameMinLength).max(50),
+        phone: z.string().trim().min(10, t.phoneMinLength).max(20),
+        password: z.string().min(6, t.passwordMinLength),
+      });
+      
+      const validated = signupSchemaWithMessages.parse({
         firstName, lastName, email, username, phone, password
       });
 
@@ -83,7 +98,7 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success("Account created! Please log in.");
+      toast.success(t.accountCreated);
       setIsSignup(false);
       
       // Clear form
@@ -108,7 +123,12 @@ const Auth = () => {
     e.preventDefault();
     
     try {
-      const validated = loginSchema.parse({ identifier, password: loginPassword });
+      const loginSchemaWithMessages = z.object({
+        identifier: z.string().trim().min(1, t.identifierRequired),
+        password: z.string().min(1, t.passwordRequired),
+      });
+      
+      const validated = loginSchemaWithMessages.parse({ identifier, password: loginPassword });
 
       setLoading(true);
       
@@ -124,7 +144,7 @@ const Auth = () => {
           .single();
 
         if (profileError || !profile) {
-          throw new Error("Invalid username or password");
+          throw new Error(t.invalidCredentials);
         }
         loginEmail = profile.email;
       }
@@ -136,7 +156,7 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success("Logged in successfully!");
+      toast.success(t.loggedInSuccess);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
@@ -150,24 +170,38 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
+      <div className="absolute top-4 right-4">
+        <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+          <SelectTrigger className="w-[160px] bg-background">
+            <Languages className="h-4 w-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-background border border-border z-50">
+            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="es">Español</SelectItem>
+            <SelectItem value="ru">Русский</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img src={logo} alt="MyProMovers" className="h-16 mx-auto mb-4" />
-          <CardTitle className="text-2xl">Reimbursement Portal</CardTitle>
-          <CardDescription>Sign in to manage your reimbursements</CardDescription>
+          <CardTitle className="text-2xl">{t.reimbursementPortal}</CardTitle>
+          <CardDescription>{t.signInToManage}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={isSignup ? "signup" : "login"} onValueChange={(v) => setIsSignup(v === "signup")}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">{t.signUp}</TabsTrigger>
+              <TabsTrigger value="login">{t.login}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">{t.firstName}</Label>
                     <Input
                       id="firstName"
                       value={firstName}
@@ -176,7 +210,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">{t.lastName}</Label>
                     <Input
                       id="lastName"
                       value={lastName}
@@ -187,7 +221,7 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t.email}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -198,7 +232,7 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t.username}</Label>
                   <Input
                     id="username"
                     value={username}
@@ -208,7 +242,7 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">{t.phoneNumber}</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -219,7 +253,7 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t.password}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -230,7 +264,7 @@ const Auth = () => {
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Sign Up"}
+                  {loading ? t.creatingAccount : t.signUpButton}
                 </Button>
               </form>
             </TabsContent>
@@ -238,7 +272,7 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="identifier">Email or Username</Label>
+                  <Label htmlFor="identifier">{t.emailOrUsername}</Label>
                   <Input
                     id="identifier"
                     value={identifier}
@@ -248,7 +282,7 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="loginPassword">Password</Label>
+                  <Label htmlFor="loginPassword">{t.password}</Label>
                   <Input
                     id="loginPassword"
                     type="password"
@@ -259,7 +293,7 @@ const Auth = () => {
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? t.loggingIn : t.loginButton}
                 </Button>
               </form>
             </TabsContent>
