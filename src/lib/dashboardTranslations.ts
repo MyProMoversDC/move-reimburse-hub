@@ -44,6 +44,7 @@ export const dashboardTranslations = {
     pending: "Pending",
     statusConfirmed: "Confirmed",
     paid: "Paid",
+    declined: "Declined",
     
     // Admin Dashboard
     allReimbursementRequests: "All Reimbursement Requests",
@@ -65,6 +66,10 @@ export const dashboardTranslations = {
     email: "Email",
     phone: "Phone",
     noMoversFound: "No movers found",
+    deleteMover: "Delete",
+    confirmDelete: "Are you sure you want to delete this mover?",
+    moverDeleted: "Mover deleted successfully",
+    deleting: "Deleting...",
     
     // Reimbursement Details
     moverDetails: "Mover Details",
@@ -80,6 +85,13 @@ export const dashboardTranslations = {
     zellePayment: "Zelle Payment Information",
     attachedReceipts: "Attached Receipts",
     close: "Close",
+    declineReimbursement: "Decline Request",
+    deleteReimbursement: "Delete Request",
+    confirmDecline: "Are you sure you want to decline this request?",
+    confirmDeleteReimbursement: "Are you sure you want to delete this request?",
+    declining: "Declining...",
+    reimbursementDeclined: "Request declined",
+    reimbursementDeleted: "Request deleted successfully",
   },
   es: {
     // Common
@@ -124,6 +136,7 @@ export const dashboardTranslations = {
     pending: "Pendiente",
     statusConfirmed: "Confirmado",
     paid: "Pagado",
+    declined: "Rechazado",
     
     // Admin Dashboard
     allReimbursementRequests: "Todas las Solicitudes de Reembolso",
@@ -145,6 +158,10 @@ export const dashboardTranslations = {
     email: "Correo Electrónico",
     phone: "Teléfono",
     noMoversFound: "No se encontraron transportistas",
+    deleteMover: "Eliminar",
+    confirmDelete: "¿Está seguro de que desea eliminar este transportista?",
+    moverDeleted: "Transportista eliminado exitosamente",
+    deleting: "Eliminando...",
     
     // Reimbursement Details
     moverDetails: "Detalles del Transportista",
@@ -160,6 +177,13 @@ export const dashboardTranslations = {
     zellePayment: "Información de Pago Zelle",
     attachedReceipts: "Recibos Adjuntos",
     close: "Cerrar",
+    declineReimbursement: "Rechazar Solicitud",
+    deleteReimbursement: "Eliminar Solicitud",
+    confirmDecline: "¿Está seguro de que desea rechazar esta solicitud?",
+    confirmDeleteReimbursement: "¿Está seguro de que desea eliminar esta solicitud?",
+    declining: "Rechazando...",
+    reimbursementDeclined: "Solicitud rechazada",
+    reimbursementDeleted: "Solicitud eliminada exitosamente",
   },
   ru: {
     // Common
@@ -204,6 +228,7 @@ export const dashboardTranslations = {
     pending: "В Ожидании",
     statusConfirmed: "Подтверждено",
     paid: "Оплачено",
+    declined: "Отклонено",
     
     // Admin Dashboard
     allReimbursementRequests: "Все Запросы на Компенсацию",
@@ -225,6 +250,10 @@ export const dashboardTranslations = {
     email: "Электронная Почта",
     phone: "Телефон",
     noMoversFound: "Перевозчики не найдены",
+    deleteMover: "Удалить",
+    confirmDelete: "Вы уверены, что хотите удалить этого перевозчика?",
+    moverDeleted: "Перевозчик успешно удален",
+    deleting: "Удаление...",
     
     // Reimbursement Details
     moverDetails: "Детали Перевозчика",
@@ -240,6 +269,13 @@ export const dashboardTranslations = {
     zellePayment: "Информация для Оплаты Zelle",
     attachedReceipts: "Прикрепленные Квитанции",
     close: "Закрыть",
+    declineReimbursement: "Отклонить Запрос",
+    deleteReimbursement: "Удалить Запрос",
+    confirmDecline: "Вы уверены, что хотите отклонить этот запрос?",
+    confirmDeleteReimbursement: "Вы уверены, что хотите удалить этот запрос?",
+    declining: "Отклонение...",
+    reimbursementDeclined: "Запрос отклонен",
+    reimbursementDeleted: "Запрос успешно удален",
   },
 };
 

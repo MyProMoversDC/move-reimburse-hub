@@ -9,7 +9,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
 interface Mover {
@@ -28,6 +40,9 @@ interface MoversListProps {
 const MoversList = ({ language }: MoversListProps) => {
   const [movers, setMovers] = useState<Mover[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [moverToDelete, setMoverToDelete] = useState<Mover | null>(null);
   
   const t = dashboardTranslations[language];
 
@@ -70,6 +85,33 @@ const MoversList = ({ language }: MoversListProps) => {
     fetchMovers();
   }, []);
 
+  const handleDeleteClick = (mover: Mover) => {
+    setMoverToDelete(mover);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!moverToDelete) return;
+
+    setDeletingId(moverToDelete.id);
+    try {
+      const { error } = await supabase.rpc("delete_user_account", {
+        user_id_to_delete: moverToDelete.id,
+      });
+
+      if (error) throw error;
+
+      toast.success(t.moverDeleted);
+      setMovers(movers.filter((m) => m.id !== moverToDelete.id));
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setDeletingId(null);
+      setShowDeleteDialog(false);
+      setMoverToDelete(null);
+    }
+  };
+
   if (loading) {
     return <div>{t.loading}</div>;
   }
@@ -87,12 +129,13 @@ const MoversList = ({ language }: MoversListProps) => {
               <TableHead>{t.username}</TableHead>
               <TableHead>{t.email}</TableHead>
               <TableHead>{t.phone}</TableHead>
+              <TableHead className="text-right">{t.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {movers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   {t.noMoversFound}
                 </TableCell>
               </TableRow>
@@ -105,12 +148,41 @@ const MoversList = ({ language }: MoversListProps) => {
                   <TableCell>{mover.username}</TableCell>
                   <TableCell>{mover.email}</TableCell>
                   <TableCell>{mover.phone}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(mover)}
+                      disabled={deletingId === mover.id}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {deletingId === mover.id ? t.deleting : t.deleteMover}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </CardContent>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteMover}</AlertDialogTitle>
+            <AlertDialogDescription>{t.confirmDelete}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.close}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground"
+            >
+              {deletingId ? t.deleting : t.deleteMover}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

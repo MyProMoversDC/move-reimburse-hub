@@ -162,6 +162,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_user_account: {
+        Args: { user_id_to_delete: string }
+        Returns: undefined
+      }
       get_email_by_username: {
         Args: { input_username: string }
         Returns: string
@@ -176,7 +180,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "accountant" | "mover"
-      reimbursement_status: "pending" | "confirmed" | "paid"
+      reimbursement_status: "pending" | "confirmed" | "paid" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -305,7 +309,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "accountant", "mover"],
-      reimbursement_status: ["pending", "confirmed", "paid"],
+      reimbursement_status: ["pending", "confirmed", "paid", "declined"],
     },
   },
 } as const
