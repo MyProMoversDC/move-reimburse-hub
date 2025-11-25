@@ -33,10 +33,16 @@ const handler = async (req: Request): Promise<Response> => {
     
     const loginUrl = `${req.headers.get('origin')}/auth`;
 
+    console.log("Sending reimbursement notification:", {
+      reimbursementNumber: data.reimbursementNumber,
+      moverFullName: data.moverFullName,
+      totalExpenses: data.totalExpenses
+    });
+
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers <onboarding@resend.dev>",
+      from: "MyProMovers Reimbursements <onboarding@resend.dev>",
       to: ["mark@mypromoversdc.com"],
-      subject: `New Reimbursement Request #${data.reimbursementNumber}`,
+      subject: `New Reimbursement Request #${data.reimbursementNumber} - ${data.moverFullName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">New Reimbursement Request</h1>
