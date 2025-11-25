@@ -41,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "MyProMovers Reimbursements <onboarding@resend.dev>",
-      to: ["mark@mypromoversdc.com"],
+      to: ["aspanmpl@gmail.com"],
       subject: `New Reimbursement Request #${data.reimbursementNumber} - ${data.moverFullName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
