@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
 interface Mover {
   id: string;
@@ -20,9 +21,15 @@ interface Mover {
   phone: string;
 }
 
-const MoversList = () => {
+interface MoversListProps {
+  language: DashboardLanguage;
+}
+
+const MoversList = ({ language }: MoversListProps) => {
   const [movers, setMovers] = useState<Mover[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const t = dashboardTranslations[language];
 
   useEffect(() => {
     const fetchMovers = async () => {
@@ -64,29 +71,29 @@ const MoversList = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading movers...</div>;
+    return <div>{t.loading}</div>;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Movers Directory</CardTitle>
+        <CardTitle>{t.moversDirectory}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead>{t.name}</TableHead>
+              <TableHead>{t.username}</TableHead>
+              <TableHead>{t.email}</TableHead>
+              <TableHead>{t.phone}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {movers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No movers found
+                  {t.noMoversFound}
                 </TableCell>
               </TableRow>
             ) : (

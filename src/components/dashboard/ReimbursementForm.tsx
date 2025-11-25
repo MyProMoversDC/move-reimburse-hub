@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { z } from "zod";
+import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
 const reimbursementSchema = z.object({
   moverFullName: z.string().trim().min(1, "Mover full name is required").max(200),
@@ -22,10 +23,12 @@ const reimbursementSchema = z.object({
 interface ReimbursementFormProps {
   userId: string;
   onSuccess: () => void;
+  language: DashboardLanguage;
 }
 
-const ReimbursementForm = ({ userId, onSuccess }: ReimbursementFormProps) => {
+const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormProps) => {
   const [loading, setLoading] = useState(false);
+  const t = dashboardTranslations[language];
   const [moverFullName, setMoverFullName] = useState("");
   const [jobNumber, setJobNumber] = useState("");
   const [truckNumber, setTruckNumber] = useState("");
@@ -144,7 +147,7 @@ const ReimbursementForm = ({ userId, onSuccess }: ReimbursementFormProps) => {
         },
       });
 
-      toast.success("Reimbursement submitted successfully!");
+      toast.success(t.requestSubmitted);
       onSuccess();
     } catch (error: any) {
       if (error instanceof z.ZodError) {

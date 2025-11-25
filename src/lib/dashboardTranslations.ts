@@ -1,0 +1,246 @@
+import { Language } from "./translations";
+
+export const dashboardTranslations = {
+  en: {
+    // Common
+    logout: "Logout",
+    loading: "Loading...",
+    exportToExcel: "Export to Excel",
+    exporting: "Exporting...",
+    exportComplete: "Export complete!",
+    
+    // Mover Dashboard
+    submitReimbursement: "Submit New Reimbursement",
+    reimbursementHistory: "My Reimbursement History",
+    reimbursementForm: "Reimbursement Form",
+    moverFullName: "Mover Full Name",
+    jobNumber: "Job #",
+    truckNumber: "Truck #",
+    customerName: "Customer Name",
+    zelleInfo: "Zelle Payment Information",
+    zelleInfoPlaceholder: "Email or phone number for Zelle payment",
+    attachments: "Attachments",
+    attachmentsDescription: "Upload receipts and photos",
+    gasExpenses: "Gas Expenses ($)",
+    roadExpenses: "Road/Tolls Expenses ($)",
+    hotelExpenses: "Hotel Expenses ($)",
+    otherExpenses: "Other Expenses ($)",
+    totalExpenses: "Total Expenses",
+    submitRequest: "Submit Request",
+    submitting: "Submitting...",
+    requestSubmitted: "Reimbursement request submitted successfully!",
+    
+    // Reimbursement History
+    reimbursementNumber: "Reimbursement #",
+    date: "Date",
+    job: "Job",
+    amount: "Amount",
+    status: "Status",
+    actions: "Actions",
+    viewDetails: "View Details",
+    noReimbursements: "No reimbursement requests found",
+    
+    // Statuses
+    pending: "Pending",
+    statusConfirmed: "Confirmed",
+    paid: "Paid",
+    
+    // Admin Dashboard
+    allReimbursementRequests: "All Reimbursement Requests",
+    reimbursementRequests: "Reimbursement Requests",
+    moversDirectory: "Movers Directory",
+    confirmReimbursement: "Confirm Reimbursement",
+    confirming: "Confirming...",
+    reimbursementConfirmed: "Reimbursement confirmed!",
+    
+    // Accountant Dashboard
+    confirmedReimbursements: "Confirmed Reimbursements",
+    markAsPaid: "Mark as Paid",
+    markingPaid: "Marking as paid...",
+    markedPaid: "Reimbursement marked as paid!",
+    
+    // Movers List
+    name: "Name",
+    username: "Username",
+    email: "Email",
+    phone: "Phone",
+    noMoversFound: "No movers found",
+    
+    // Reimbursement Details
+    moverDetails: "Mover Details",
+    jobDetails: "Job Details",
+    truck: "Truck",
+    customer: "Customer",
+    expenseBreakdown: "Expense Breakdown",
+    gas: "Gas",
+    roadTolls: "Road/Tolls",
+    hotel: "Hotel",
+    other: "Other",
+    total: "Total",
+    zellePayment: "Zelle Payment Information",
+    attachedReceipts: "Attached Receipts",
+    close: "Close",
+  },
+  es: {
+    // Common
+    logout: "Cerrar Sesión",
+    loading: "Cargando...",
+    exportToExcel: "Exportar a Excel",
+    exporting: "Exportando...",
+    exportComplete: "¡Exportación completa!",
+    
+    // Mover Dashboard
+    submitReimbursement: "Enviar Nuevo Reembolso",
+    reimbursementHistory: "Mi Historial de Reembolsos",
+    reimbursementForm: "Formulario de Reembolso",
+    moverFullName: "Nombre Completo del Transportista",
+    jobNumber: "Trabajo #",
+    truckNumber: "Camión #",
+    customerName: "Nombre del Cliente",
+    zelleInfo: "Información de Pago Zelle",
+    zelleInfoPlaceholder: "Correo electrónico o teléfono para pago Zelle",
+    attachments: "Adjuntos",
+    attachmentsDescription: "Subir recibos y fotos",
+    gasExpenses: "Gastos de Gasolina ($)",
+    roadExpenses: "Gastos de Carretera/Peajes ($)",
+    hotelExpenses: "Gastos de Hotel ($)",
+    otherExpenses: "Otros Gastos ($)",
+    totalExpenses: "Gastos Totales",
+    submitRequest: "Enviar Solicitud",
+    submitting: "Enviando...",
+    requestSubmitted: "¡Solicitud de reembolso enviada exitosamente!",
+    
+    // Reimbursement History
+    reimbursementNumber: "Reembolso #",
+    date: "Fecha",
+    job: "Trabajo",
+    amount: "Cantidad",
+    status: "Estado",
+    actions: "Acciones",
+    viewDetails: "Ver Detalles",
+    noReimbursements: "No se encontraron solicitudes de reembolso",
+    
+    // Statuses
+    pending: "Pendiente",
+    statusConfirmed: "Confirmado",
+    paid: "Pagado",
+    
+    // Admin Dashboard
+    allReimbursementRequests: "Todas las Solicitudes de Reembolso",
+    reimbursementRequests: "Solicitudes de Reembolso",
+    moversDirectory: "Directorio de Transportistas",
+    confirmReimbursement: "Confirmar Reembolso",
+    confirming: "Confirmando...",
+    reimbursementConfirmed: "¡Reembolso confirmado!",
+    
+    // Accountant Dashboard
+    confirmedReimbursements: "Reembolsos Confirmados",
+    markAsPaid: "Marcar como Pagado",
+    markingPaid: "Marcando como pagado...",
+    markedPaid: "¡Reembolso marcado como pagado!",
+    
+    // Movers List
+    name: "Nombre",
+    username: "Usuario",
+    email: "Correo Electrónico",
+    phone: "Teléfono",
+    noMoversFound: "No se encontraron transportistas",
+    
+    // Reimbursement Details
+    moverDetails: "Detalles del Transportista",
+    jobDetails: "Detalles del Trabajo",
+    truck: "Camión",
+    customer: "Cliente",
+    expenseBreakdown: "Desglose de Gastos",
+    gas: "Gasolina",
+    roadTolls: "Carretera/Peajes",
+    hotel: "Hotel",
+    other: "Otros",
+    total: "Total",
+    zellePayment: "Información de Pago Zelle",
+    attachedReceipts: "Recibos Adjuntos",
+    close: "Cerrar",
+  },
+  ru: {
+    // Common
+    logout: "Выйти",
+    loading: "Загрузка...",
+    exportToExcel: "Экспорт в Excel",
+    exporting: "Экспорт...",
+    exportComplete: "Экспорт завершен!",
+    
+    // Mover Dashboard
+    submitReimbursement: "Отправить Новую Компенсацию",
+    reimbursementHistory: "Моя История Компенсаций",
+    reimbursementForm: "Форма Компенсации",
+    moverFullName: "Полное Имя Перевозчика",
+    jobNumber: "Работа #",
+    truckNumber: "Грузовик #",
+    customerName: "Имя Клиента",
+    zelleInfo: "Информация для Оплаты Zelle",
+    zelleInfoPlaceholder: "Email или телефон для оплаты Zelle",
+    attachments: "Вложения",
+    attachmentsDescription: "Загрузить квитанции и фотографии",
+    gasExpenses: "Расходы на Бензин ($)",
+    roadExpenses: "Расходы на Дороги/Платные дороги ($)",
+    hotelExpenses: "Расходы на Отель ($)",
+    otherExpenses: "Прочие Расходы ($)",
+    totalExpenses: "Общие Расходы",
+    submitRequest: "Отправить Запрос",
+    submitting: "Отправка...",
+    requestSubmitted: "Запрос на компенсацию успешно отправлен!",
+    
+    // Reimbursement History
+    reimbursementNumber: "Компенсация #",
+    date: "Дата",
+    job: "Работа",
+    amount: "Сумма",
+    status: "Статус",
+    actions: "Действия",
+    viewDetails: "Посмотреть Детали",
+    noReimbursements: "Запросы на компенсацию не найдены",
+    
+    // Statuses
+    pending: "В Ожидании",
+    statusConfirmed: "Подтверждено",
+    paid: "Оплачено",
+    
+    // Admin Dashboard
+    allReimbursementRequests: "Все Запросы на Компенсацию",
+    reimbursementRequests: "Запросы на Компенсацию",
+    moversDirectory: "Справочник Перевозчиков",
+    confirmReimbursement: "Подтвердить Компенсацию",
+    confirming: "Подтверждение...",
+    reimbursementConfirmed: "Компенсация подтверждена!",
+    
+    // Accountant Dashboard
+    confirmedReimbursements: "Подтвержденные Компенсации",
+    markAsPaid: "Отметить как Оплаченное",
+    markingPaid: "Отметка как оплачено...",
+    markedPaid: "Компенсация отмечена как оплаченная!",
+    
+    // Movers List
+    name: "Имя",
+    username: "Имя Пользователя",
+    email: "Электронная Почта",
+    phone: "Телефон",
+    noMoversFound: "Перевозчики не найдены",
+    
+    // Reimbursement Details
+    moverDetails: "Детали Перевозчика",
+    jobDetails: "Детали Работы",
+    truck: "Грузовик",
+    customer: "Клиент",
+    expenseBreakdown: "Разбивка Расходов",
+    gas: "Бензин",
+    roadTolls: "Дороги/Платные дороги",
+    hotel: "Отель",
+    other: "Прочее",
+    total: "Итого",
+    zellePayment: "Информация для Оплаты Zelle",
+    attachedReceipts: "Прикрепленные Квитанции",
+    close: "Закрыть",
+  },
+};
+
+export type DashboardLanguage = Language;

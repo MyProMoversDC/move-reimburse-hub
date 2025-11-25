@@ -135,18 +135,15 @@ const Auth = () => {
       const isEmail = validated.identifier.includes("@");
       let loginEmail = validated.identifier;
 
-      // If username provided, fetch email from profiles
+      // If username provided, fetch email using secure function
       if (!isEmail) {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("username", validated.identifier)
-          .single();
+        const { data, error: rpcError } = await supabase
+          .rpc("get_email_by_username", { input_username: validated.identifier });
 
-        if (profileError || !profile) {
+        if (rpcError || !data) {
           throw new Error(t.invalidCredentials);
         }
-        loginEmail = profile.email;
+        loginEmail = data;
       }
 
       const { error } = await supabase.auth.signInWithPassword({

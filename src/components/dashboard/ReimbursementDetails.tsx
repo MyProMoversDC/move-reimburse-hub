@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CheckCircle, DollarSign } from "lucide-react";
+import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
 interface Reimbursement {
   id: string;
@@ -32,11 +33,14 @@ interface ReimbursementDetailsProps {
   userRole: "mover" | "admin" | "accountant";
   onUpdate: () => void;
   onClose: () => void;
+  language: DashboardLanguage;
 }
 
-const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose }: ReimbursementDetailsProps) => {
+const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, language }: ReimbursementDetailsProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  const t = dashboardTranslations[language];
 
   useEffect(() => {
     fetchAttachments();
@@ -76,7 +80,7 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose }: Re
         },
       });
 
-      toast.success("Reimbursement confirmed!");
+      toast.success(t.reimbursementConfirmed);
       onUpdate();
       onClose();
     } catch (error: any) {
@@ -99,7 +103,7 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose }: Re
 
       if (error) throw error;
 
-      toast.success("Reimbursement marked as paid!");
+      toast.success(t.markedPaid);
       onUpdate();
       onClose();
     } catch (error: any) {
