@@ -31,6 +31,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
   
   const t = translations[language];
@@ -46,6 +47,9 @@ const Auth = () => {
   // Login form
   const [identifier, setIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+
+  // Forgot password form
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -165,6 +169,38 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const resetEmailSchema = z.object({
+        email: z.string().trim().email(t.invalidEmail),
+      });
+      
+      const validated = resetEmailSchema.parse({ email: resetEmail });
+
+      setLoading(true);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+      
+      toast.success(t.resetLinkSent);
+      setResetEmail("");
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
       <div className="absolute top-4 right-4">
@@ -267,32 +303,70 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="identifier">{t.emailOrUsername}</Label>
-                  <Input
-                    id="identifier"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="loginPassword">{t.password}</Label>
-                  <Input
-                    id="loginPassword"
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? t.loggingIn : t.loginButton}
-                </Button>
-              </form>
+              {showForgotPassword ? (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resetEmail">{t.email}</Label>
+                    <Input
+                      id="resetEmail"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder={t.resetEmailPlaceholder}
+                      required
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? t.sendingResetLink : t.sendResetLink}
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setShowForgotPassword(false)}
+                  >
+                    {t.backToLogin}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="identifier">{t.emailOrUsername}</Label>
+                    <Input
+                      id="identifier"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="loginPassword">{t.password}</Label>
+                    <Input
+                      id="loginPassword"
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? t.loggingIn : t.loginButton}
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-sm"
+                    onClick={() => setShowForgotPassword(true)}
+                  >
+                    {t.forgotPassword}
+                  </Button>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

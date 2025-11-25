@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { CheckCircle, DollarSign } from "lucide-react";
+import { CheckCircle, DollarSign, XCircle, Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
 interface Reimbursement {
@@ -39,6 +49,8 @@ interface ReimbursementDetailsProps {
 const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, language }: ReimbursementDetailsProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const t = dashboardTranslations[language];
 
@@ -54,9 +66,24 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
 
     if (error) {
       console.error("Error fetching attachments:", error);
-    } else {
-      setAttachments(data || []);
+      return;
     }
+
+    // Generate signed URLs for each attachment
+    const attachmentsWithUrls = await Promise.all(
+      (data || []).map(async (attachment) => {
+        const { data: signedData } = await supabase.storage
+          .from("reimbursement-attachments")
+          .createSignedUrl(attachment.file_url.split("/").pop() || "", 3600);
+        
+        return {
+          ...attachment,
+          file_url: signedData?.signedUrl || attachment.file_url,
+        };
+      })
+    );
+
+    setAttachments(attachmentsWithUrls);
   };
 
   const handleConfirm = async () => {
@@ -110,6 +137,48 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("reimbursements")
+        .update({ status: "declined" })
+        .eq("id", reimbursement.id);
+
+      if (error) throw error;
+
+      toast.success(t.reimbursementDeclined);
+      onUpdate();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      setShowDeclineDialog(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("reimbursements")
+        .delete()
+        .eq("id", reimbursement.id);
+
+      if (error) throw error;
+
+      toast.success(t.reimbursementDeleted);
+      onUpdate();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -187,10 +256,32 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       </div>
 
       {userRole === "admin" && reimbursement.status === "pending" && (
-        <Button onClick={handleConfirm} disabled={loading} className="w-full">
-          <CheckCircle className="h-4 w-4 mr-2" />
-          {loading ? "Confirming..." : "Confirm Reimbursement"}
-        </Button>
+        <div className="space-y-2">
+          <Button onClick={handleConfirm} disabled={loading} className="w-full">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            {loading ? "Confirming..." : "Confirm Reimbursement"}
+          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => setShowDeclineDialog(true)}
+              disabled={loading}
+              variant="outline"
+              className="w-full"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              {t.declineReimbursement}
+            </Button>
+            <Button
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={loading}
+              variant="destructive"
+              className="w-full"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {t.deleteReimbursement}
+            </Button>
+          </div>
+        </div>
       )}
 
       {userRole === "accountant" && reimbursement.status === "confirmed" && (
@@ -199,6 +290,36 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
           {loading ? "Processing..." : "Mark as Paid"}
         </Button>
       )}
+
+      <AlertDialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.declineReimbursement}</AlertDialogTitle>
+            <AlertDialogDescription>{t.confirmDecline}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.close}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDecline}>
+              {loading ? t.declining : t.declineReimbursement}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.deleteReimbursement}</AlertDialogTitle>
+            <AlertDialogDescription>{t.confirmDeleteReimbursement}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.close}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+              {loading ? t.deleting : t.deleteReimbursement}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
