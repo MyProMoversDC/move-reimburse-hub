@@ -72,9 +72,13 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
     // Generate signed URLs for each attachment
     const attachmentsWithUrls = await Promise.all(
       (data || []).map(async (attachment) => {
+        // Extract the file path from the public URL
+        const urlParts = attachment.file_url.split('/reimbursement-attachments/');
+        const filePath = urlParts[1] || attachment.file_url;
+        
         const { data: signedData } = await supabase.storage
           .from("reimbursement-attachments")
-          .createSignedUrl(attachment.file_url.split("/").pop() || "", 3600);
+          .createSignedUrl(filePath, 3600);
         
         return {
           ...attachment,

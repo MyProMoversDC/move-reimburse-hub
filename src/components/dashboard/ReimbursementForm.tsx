@@ -13,10 +13,7 @@ const reimbursementSchema = z.object({
   jobNumber: z.string().trim().min(1, "Job number is required").max(50),
   truckNumber: z.string().trim().min(1, "Truck number is required").max(50),
   customerName: z.string().trim().min(1, "Customer name is required").max(200),
-  gasExpenses: z.number().min(0).optional(),
-  roadExpenses: z.number().min(0).optional(),
-  hotelExpenses: z.number().min(0).optional(),
-  otherExpenses: z.number().min(0).optional(),
+  totalReimbursement: z.number().min(0.01, "Total reimbursement must be greater than 0"),
   zelleInfo: z.string().trim().min(1, "Zelle payment info is required").max(200),
 });
 
@@ -33,20 +30,9 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const [jobNumber, setJobNumber] = useState("");
   const [truckNumber, setTruckNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [gasExpenses, setGasExpenses] = useState("");
-  const [roadExpenses, setRoadExpenses] = useState("");
-  const [hotelExpenses, setHotelExpenses] = useState("");
-  const [otherExpenses, setOtherExpenses] = useState("");
+  const [totalReimbursement, setTotalReimbursement] = useState("");
   const [zelleInfo, setZelleInfo] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-
-  const calculateTotal = () => {
-    const gas = parseFloat(gasExpenses) || 0;
-    const road = parseFloat(roadExpenses) || 0;
-    const hotel = parseFloat(hotelExpenses) || 0;
-    const other = parseFloat(otherExpenses) || 0;
-    return (gas + road + hotel + other).toFixed(2);
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -73,16 +59,11 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
         jobNumber: jobNumber.trim(),
         truckNumber: truckNumber.trim(),
         customerName: customerName.trim(),
-        gasExpenses: gasExpenses ? parseFloat(gasExpenses) : 0,
-        roadExpenses: roadExpenses ? parseFloat(roadExpenses) : 0,
-        hotelExpenses: hotelExpenses ? parseFloat(hotelExpenses) : 0,
-        otherExpenses: otherExpenses ? parseFloat(otherExpenses) : 0,
+        totalReimbursement: parseFloat(totalReimbursement),
         zelleInfo: zelleInfo.trim(),
       });
 
       setLoading(true);
-
-      const totalExpenses = parseFloat(calculateTotal());
 
       // Insert reimbursement
       const { data: reimbursement, error: reimbursementError } = await supabase
@@ -93,11 +74,11 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           job_number: validated.jobNumber,
           truck_number: validated.truckNumber,
           customer_name: validated.customerName,
-          gas_expenses: validated.gasExpenses,
-          road_expenses: validated.roadExpenses,
-          hotel_expenses: validated.hotelExpenses,
-          other_expenses: validated.otherExpenses,
-          total_expenses: totalExpenses,
+          gas_expenses: 0,
+          road_expenses: 0,
+          hotel_expenses: 0,
+          other_expenses: 0,
+          total_expenses: validated.totalReimbursement,
           zelle_info: validated.zelleInfo,
         })
         .select()
@@ -137,11 +118,11 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           jobNumber: validated.jobNumber,
           truckNumber: validated.truckNumber,
           customerName: validated.customerName,
-          gasExpenses: validated.gasExpenses || 0,
-          roadExpenses: validated.roadExpenses || 0,
-          hotelExpenses: validated.hotelExpenses || 0,
-          otherExpenses: validated.otherExpenses || 0,
-          totalExpenses,
+          gasExpenses: 0,
+          roadExpenses: 0,
+          hotelExpenses: 0,
+          otherExpenses: 0,
+          totalExpenses: validated.totalReimbursement,
           zelleInfo: validated.zelleInfo,
           attachmentCount: files.length,
         },
@@ -204,58 +185,18 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="gasExpenses">Gas Expenses ($)</Label>
+          <Label htmlFor="totalReimbursement">Total Requested Reimbursement ($) *</Label>
           <Input
-            id="gasExpenses"
+            id="totalReimbursement"
             type="number"
             step="0.01"
-            min="0"
-            value={gasExpenses}
-            onChange={(e) => setGasExpenses(e.target.value)}
+            min="0.01"
+            value={totalReimbursement}
+            onChange={(e) => setTotalReimbursement(e.target.value)}
+            placeholder="0.00"
+            required
           />
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="roadExpenses">Road/Tolls Expenses ($)</Label>
-          <Input
-            id="roadExpenses"
-            type="number"
-            step="0.01"
-            min="0"
-            value={roadExpenses}
-            onChange={(e) => setRoadExpenses(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="hotelExpenses">Hotel Expenses ($)</Label>
-          <Input
-            id="hotelExpenses"
-            type="number"
-            step="0.01"
-            min="0"
-            value={hotelExpenses}
-            onChange={(e) => setHotelExpenses(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="otherExpenses">Other Expenses ($)</Label>
-          <Input
-            id="otherExpenses"
-            type="number"
-            step="0.01"
-            min="0"
-            value={otherExpenses}
-            onChange={(e) => setOtherExpenses(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="p-4 bg-muted rounded-lg">
-        <p className="text-lg font-semibold">
-          Total Expenses: ${calculateTotal()}
-        </p>
       </div>
 
       <div className="space-y-2">
