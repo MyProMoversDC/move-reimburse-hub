@@ -15,6 +15,10 @@ const reimbursementSchema = z.object({
   customerName: z.string().trim().min(1, "Customer name is required").max(200),
   totalReimbursement: z.number().min(0.01, "Total reimbursement must be greater than 0"),
   zelleInfo: z.string().trim().min(1, "Zelle payment info is required").max(200),
+  gasExpenses: z.number().min(0).optional(),
+  roadExpenses: z.number().min(0).optional(),
+  hotelExpenses: z.number().min(0).optional(),
+  otherExpenses: z.number().min(0).optional(),
 });
 
 interface ReimbursementFormProps {
@@ -32,6 +36,10 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const [customerName, setCustomerName] = useState("");
   const [totalReimbursement, setTotalReimbursement] = useState("");
   const [zelleInfo, setZelleInfo] = useState("");
+  const [gasExpenses, setGasExpenses] = useState("");
+  const [roadExpenses, setRoadExpenses] = useState("");
+  const [hotelExpenses, setHotelExpenses] = useState("");
+  const [otherExpenses, setOtherExpenses] = useState("");
   const [files, setFiles] = useState<File[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +69,10 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
         customerName: customerName.trim(),
         totalReimbursement: parseFloat(totalReimbursement),
         zelleInfo: zelleInfo.trim(),
+        gasExpenses: gasExpenses ? parseFloat(gasExpenses) : undefined,
+        roadExpenses: roadExpenses ? parseFloat(roadExpenses) : undefined,
+        hotelExpenses: hotelExpenses ? parseFloat(hotelExpenses) : undefined,
+        otherExpenses: otherExpenses ? parseFloat(otherExpenses) : undefined,
       });
 
       setLoading(true);
@@ -74,10 +86,10 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           job_number: validated.jobNumber,
           truck_number: validated.truckNumber,
           customer_name: validated.customerName,
-          gas_expenses: 0,
-          road_expenses: 0,
-          hotel_expenses: 0,
-          other_expenses: 0,
+          gas_expenses: validated.gasExpenses || 0,
+          road_expenses: validated.roadExpenses || 0,
+          hotel_expenses: validated.hotelExpenses || 0,
+          other_expenses: validated.otherExpenses || 0,
           total_expenses: validated.totalReimbursement,
           zelle_info: validated.zelleInfo,
         })
@@ -118,10 +130,10 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           jobNumber: validated.jobNumber,
           truckNumber: validated.truckNumber,
           customerName: validated.customerName,
-          gasExpenses: 0,
-          roadExpenses: 0,
-          hotelExpenses: 0,
-          otherExpenses: 0,
+          gasExpenses: validated.gasExpenses || 0,
+          roadExpenses: validated.roadExpenses || 0,
+          hotelExpenses: validated.hotelExpenses || 0,
+          otherExpenses: validated.otherExpenses || 0,
           totalExpenses: validated.totalReimbursement,
           zelleInfo: validated.zelleInfo,
           attachmentCount: files.length,
@@ -195,6 +207,58 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
             onChange={(e) => setTotalReimbursement(e.target.value)}
             placeholder="0.00"
             required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="gasExpenses">Gas Expenses ($)</Label>
+          <Input
+            id="gasExpenses"
+            type="number"
+            step="0.01"
+            min="0"
+            value={gasExpenses}
+            onChange={(e) => setGasExpenses(e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="roadExpenses">Road (Tolls) Expenses ($)</Label>
+          <Input
+            id="roadExpenses"
+            type="number"
+            step="0.01"
+            min="0"
+            value={roadExpenses}
+            onChange={(e) => setRoadExpenses(e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="hotelExpenses">Hotel Expenses ($)</Label>
+          <Input
+            id="hotelExpenses"
+            type="number"
+            step="0.01"
+            min="0"
+            value={hotelExpenses}
+            onChange={(e) => setHotelExpenses(e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="otherExpenses">Other Expenses ($)</Label>
+          <Input
+            id="otherExpenses"
+            type="number"
+            step="0.01"
+            min="0"
+            value={otherExpenses}
+            onChange={(e) => setOtherExpenses(e.target.value)}
+            placeholder="0.00"
           />
         </div>
       </div>
