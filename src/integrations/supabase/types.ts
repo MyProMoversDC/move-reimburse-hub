@@ -136,6 +136,81 @@ export type Database = {
         }
         Relationships: []
       }
+      review_bonuses: {
+        Row: {
+          client_full_name: string
+          created_at: string
+          crew_member_1: string
+          crew_member_2: string
+          crew_member_3: string
+          crew_member_4: string | null
+          crew_member_5: string | null
+          crew_member_6: string | null
+          crew_member_7: string | null
+          crew_member_8: string | null
+          decline_reason: string | null
+          foreman_name: string
+          id: string
+          invoice_number: string
+          job_date: string
+          mover_id: string
+          review_month: string
+          review_url: string | null
+          reviewed_at: string | null
+          screenshot_url: string
+          status: Database["public"]["Enums"]["review_bonus_status"]
+          submission_date: string
+        }
+        Insert: {
+          client_full_name: string
+          created_at?: string
+          crew_member_1: string
+          crew_member_2: string
+          crew_member_3: string
+          crew_member_4?: string | null
+          crew_member_5?: string | null
+          crew_member_6?: string | null
+          crew_member_7?: string | null
+          crew_member_8?: string | null
+          decline_reason?: string | null
+          foreman_name: string
+          id?: string
+          invoice_number: string
+          job_date: string
+          mover_id: string
+          review_month: string
+          review_url?: string | null
+          reviewed_at?: string | null
+          screenshot_url: string
+          status?: Database["public"]["Enums"]["review_bonus_status"]
+          submission_date?: string
+        }
+        Update: {
+          client_full_name?: string
+          created_at?: string
+          crew_member_1?: string
+          crew_member_2?: string
+          crew_member_3?: string
+          crew_member_4?: string | null
+          crew_member_5?: string | null
+          crew_member_6?: string | null
+          crew_member_7?: string | null
+          crew_member_8?: string | null
+          decline_reason?: string | null
+          foreman_name?: string
+          id?: string
+          invoice_number?: string
+          job_date?: string
+          mover_id?: string
+          review_month?: string
+          review_url?: string | null
+          reviewed_at?: string | null
+          screenshot_url?: string
+          status?: Database["public"]["Enums"]["review_bonus_status"]
+          submission_date?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -181,6 +256,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "accountant" | "mover"
       reimbursement_status: "pending" | "confirmed" | "paid" | "declined"
+      review_bonus_status: "pending" | "confirmed" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -310,6 +386,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "accountant", "mover"],
       reimbursement_status: ["pending", "confirmed", "paid", "declined"],
+      review_bonus_status: ["pending", "confirmed", "declined"],
     },
   },
 } as const
