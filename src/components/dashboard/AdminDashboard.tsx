@@ -1,9 +1,10 @@
 import { useState } from "react";
 import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
+import AdminReviewBonusList from "./AdminReviewBonusList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download } from "lucide-react";
+import { Download, Star } from "lucide-react";
 import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -47,6 +48,10 @@ const AdminDashboard = () => {
       <Tabs defaultValue="requests" className="w-full">
         <TabsList>
           <TabsTrigger value="requests">{t.reimbursementRequests}</TabsTrigger>
+          <TabsTrigger value="reviews">
+            <Star className="h-4 w-4 mr-2" />
+            Review Bonuses
+          </TabsTrigger>
           <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
         </TabsList>
         
@@ -59,6 +64,11 @@ const AdminDashboard = () => {
             </Button>
           </div>
           <ReimbursementHistory refreshKey={refreshKey} userRole="admin" onUpdate={() => setRefreshKey((prev) => prev + 1)} language={language} />
+        </TabsContent>
+
+        <TabsContent value="reviews" className="space-y-6">
+          <h2 className="text-2xl font-bold">Review Bonus Submissions</h2>
+          <AdminReviewBonusList language={language} />
         </TabsContent>
         
         <TabsContent value="movers">
