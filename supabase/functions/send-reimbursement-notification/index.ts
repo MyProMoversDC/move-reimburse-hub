@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -8,20 +9,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ReimbursementEmailRequest {
-  reimbursementNumber: string;
-  moverFullName: string;
-  jobNumber: string;
-  truckNumber: string;
-  customerName: string;
-  gasExpenses: number;
-  roadExpenses: number;
-  hotelExpenses: number;
-  otherExpenses: number;
-  totalExpenses: number;
-  zelleInfo: string;
-  attachmentCount: number;
-}
+// Input validation schema
+const reimbursementEmailSchema = z.object({
+  reimbursementNumber: z.string().min(1).max(10),
+  moverFullName: z.string().min(1).max(200),
+  jobNumber: z.string().min(1).max(50),
+  truckNumber: z.string().min(1).max(50),
+  customerName: z.string().min(1).max(200),
+  gasExpenses: z.number().min(0).max(100000),
+  roadExpenses: z.number().min(0).max(100000),
+  hotelExpenses: z.number().min(0).max(100000),
+  otherExpenses: z.number().min(0).max(100000),
+  totalExpenses: z.number().min(0).max(500000),
+  zelleInfo: z.string().min(1).max(200),
+  attachmentCount: z.number().int().min(0).max(100),
+});
+
+// Sanitize string for HTML to prevent injection
+const sanitizeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -29,7 +41,27 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const data: ReimbursementEmailRequest = await req.json();
+    const rawData = await req.json();
+    
+    // Validate input
+    const validationResult = reimbursementEmailSchema.safeParse(rawData);
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error);
+      return new Response(
+        JSON.stringify({ error: "Invalid input data", details: validationResult.error.issues }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    const data = validationResult.data;
+
+    // Sanitize all user-provided content for HTML
+    const safeReimbursementNumber = sanitizeHtml(data.reimbursementNumber);
+    const safeMoverFullName = sanitizeHtml(data.moverFullName);
+    const safeJobNumber = sanitizeHtml(data.jobNumber);
+    const safeTruckNumber = sanitizeHtml(data.truckNumber);
+    const safeCustomerName = sanitizeHtml(data.customerName);
+    const safeZelleInfo = sanitizeHtml(data.zelleInfo);
 
     console.log("Sending reimbursement notification:", {
       reimbursementNumber: data.reimbursementNumber,
@@ -40,30 +72,30 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "MyProMovers Reimbursements <reimbursements@mypromoversreimbursements.com>",
       to: ["mark@mypromoversdc.com"],
-      subject: `New Reimbursement Request #${data.reimbursementNumber} - ${data.moverFullName}`,
+      subject: `New Reimbursement Request #${safeReimbursementNumber} - ${safeMoverFullName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">New Reimbursement Request</h1>
-          <p><strong>Reimbursement #:</strong> ${data.reimbursementNumber}</p>
+          <p><strong>Reimbursement #:</strong> ${safeReimbursementNumber}</p>
           <hr style="border: 1px solid #eee; margin: 20px 0;">
           
           <h2 style="color: #555;">Details</h2>
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Mover Name:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.moverFullName}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeMoverFullName}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Job #:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.jobNumber}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeJobNumber}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Truck #:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.truckNumber}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeTruckNumber}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Customer Name:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.customerName}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeCustomerName}</td>
             </tr>
           </table>
           
@@ -91,7 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
             </tr>
           </table>
           
-          <p style="margin-top: 20px;"><strong>Zelle Payment Info:</strong> ${data.zelleInfo}</p>
+          <p style="margin-top: 20px;"><strong>Zelle Payment Info:</strong> ${safeZelleInfo}</p>
           <p><strong>Attachments:</strong> ${data.attachmentCount} file(s)</p>
         </div>
       `,
