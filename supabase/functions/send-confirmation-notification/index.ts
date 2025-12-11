@@ -20,8 +20,6 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const data: ConfirmationEmailRequest = await req.json();
-    
-    const loginUrl = `${req.headers.get('origin')}/auth`;
 
     const emailResponse = await resend.emails.send({
       from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
@@ -32,12 +30,6 @@ const handler = async (req: Request): Promise<Response> => {
           <h1 style="color: #333;">Reimbursement Approved</h1>
           <p>Admin has approved reimbursement request <strong>#${data.reimbursementNumber}</strong></p>
           <p>Please process the payment and update the status in the accountant portal.</p>
-          
-          <div style="margin-top: 30px; text-align: center;">
-            <a href="${loginUrl}" style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Process Payment
-            </a>
-          </div>
           
           <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
             <p style="margin: 0;"><strong>Accountant Login:</strong></p>
