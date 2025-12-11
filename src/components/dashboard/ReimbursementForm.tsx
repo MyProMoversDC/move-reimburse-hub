@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
 import { z } from "zod";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { handleError, handleUploadError } from "@/lib/errorHandler";
 
 const reimbursementSchema = z.object({
   moverFullName: z.string().trim().min(1, "Mover full name is required").max(200),
@@ -20,6 +21,10 @@ const reimbursementSchema = z.object({
   hotelExpenses: z.number().min(0).optional(),
   otherExpenses: z.number().min(0).optional(),
 });
+
+// File validation constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 interface ReimbursementFormProps {
   userId: string;
@@ -42,15 +47,43 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const [otherExpenses, setOtherExpenses] = useState("");
   const [files, setFiles] = useState<File[]>([]);
 
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `File "${file.name}" is too large (max 5MB)`;
+    }
+    if (!VALID_FILE_TYPES.includes(file.type)) {
+      return `File "${file.name}" is not a valid image type. Please use JPEG, PNG, GIF, or WebP.`;
+    }
+    return null;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...newFiles]);
+      const validFiles: File[] = [];
+      
+      for (const file of newFiles) {
+        const error = validateFile(file);
+        if (error) {
+          toast.error(error);
+        } else {
+          validFiles.push(file);
+        }
+      }
+      
+      setFiles((prev) => [...prev, ...validFiles]);
     }
   };
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const sanitizeFilename = (filename: string): string => {
+    return filename
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/\.{2,}/g, '.')
+      .substring(0, 100);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +134,8 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
       // Upload files
       const uploadPromises = files.map(async (file) => {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${userId}/${reimbursement.id}/${Date.now()}.${fileExt}`;
+        const safeFilename = sanitizeFilename(file.name);
+        const fileName = `${userId}/${reimbursement.id}/${Date.now()}_${safeFilename}`;
 
         const { error: uploadError } = await supabase.storage
           .from("reimbursement-attachments")
@@ -142,11 +176,18 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
 
       toast.success(t.requestSubmitted);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        const msg = (error as { message: string }).message.toLowerCase();
+        if (msg.includes('storage') || msg.includes('upload') || msg.includes('file')) {
+          toast.error(handleUploadError(error));
+        } else {
+          toast.error(handleError(error));
+        }
       } else {
-        toast.error(error.message || "Failed to submit reimbursement");
+        toast.error(handleError(error));
       }
     } finally {
       setLoading(false);
@@ -275,12 +316,12 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="attachments">Attach Pictures *</Label>
+        <Label htmlFor="attachments">Attach Pictures * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
         <div className="flex items-center gap-2">
           <Input
             id="attachments"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/gif,image/webp"
             multiple
             onChange={handleFileChange}
             className="hidden"

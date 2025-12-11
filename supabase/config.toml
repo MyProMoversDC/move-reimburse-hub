@@ -1,10 +1,10 @@
 project_id = "qunbwlsgjrhayeqhgyce"
 
 [functions.send-reimbursement-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-confirmation-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-decline-notification]
-verify_jwt = false
+verify_jwt = true

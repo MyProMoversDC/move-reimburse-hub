@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -31,6 +32,44 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authorization check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verify user is admin
+    const { data: roleData, error: roleError } = await supabaseClient
+      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+
+    if (roleError || !roleData) {
+      console.error("Role check failed:", roleError);
+      return new Response(
+        JSON.stringify({ error: "Forbidden - Admin access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const rawData = await req.json();
     
     // Validate input
@@ -44,7 +83,25 @@ const handler = async (req: Request): Promise<Response> => {
     }
     
     const data = validationResult.data;
+
+    // Verify reimbursement exists
+    const { data: reimbursement, error: reimbursementError } = await supabaseClient
+      .from('reimbursements')
+      .select('id')
+      .eq('id', data.reimbursementId)
+      .single();
+
+    if (reimbursementError || !reimbursement) {
+      console.error("Reimbursement not found:", reimbursementError);
+      return new Response(
+        JSON.stringify({ error: "Reimbursement not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const safeReimbursementNumber = sanitizeHtml(data.reimbursementNumber);
+
+    console.log("Sending confirmation email for reimbursement:", data.reimbursementNumber, "by admin:", user.id);
 
     const emailResponse = await resend.emails.send({
       from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
@@ -67,7 +124,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending confirmation:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Failed to send notification" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

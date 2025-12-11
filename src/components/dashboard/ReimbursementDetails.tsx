@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle, DollarSign, XCircle, Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { handleError } from "@/lib/errorHandler";
 
 interface Reimbursement {
   id: string;
@@ -119,8 +120,8 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       toast.success(t.reimbursementConfirmed);
       onUpdate();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
     }
@@ -142,8 +143,8 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       toast.success(t.markedPaid);
       onUpdate();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
     }
@@ -189,8 +190,8 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       toast.success(t.reimbursementDeclined);
       onUpdate();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
       setShowDeclineDialog(false);
@@ -211,8 +212,8 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       toast.success(t.reimbursementDeleted);
       onUpdate();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
       setShowDeleteDialog(false);
