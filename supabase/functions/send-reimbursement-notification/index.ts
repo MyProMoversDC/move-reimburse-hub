@@ -30,8 +30,6 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const data: ReimbursementEmailRequest = await req.json();
-    
-    const loginUrl = `${req.headers.get('origin')}/auth`;
 
     console.log("Sending reimbursement notification:", {
       reimbursementNumber: data.reimbursementNumber,
@@ -95,12 +93,6 @@ const handler = async (req: Request): Promise<Response> => {
           
           <p style="margin-top: 20px;"><strong>Zelle Payment Info:</strong> ${data.zelleInfo}</p>
           <p><strong>Attachments:</strong> ${data.attachmentCount} file(s)</p>
-          
-          <div style="margin-top: 30px; text-align: center;">
-            <a href="${loginUrl}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Review in Portal
-            </a>
-          </div>
         </div>
       `,
     });
