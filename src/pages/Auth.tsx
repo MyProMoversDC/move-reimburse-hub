@@ -11,21 +11,8 @@ import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
 import { translations, Language } from "@/lib/translations";
+import { handleError } from "@/lib/errorHandler";
 import { Languages } from "lucide-react";
-
-const signupSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required").max(100),
-  lastName: z.string().trim().min(1, "Last name is required").max(100),
-  email: z.string().trim().email("Invalid email address").max(255),
-  username: z.string().trim().min(3, "Username must be at least 3 characters").max(50),
-  phone: z.string().trim().min(10, "Phone number must be at least 10 digits").max(20),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-const loginSchema = z.object({
-  identifier: z.string().trim().min(1, "Email or username is required"),
-  password: z.string().min(1, "Password is required"),
-});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -112,12 +99,8 @@ const Auth = () => {
       setUsername("");
       setPhone("");
       setPassword("");
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error(error.message);
-      }
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
     }
@@ -158,12 +141,8 @@ const Auth = () => {
       if (error) throw error;
       
       toast.success(t.loggedInSuccess);
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error(error.message);
-      }
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
     }
@@ -190,12 +169,8 @@ const Auth = () => {
       toast.success(t.resetLinkSent);
       setResetEmail("");
       setShowForgotPassword(false);
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      } else {
-        toast.error(error.message);
-      }
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
     }

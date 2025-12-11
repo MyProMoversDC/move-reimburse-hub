@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -41,6 +42,44 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authorization check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Verify user has mover role (any authenticated mover can submit their own reimbursement)
+    const { data: roleData, error: roleError } = await supabaseClient
+      .rpc('has_role', { _user_id: user.id, _role: 'mover' });
+
+    if (roleError || !roleData) {
+      console.error("Role check failed:", roleError);
+      return new Response(
+        JSON.stringify({ error: "Forbidden - Mover access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const rawData = await req.json();
     
     // Validate input
@@ -66,7 +105,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending reimbursement notification:", {
       reimbursementNumber: data.reimbursementNumber,
       moverFullName: data.moverFullName,
-      totalExpenses: data.totalExpenses
+      totalExpenses: data.totalExpenses,
+      userId: user.id
     });
 
     const emailResponse = await resend.emails.send({
@@ -137,7 +177,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending notification:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Failed to send notification" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

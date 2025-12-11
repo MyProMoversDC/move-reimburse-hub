@@ -10,6 +10,11 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusTranslations";
+import { handleError, handleUploadError } from "@/lib/errorHandler";
+
+// File validation constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 interface ReviewBonusFormProps {
   userId: string;
@@ -35,10 +40,34 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
     setCrewMembers(newCrewMembers);
   };
 
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `File is too large (max 5MB)`;
+    }
+    if (!VALID_FILE_TYPES.includes(file.type)) {
+      return `Invalid file type. Please use JPEG, PNG, GIF, or WebP.`;
+    }
+    return null;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setScreenshotFile(e.target.files[0]);
+      const file = e.target.files[0];
+      const error = validateFile(file);
+      if (error) {
+        toast.error(error);
+        e.target.value = '';
+        return;
+      }
+      setScreenshotFile(file);
     }
+  };
+
+  const sanitizeFilename = (filename: string): string => {
+    return filename
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/\.{2,}/g, '.')
+      .substring(0, 100);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +103,8 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
     try {
       // Upload screenshot
       const fileExt = screenshotFile.name.split(".").pop();
-      const fileName = `${userId}/${Date.now()}.${fileExt}`;
+      const safeFilename = sanitizeFilename(screenshotFile.name);
+      const fileName = `${userId}/${Date.now()}_${safeFilename}`;
 
       const { error: uploadError } = await supabase.storage
         .from("review-screenshots")
@@ -111,9 +141,18 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
 
       toast.success(t.successMessage);
       onSuccess();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error submitting review:", error);
-      toast.error(t.errorMessage);
+      if (error && typeof error === 'object' && 'message' in error) {
+        const msg = (error as { message: string }).message.toLowerCase();
+        if (msg.includes('storage') || msg.includes('upload') || msg.includes('file')) {
+          toast.error(handleUploadError(error));
+        } else {
+          toast.error(handleError(error));
+        }
+      } else {
+        toast.error(handleError(error));
+      }
     } finally {
       setLoading(false);
     }
@@ -213,11 +252,11 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
 
       {/* Screenshot Upload */}
       <div className="space-y-2">
-        <Label htmlFor="screenshot">{t.screenshotUpload} *</Label>
+        <Label htmlFor="screenshot">{t.screenshotUpload} * (Max 5MB, JPEG/PNG/GIF/WebP)</Label>
         <Input
           id="screenshot"
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/gif,image/webp"
           onChange={handleFileChange}
           required
         />

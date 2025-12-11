@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { handleError } from "@/lib/errorHandler";
 
 interface Mover {
   id: string;
@@ -75,8 +76,8 @@ const MoversList = ({ language }: MoversListProps) => {
         if (profilesError) throw profilesError;
 
         setMovers(profiles || []);
-      } catch (error: any) {
-        toast.error(error.message);
+      } catch (error: unknown) {
+        toast.error(handleError(error));
       } finally {
         setLoading(false);
       }
@@ -103,8 +104,8 @@ const MoversList = ({ language }: MoversListProps) => {
 
       toast.success(t.moverDeleted);
       setMovers(movers.filter((m) => m.id !== moverToDelete.id));
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     } finally {
       setDeletingId(null);
       setShowDeleteDialog(false);
