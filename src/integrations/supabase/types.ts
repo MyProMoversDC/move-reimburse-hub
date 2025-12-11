@@ -81,6 +81,7 @@ export type Database = {
           confirmed_at: string | null
           created_at: string | null
           customer_name: string
+          decline_reason: string | null
           gas_expenses: number | null
           hotel_expenses: number | null
           id: string
@@ -100,6 +101,7 @@ export type Database = {
           confirmed_at?: string | null
           created_at?: string | null
           customer_name: string
+          decline_reason?: string | null
           gas_expenses?: number | null
           hotel_expenses?: number | null
           id?: string
@@ -119,6 +121,7 @@ export type Database = {
           confirmed_at?: string | null
           created_at?: string | null
           customer_name?: string
+          decline_reason?: string | null
           gas_expenses?: number | null
           hotel_expenses?: number | null
           id?: string

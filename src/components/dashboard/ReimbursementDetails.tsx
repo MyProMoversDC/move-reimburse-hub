@@ -11,6 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle, DollarSign, XCircle, Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
@@ -19,6 +21,7 @@ interface Reimbursement {
   id: string;
   reimbursement_number: number;
   mover_full_name: string;
+  mover_id: string;
   job_number: string;
   truck_number: string;
   customer_name: string;
@@ -30,6 +33,7 @@ interface Reimbursement {
   zelle_info: string;
   status: string;
   created_at: string;
+  decline_reason?: string | null;
 }
 
 interface Attachment {
@@ -51,6 +55,7 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
   const [loading, setLoading] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
   
   const t = dashboardTranslations[language];
 
@@ -145,14 +150,41 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
   };
 
   const handleDecline = async () => {
+    if (!declineReason.trim()) {
+      toast.error(t.declineReasonRequired);
+      return;
+    }
+    
     setLoading(true);
     try {
       const { error } = await supabase
         .from("reimbursements")
-        .update({ status: "declined" })
+        .update({ 
+          status: "declined",
+          decline_reason: declineReason.trim()
+        })
         .eq("id", reimbursement.id);
 
       if (error) throw error;
+
+      // Get mover's email for notification
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", reimbursement.mover_id)
+        .maybeSingle();
+
+      if (profileData?.email) {
+        // Send decline notification email to mover
+        await supabase.functions.invoke("send-decline-notification", {
+          body: {
+            reimbursementNumber: String(reimbursement.reimbursement_number).padStart(5, "0"),
+            moverEmail: profileData.email,
+            moverName: reimbursement.mover_full_name,
+            declineReason: declineReason.trim(),
+          },
+        });
+      }
 
       toast.success(t.reimbursementDeclined);
       onUpdate();
@@ -162,6 +194,7 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
     } finally {
       setLoading(false);
       setShowDeclineDialog(false);
+      setDeclineReason("");
     }
   };
 
@@ -238,6 +271,13 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
         <p className="text-base">{reimbursement.zelle_info}</p>
       </div>
 
+      {reimbursement.status === "declined" && reimbursement.decline_reason && (
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+          <p className="text-sm font-medium text-destructive">{t.declineReasonLabel}</p>
+          <p className="text-base mt-1">{reimbursement.decline_reason}</p>
+        </div>
+      )}
+
       <div>
         <h3 className="text-lg font-semibold mb-3">Attachments ({attachments.length})</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -295,15 +335,29 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
         </Button>
       )}
 
-      <AlertDialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>
+      <AlertDialog open={showDeclineDialog} onOpenChange={(open) => {
+        setShowDeclineDialog(open);
+        if (!open) setDeclineReason("");
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t.declineReimbursement}</AlertDialogTitle>
             <AlertDialogDescription>{t.confirmDecline}</AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="declineReason">{t.declineReason} *</Label>
+            <Textarea
+              id="declineReason"
+              value={declineReason}
+              onChange={(e) => setDeclineReason(e.target.value)}
+              placeholder={t.declineReasonPlaceholder}
+              className="mt-2"
+              rows={4}
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{t.close}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDecline}>
+            <AlertDialogAction onClick={handleDecline} disabled={!declineReason.trim()}>
               {loading ? t.declining : t.declineReimbursement}
             </AlertDialogAction>
           </AlertDialogFooter>
