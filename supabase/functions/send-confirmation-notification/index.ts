@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -8,10 +9,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ConfirmationEmailRequest {
-  reimbursementNumber: string;
-  reimbursementId: string;
-}
+// Input validation schema
+const confirmationEmailSchema = z.object({
+  reimbursementNumber: z.string().min(1).max(10),
+  reimbursementId: z.string().uuid(),
+});
+
+// Sanitize string for HTML to prevent injection
+const sanitizeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -19,23 +31,30 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const data: ConfirmationEmailRequest = await req.json();
+    const rawData = await req.json();
+    
+    // Validate input
+    const validationResult = confirmationEmailSchema.safeParse(rawData);
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error);
+      return new Response(
+        JSON.stringify({ error: "Invalid input data", details: validationResult.error.issues }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    
+    const data = validationResult.data;
+    const safeReimbursementNumber = sanitizeHtml(data.reimbursementNumber);
 
     const emailResponse = await resend.emails.send({
       from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
       to: ["mark@mypromoversdc.com"],
-      subject: `Reimbursement Request #${data.reimbursementNumber} Approved`,
+      subject: `Reimbursement Request #${safeReimbursementNumber} Approved`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">Reimbursement Approved</h1>
-          <p>Admin has approved reimbursement request <strong>#${data.reimbursementNumber}</strong></p>
+          <p>Admin has approved reimbursement request <strong>#${safeReimbursementNumber}</strong></p>
           <p>Please process the payment and update the status in the accountant portal.</p>
-          
-          <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
-            <p style="margin: 0;"><strong>Accountant Login:</strong></p>
-            <p style="margin: 5px 0 0 0;">Username: accountingmpm</p>
-            <p style="margin: 5px 0 0 0;">Password: accrempm!@#2025</p>
-          </div>
         </div>
       `,
     });
