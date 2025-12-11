@@ -238,20 +238,6 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="totalReimbursement">Total Requested Reimbursement ($) *</Label>
-          <Input
-            id="totalReimbursement"
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={totalReimbursement}
-            onChange={(e) => setTotalReimbursement(e.target.value)}
-            placeholder="0.00"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="gasExpenses">Gas Expenses ($)</Label>
           <Input
             id="gasExpenses"
@@ -300,6 +286,20 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
             value={otherExpenses}
             onChange={(e) => setOtherExpenses(e.target.value)}
             placeholder="0.00"
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="totalReimbursement">Total Requested Reimbursement ($) *</Label>
+          <Input
+            id="totalReimbursement"
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={totalReimbursement}
+            onChange={(e) => setTotalReimbursement(e.target.value)}
+            placeholder="0.00"
+            required
           />
         </div>
       </div>
