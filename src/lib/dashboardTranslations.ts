@@ -92,6 +92,10 @@ export const dashboardTranslations = {
     declining: "Declining...",
     reimbursementDeclined: "Request declined",
     reimbursementDeleted: "Request deleted successfully",
+    declineReason: "Decline Reason",
+    declineReasonPlaceholder: "Please explain why this request is being declined...",
+    declineReasonRequired: "Please provide a reason for declining this request",
+    declineReasonLabel: "Reason for Decline",
   },
   es: {
     // Common
@@ -184,6 +188,10 @@ export const dashboardTranslations = {
     declining: "Rechazando...",
     reimbursementDeclined: "Solicitud rechazada",
     reimbursementDeleted: "Solicitud eliminada exitosamente",
+    declineReason: "Razón del Rechazo",
+    declineReasonPlaceholder: "Por favor explique por qué esta solicitud está siendo rechazada...",
+    declineReasonRequired: "Por favor proporcione una razón para rechazar esta solicitud",
+    declineReasonLabel: "Razón del Rechazo",
   },
   ru: {
     // Common
@@ -276,6 +284,10 @@ export const dashboardTranslations = {
     declining: "Отклонение...",
     reimbursementDeclined: "Запрос отклонен",
     reimbursementDeleted: "Запрос успешно удален",
+    declineReason: "Причина Отклонения",
+    declineReasonPlaceholder: "Пожалуйста, объясните почему этот запрос отклоняется...",
+    declineReasonRequired: "Пожалуйста, укажите причину отклонения этого запроса",
+    declineReasonLabel: "Причина Отклонения",
   },
 };
 

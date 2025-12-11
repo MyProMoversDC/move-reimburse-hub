@@ -19,6 +19,7 @@ interface Reimbursement {
   id: string;
   reimbursement_number: number;
   mover_full_name: string;
+  mover_id: string;
   job_number: string;
   truck_number: string;
   customer_name: string;
@@ -32,6 +33,7 @@ interface Reimbursement {
   created_at: string;
   confirmed_at: string | null;
   paid_at: string | null;
+  decline_reason?: string | null;
 }
 
 interface ReimbursementHistoryProps {
