@@ -88,6 +88,24 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       return;
     }
 
+    // Check for duplicate invoice number
+    const { data: existingInvoice, error: checkError } = await supabase
+      .from("review_bonuses")
+      .select("id")
+      .eq("invoice_number", invoiceNumber.trim())
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking invoice number:", checkError);
+      toast.error("Failed to validate invoice number. Please try again.");
+      return;
+    }
+
+    if (existingInvoice) {
+      toast.error("This invoice number has already been submitted. Each invoice number can only be used once.");
+      return;
+    }
+
     if (!crewMembers[0].trim() || !crewMembers[1].trim() || !crewMembers[2].trim()) {
       toast.error("First 3 crew members are required");
       return;
@@ -137,12 +155,25 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
           review_month: reviewMonth,
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        // Check if it's a unique constraint violation
+        if (insertError.code === '23505' || insertError.message?.includes('unique') || insertError.message?.includes('duplicate')) {
+          throw new Error('DUPLICATE_INVOICE');
+        }
+        throw insertError;
+      }
 
       toast.success(t.successMessage);
       onSuccess();
     } catch (error: unknown) {
       console.error("Error submitting review:", error);
+      
+      // Check for duplicate invoice error
+      if (error instanceof Error && error.message === 'DUPLICATE_INVOICE') {
+        toast.error("This invoice number has already been submitted. Each invoice number can only be used once.");
+        return;
+      }
+      
       if (error && typeof error === 'object' && 'message' in error) {
         const msg = (error as { message: string }).message.toLowerCase();
         if (msg.includes('storage') || msg.includes('upload') || msg.includes('file')) {
