@@ -14,6 +14,7 @@ import { Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReimbursementDetails from "./ReimbursementDetails";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { format } from "date-fns";
 
 interface Reimbursement {
   id: string;
@@ -42,9 +43,11 @@ interface ReimbursementHistoryProps {
   userRole: "mover" | "admin" | "accountant";
   onUpdate?: () => void;
   language: DashboardLanguage;
+  startDate?: Date;
+  endDate?: Date;
 }
 
-const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language }: ReimbursementHistoryProps) => {
+const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate }: ReimbursementHistoryProps) => {
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
@@ -53,7 +56,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
 
   useEffect(() => {
     fetchReimbursements();
-  }, [userId, refreshKey]);
+  }, [userId, refreshKey, startDate, endDate]);
 
   const fetchReimbursements = async () => {
     try {
@@ -68,6 +71,15 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
 
       if (userRole === "accountant") {
         query = query.in("status", ["confirmed", "paid"]);
+      }
+
+      if (startDate) {
+        query = query.gte("created_at", format(startDate, "yyyy-MM-dd"));
+      }
+      if (endDate) {
+        const endDatePlusOne = new Date(endDate);
+        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+        query = query.lt("created_at", format(endDatePlusOne, "yyyy-MM-dd"));
       }
 
       const { data, error } = await query;
