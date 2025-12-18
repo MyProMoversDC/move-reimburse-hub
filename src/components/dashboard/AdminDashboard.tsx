@@ -5,9 +5,10 @@ import AdminReviewBonusList from "./AdminReviewBonusList";
 import DateRangeFilter from "./DateRangeFilter";
 import ReimbursementReportingDashboard from "./ReimbursementReportingDashboard";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
+import UserRoleManager from "./UserRoleManager";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart } from "lucide-react";
+import { Download, Star, FileBarChart, UserCog } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,6 +118,10 @@ const AdminDashboard = () => {
             Review Reports
           </TabsTrigger>
           <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
+          <TabsTrigger value="roles">
+            <UserCog className="h-4 w-4 mr-2" />
+            Role Management
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="requests" className="space-y-6">
@@ -188,6 +193,11 @@ const AdminDashboard = () => {
         
         <TabsContent value="movers">
           <MoversList language={language} />
+        </TabsContent>
+
+        <TabsContent value="roles" className="space-y-6">
+          <h2 className="text-2xl font-bold">User Role Management</h2>
+          <UserRoleManager language={language} />
         </TabsContent>
       </Tabs>
     </div>
