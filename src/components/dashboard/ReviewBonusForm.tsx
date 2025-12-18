@@ -111,6 +111,11 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       return;
     }
 
+    if (!reviewUrl.trim()) {
+      toast.error("Review URL is required");
+      return;
+    }
+
     if (!screenshotFile) {
       toast.error(t.screenshotRequired);
       return;
@@ -150,7 +155,7 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
           crew_member_6: crewMembers[5].trim() || null,
           crew_member_7: crewMembers[6].trim() || null,
           crew_member_8: crewMembers[7].trim() || null,
-          review_url: reviewUrl.trim() || null,
+          review_url: reviewUrl.trim(),
           screenshot_url: screenshotUrl,
           review_month: reviewMonth,
         });
@@ -271,13 +276,14 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
 
       {/* Review URL */}
       <div className="space-y-2">
-        <Label htmlFor="reviewUrl">{t.reviewUrl}</Label>
+        <Label htmlFor="reviewUrl">{t.reviewUrl} *</Label>
         <Input
           id="reviewUrl"
           type="url"
           value={reviewUrl}
           onChange={(e) => setReviewUrl(e.target.value)}
           placeholder={t.reviewUrlPlaceholder}
+          required
         />
       </div>
 
