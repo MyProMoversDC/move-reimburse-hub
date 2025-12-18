@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import MoverDashboard from "@/components/dashboard/MoverDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import AccountantDashboard from "@/components/dashboard/AccountantDashboard";
+import OperationsManagerDashboard from "@/components/dashboard/OperationsManagerDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-type UserRole = "mover" | "admin" | "accountant";
+type UserRole = "mover" | "admin" | "accountant" | "operations_manager";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -46,11 +47,13 @@ const Dashboard = () => {
         .eq("user_id", session.user.id);
 
       if (roles && roles.length > 0) {
-        // Priority: admin > accountant > mover
+        // Priority: admin > accountant > operations_manager > mover
         if (roles.some((r) => r.role === "admin")) {
           setUserRole("admin");
         } else if (roles.some((r) => r.role === "accountant")) {
           setUserRole("accountant");
+        } else if (roles.some((r) => r.role === "operations_manager")) {
+          setUserRole("operations_manager");
         } else {
           setUserRole("mover");
         }
@@ -101,6 +104,7 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold">
                 {userRole === "admin" && "Admin Portal"}
                 {userRole === "accountant" && "Accountant Portal"}
+                {userRole === "operations_manager" && "Operations Manager Portal"}
                 {userRole === "mover" && "Mover Portal"}
               </h1>
               <p className="text-sm text-muted-foreground">{userName}</p>
@@ -117,6 +121,7 @@ const Dashboard = () => {
         {userRole === "mover" && <MoverDashboard userId={userId} />}
         {userRole === "admin" && <AdminDashboard />}
         {userRole === "accountant" && <AccountantDashboard />}
+        {userRole === "operations_manager" && <OperationsManagerDashboard />}
       </main>
     </div>
   );

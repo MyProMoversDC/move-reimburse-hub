@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      performance_reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          incident_category: string
+          incident_datetime: string
+          incident_description: string
+          severity_level: string
+          title: string
+          worker_name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          incident_category: string
+          incident_datetime: string
+          incident_description: string
+          severity_level: string
+          title: string
+          worker_name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          incident_category?: string
+          incident_datetime?: string
+          incident_description?: string
+          severity_level?: string
+          title?: string
+          worker_name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -257,7 +293,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "accountant" | "mover"
+      app_role: "admin" | "accountant" | "mover" | "operations_manager"
       reimbursement_status: "pending" | "confirmed" | "paid" | "declined"
       review_bonus_status: "pending" | "confirmed" | "declined"
     }
@@ -387,7 +423,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "accountant", "mover"],
+      app_role: ["admin", "accountant", "mover", "operations_manager"],
       reimbursement_status: ["pending", "confirmed", "paid", "declined"],
       review_bonus_status: ["pending", "confirmed", "declined"],
     },
