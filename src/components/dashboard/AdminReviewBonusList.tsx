@@ -13,6 +13,7 @@ import { Check, X } from "lucide-react";
 
 interface ReviewBonus {
   id: string;
+  mover_id: string;
   foreman_name: string;
   job_date: string;
   client_full_name: string;
@@ -138,6 +139,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
 
     setProcessingId(selectedReview.id);
     try {
+      // First update the status
       const { error } = await supabase
         .from("review_bonuses")
         .update({
@@ -148,6 +150,33 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
         .eq("id", selectedReview.id);
 
       if (error) throw error;
+
+      // Get mover's email from profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("email, first_name, last_name")
+        .eq("id", selectedReview.mover_id)
+        .single();
+
+      if (!profileError && profileData) {
+        // Send decline notification email
+        try {
+          await supabase.functions.invoke("send-review-decline-notification", {
+            body: {
+              invoiceNumber: selectedReview.invoice_number,
+              moverEmail: profileData.email,
+              moverName: `${profileData.first_name} ${profileData.last_name}`,
+              clientName: selectedReview.client_full_name,
+              declineReason: declineReason.trim(),
+            },
+          });
+          console.log("Decline notification email sent");
+        } catch (emailError) {
+          console.error("Failed to send decline notification email:", emailError);
+          // Don't fail the whole operation if email fails
+        }
+      }
+
       toast.success("Review declined");
       setShowDeclineDialog(false);
       setDeclineReason("");

@@ -3,9 +3,11 @@ import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
 import AdminReviewBonusList from "./AdminReviewBonusList";
 import DateRangeFilter from "./DateRangeFilter";
+import ReimbursementReportingDashboard from "./ReimbursementReportingDashboard";
+import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star } from "lucide-react";
+import { Download, Star, FileBarChart } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -100,11 +102,19 @@ const AdminDashboard = () => {
       </div>
       
       <Tabs defaultValue="requests" className="w-full">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="requests">{t.reimbursementRequests}</TabsTrigger>
           <TabsTrigger value="reviews">
             <Star className="h-4 w-4 mr-2" />
             Review Bonuses
+          </TabsTrigger>
+          <TabsTrigger value="reimbursement-reports">
+            <FileBarChart className="h-4 w-4 mr-2" />
+            Reimbursement Reports
+          </TabsTrigger>
+          <TabsTrigger value="review-reports">
+            <FileBarChart className="h-4 w-4 mr-2" />
+            Review Reports
           </TabsTrigger>
           <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
         </TabsList>
@@ -164,6 +174,16 @@ const AdminDashboard = () => {
             startDate={reviewStartDate}
             endDate={reviewEndDate}
           />
+        </TabsContent>
+
+        <TabsContent value="reimbursement-reports" className="space-y-6">
+          <h2 className="text-2xl font-bold">Reimbursement Reporting</h2>
+          <ReimbursementReportingDashboard language={language} />
+        </TabsContent>
+
+        <TabsContent value="review-reports" className="space-y-6">
+          <h2 className="text-2xl font-bold">Customer Review Reporting</h2>
+          <CustomerReviewReportingDashboard language={language} />
         </TabsContent>
         
         <TabsContent value="movers">
