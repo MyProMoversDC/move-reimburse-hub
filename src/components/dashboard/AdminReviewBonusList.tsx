@@ -35,9 +35,11 @@ interface ReviewBonus {
 
 interface AdminReviewBonusListProps {
   language: DashboardLanguage;
+  startDate?: Date;
+  endDate?: Date;
 }
 
-const AdminReviewBonusList = ({ language }: AdminReviewBonusListProps) => {
+const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonusListProps) => {
   const t = dashboardTranslations[language];
   
   const [reviews, setReviews] = useState<ReviewBonus[]>([]);
@@ -50,14 +52,25 @@ const AdminReviewBonusList = ({ language }: AdminReviewBonusListProps) => {
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [startDate, endDate]);
 
   const fetchReviews = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("review_bonuses")
         .select("*")
         .order("submission_date", { ascending: false });
+
+      if (startDate) {
+        query = query.gte("submission_date", format(startDate, "yyyy-MM-dd"));
+      }
+      if (endDate) {
+        const endDatePlusOne = new Date(endDate);
+        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+        query = query.lt("submission_date", format(endDatePlusOne, "yyyy-MM-dd"));
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setReviews(data || []);
