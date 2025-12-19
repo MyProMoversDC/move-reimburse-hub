@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.send-review-decline-notification]
 verify_jwt = true
+
+[functions.send-performance-report-notification]
+verify_jwt = true
