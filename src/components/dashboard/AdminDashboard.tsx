@@ -6,9 +6,10 @@ import DateRangeFilter from "./DateRangeFilter";
 import ReimbursementReportingDashboard from "./ReimbursementReportingDashboard";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
 import UserRoleManager from "./UserRoleManager";
+import PerformanceReportsList from "./PerformanceReportsList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart, UserCog } from "lucide-react";
+import { Download, Star, FileBarChart, UserCog, AlertTriangle } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,6 +118,10 @@ const AdminDashboard = () => {
             <FileBarChart className="h-4 w-4 mr-2" />
             Review Reports
           </TabsTrigger>
+          <TabsTrigger value="performance-reports">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Performance Reports
+          </TabsTrigger>
           <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
           <TabsTrigger value="roles">
             <UserCog className="h-4 w-4 mr-2" />
@@ -189,6 +194,11 @@ const AdminDashboard = () => {
         <TabsContent value="review-reports" className="space-y-6">
           <h2 className="text-2xl font-bold">Customer Review Reporting</h2>
           <CustomerReviewReportingDashboard language={language} />
+        </TabsContent>
+        
+        <TabsContent value="performance-reports" className="space-y-6">
+          <h2 className="text-2xl font-bold">Performance / Misconduct Reports</h2>
+          <PerformanceReportsList refreshKey={refreshKey} onRefresh={() => setRefreshKey((prev) => prev + 1)} userRole="admin" />
         </TabsContent>
         
         <TabsContent value="movers">

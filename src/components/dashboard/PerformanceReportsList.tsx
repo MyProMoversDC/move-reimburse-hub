@@ -33,6 +33,7 @@ interface PerformanceReport {
 interface PerformanceReportsListProps {
   refreshKey: number;
   onRefresh: () => void;
+  userRole?: 'admin' | 'operations_manager';
 }
 
 const severityColors: Record<string, string> = {
@@ -42,7 +43,7 @@ const severityColors: Record<string, string> = {
   Critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-const PerformanceReportsList = ({ refreshKey, onRefresh }: PerformanceReportsListProps) => {
+const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_manager' }: PerformanceReportsListProps) => {
   const [reports, setReports] = useState<PerformanceReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -100,10 +101,12 @@ const PerformanceReportsList = ({ refreshKey, onRefresh }: PerformanceReportsLis
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Performance / Misconduct Reports</CardTitle>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create New Report
-        </Button>
+        {userRole === 'operations_manager' && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create New Report
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <Table>
