@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload, X, Image } from "lucide-react";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 
@@ -21,10 +21,17 @@ interface PerformanceReportFormProps {
   onCancel: () => void;
 }
 
+interface AttachmentFile {
+  file: File;
+  preview: string;
+}
+
 const severityLevels = ["Low", "Medium", "High", "Critical"];
 
 const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormProps) => {
   const [submitting, setSubmitting] = useState(false);
+  const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: "",
     incident_datetime: "",
@@ -33,6 +40,42 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
     incident_description: "",
     severity_level: "",
   });
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newAttachments: AttachmentFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name} is not an image file`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 10MB)`);
+        continue;
+      }
+      newAttachments.push({
+        file,
+        preview: URL.createObjectURL(file),
+      });
+    }
+
+    setAttachments((prev) => [...prev, ...newAttachments]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => {
+      const newAttachments = [...prev];
+      URL.revokeObjectURL(newAttachments[index].preview);
+      newAttachments.splice(index, 1);
+      return newAttachments;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,17 +127,48 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
         ? `${profile.first_name} ${profile.last_name}`.trim() 
         : user.email || "Unknown";
 
-      const { error } = await supabase.from("performance_reports").insert({
-        title: formData.title.trim(),
-        incident_datetime: formData.incident_datetime,
-        worker_name: formData.worker_name.trim(),
-        incident_category: formData.incident_category.trim(),
-        incident_description: formData.incident_description.trim(),
-        severity_level: formData.severity_level,
-        created_by: user.id,
-      });
+      const { data: reportData, error } = await supabase
+        .from("performance_reports")
+        .insert({
+          title: formData.title.trim(),
+          incident_datetime: formData.incident_datetime,
+          worker_name: formData.worker_name.trim(),
+          incident_category: formData.incident_category.trim(),
+          incident_description: formData.incident_description.trim(),
+          severity_level: formData.severity_level,
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      // Upload attachments if any
+      if (attachments.length > 0 && reportData) {
+        for (const attachment of attachments) {
+          const fileExt = attachment.file.name.split(".").pop();
+          const fileName = `${reportData.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("performance-report-attachments")
+            .upload(fileName, attachment.file);
+
+          if (uploadError) {
+            console.error("Failed to upload attachment:", uploadError);
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from("performance-report-attachments")
+            .getPublicUrl(fileName);
+
+          await supabase.from("performance_report_attachments").insert({
+            report_id: reportData.id,
+            file_url: urlData.publicUrl,
+            file_name: attachment.file.name,
+          });
+        }
+      }
 
       // Send email notification
       try {
@@ -112,6 +186,9 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
         console.error("Failed to send notification:", notifyError);
         // Don't fail the submission if notification fails
       }
+
+      // Clean up previews
+      attachments.forEach((a) => URL.revokeObjectURL(a.preview));
 
       onSuccess();
     } catch (error: unknown) {
@@ -201,6 +278,61 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
               placeholder="Provide a detailed description of the incident..."
               rows={6}
             />
+          </div>
+
+          {/* Attachments Section */}
+          <div className="space-y-2">
+            <Label>Attachments (Optional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Upload images related to the incident (max 10MB per image)
+            </p>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full border-dashed"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Images
+            </Button>
+
+            {attachments.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                {attachments.map((attachment, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-square rounded-lg overflow-hidden border bg-muted">
+                      <img
+                        src={attachment.preview}
+                        alt={attachment.file.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeAttachment(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {attachment.file.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4">
