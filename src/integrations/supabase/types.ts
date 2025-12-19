@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      performance_report_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_url: string
+          id: string
+          report_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          report_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_report_attachments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "performance_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_reports: {
         Row: {
           created_at: string
