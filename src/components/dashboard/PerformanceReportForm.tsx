@@ -28,6 +28,24 @@ interface AttachmentFile {
 
 const severityLevels = ["Low", "Medium", "High", "Critical"];
 
+const incidentCategories = [
+  "Late for job",
+  "No Uniform",
+  "Declined a job",
+  "Incomplete Uniform",
+  "Refused Long-Distance Job",
+  "Time-off Request <72 hours",
+  "Customer Unhappy / Compliant",
+  "Negative feedback from coworkers/staff/contractors",
+  "No tools/Missing tools",
+  "Refused Skill Learning (TV Mount, W/D install, safe anchoring/bolting, English comms, etc.)",
+  "Paperwork Incomplete (BOL, addendum, storage agreement)",
+  "Pre-existing Damage Notes/Pictures Missing",
+  "Pre-trip Inspection not Submitted",
+  "Post-trip Inspection not Submitted",
+  "Other",
+];
+
 const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
@@ -241,12 +259,21 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
 
             <div className="space-y-2">
               <Label htmlFor="incident_category">Incident Category *</Label>
-              <Input
-                id="incident_category"
+              <Select
                 value={formData.incident_category}
-                onChange={(e) => setFormData({ ...formData, incident_category: e.target.value })}
-                placeholder="e.g., Safety Violation, Misconduct, Performance Issue"
-              />
+                onValueChange={(value) => setFormData({ ...formData, incident_category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select incident category" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover max-h-[300px]">
+                  {incidentCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
