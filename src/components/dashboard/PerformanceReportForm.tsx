@@ -73,6 +73,17 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
         return;
       }
 
+      // Get user profile for submitter name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+
+      const submitterName = profile 
+        ? `${profile.first_name} ${profile.last_name}`.trim() 
+        : user.email || "Unknown";
+
       const { error } = await supabase.from("performance_reports").insert({
         title: formData.title.trim(),
         incident_datetime: formData.incident_datetime,
@@ -84,6 +95,23 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
       });
 
       if (error) throw error;
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke("send-performance-report-notification", {
+          body: {
+            title: formData.title.trim(),
+            workerName: formData.worker_name.trim(),
+            incidentCategory: formData.incident_category.trim(),
+            severityLevel: formData.severity_level,
+            incidentDatetime: formData.incident_datetime,
+            submittedBy: submitterName,
+          },
+        });
+      } catch (notifyError) {
+        console.error("Failed to send notification:", notifyError);
+        // Don't fail the submission if notification fails
+      }
 
       onSuccess();
     } catch (error: unknown) {
