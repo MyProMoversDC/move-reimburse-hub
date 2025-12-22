@@ -10,11 +10,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusTranslations";
-import { handleError, handleUploadError } from "@/lib/errorHandler";
-
-// File validation constants
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+import { handleError } from "@/lib/errorHandler";
 
 interface ReviewBonusFormProps {
   userId: string;
@@ -32,42 +28,11 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [crewMembers, setCrewMembers] = useState<string[]>(["", "", "", "", "", "", "", ""]);
   const [reviewUrl, setReviewUrl] = useState("");
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
 
   const handleCrewMemberChange = (index: number, value: string) => {
     const newCrewMembers = [...crewMembers];
     newCrewMembers[index] = value;
     setCrewMembers(newCrewMembers);
-  };
-
-  const validateFile = (file: File): string | null => {
-    if (file.size > MAX_FILE_SIZE) {
-      return `File is too large (max 5MB)`;
-    }
-    if (!VALID_FILE_TYPES.includes(file.type)) {
-      return `Invalid file type. Please use JPEG, PNG, GIF, or WebP.`;
-    }
-    return null;
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const error = validateFile(file);
-      if (error) {
-        toast.error(error);
-        e.target.value = '';
-        return;
-      }
-      setScreenshotFile(file);
-    }
-  };
-
-  const sanitizeFilename = (filename: string): string => {
-    return filename
-      .replace(/[^a-zA-Z0-9.-]/g, '_')
-      .replace(/\.{2,}/g, '.')
-      .substring(0, 100);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,8 +71,9 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       return;
     }
 
-    if (!crewMembers[0].trim() || !crewMembers[1].trim() || !crewMembers[2].trim()) {
-      toast.error("First 3 crew members are required");
+    // Only first 2 crew members are required
+    if (!crewMembers[0].trim() || !crewMembers[1].trim()) {
+      toast.error("First 2 crew members are required");
       return;
     }
 
@@ -116,29 +82,12 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       return;
     }
 
-    if (!screenshotFile) {
-      toast.error(t.screenshotRequired);
-      return;
-    }
-
     setLoading(true);
 
     try {
-      // Upload screenshot
-      const fileExt = screenshotFile.name.split(".").pop();
-      const safeFilename = sanitizeFilename(screenshotFile.name);
-      const fileName = `${userId}/${Date.now()}_${safeFilename}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("review-screenshots")
-        .upload(fileName, screenshotFile);
-
-      if (uploadError) throw uploadError;
-
-      const screenshotUrl = `review-screenshots/${fileName}`;
       const reviewMonth = format(jobDate, "yyyy-MM");
 
-      // Insert review bonus record
+      // Insert review bonus record with placeholder screenshot URL
       const { error: insertError } = await supabase
         .from("review_bonuses")
         .insert({
@@ -149,14 +98,14 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
           invoice_number: invoiceNumber.trim(),
           crew_member_1: crewMembers[0].trim(),
           crew_member_2: crewMembers[1].trim(),
-          crew_member_3: crewMembers[2].trim(),
+          crew_member_3: crewMembers[2].trim() || null,
           crew_member_4: crewMembers[3].trim() || null,
           crew_member_5: crewMembers[4].trim() || null,
           crew_member_6: crewMembers[5].trim() || null,
           crew_member_7: crewMembers[6].trim() || null,
           crew_member_8: crewMembers[7].trim() || null,
           review_url: reviewUrl.trim(),
-          screenshot_url: screenshotUrl,
+          screenshot_url: "no-screenshot",
           review_month: reviewMonth,
         });
 
@@ -179,16 +128,7 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
         return;
       }
       
-      if (error && typeof error === 'object' && 'message' in error) {
-        const msg = (error as { message: string }).message.toLowerCase();
-        if (msg.includes('storage') || msg.includes('upload') || msg.includes('file')) {
-          toast.error(handleUploadError(error));
-        } else {
-          toast.error(handleError(error));
-        }
-      } else {
-        toast.error(handleError(error));
-      }
+      toast.error(handleError(error));
     } finally {
       setLoading(false);
     }
@@ -261,13 +201,13 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
           {crewMembers.map((member, index) => (
             <div key={index} className="space-y-1">
               <Label htmlFor={`crew-${index}`} className="text-sm text-muted-foreground">
-                {t.crewMember} {index + 1} {index < 3 ? t.required : t.optional}
+                {t.crewMember} {index + 1} {index < 2 ? t.required : t.optional}
               </Label>
               <Input
                 id={`crew-${index}`}
                 value={member}
                 onChange={(e) => handleCrewMemberChange(index, e.target.value)}
-                required={index < 3}
+                required={index < 2}
               />
             </div>
           ))}
@@ -285,21 +225,6 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
           placeholder={t.reviewUrlPlaceholder}
           required
         />
-      </div>
-
-      {/* Screenshot Upload */}
-      <div className="space-y-2">
-        <Label htmlFor="screenshot">{t.screenshotUpload} * (Max 5MB, JPEG/PNG/GIF/WebP)</Label>
-        <Input
-          id="screenshot"
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          onChange={handleFileChange}
-          required
-        />
-        {screenshotFile && (
-          <p className="text-sm text-muted-foreground">{screenshotFile.name}</p>
-        )}
       </div>
 
       <Button type="submit" disabled={loading} className="w-full">
