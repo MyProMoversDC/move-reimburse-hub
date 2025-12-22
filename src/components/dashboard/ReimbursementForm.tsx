@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Upload, X } from "lucide-react";
 import { z } from "zod";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
-import { handleError, handleUploadError } from "@/lib/errorHandler";
+import { handleError } from "@/lib/errorHandler";
 
 const reimbursementSchema = z.object({
   moverFullName: z.string().trim().min(1, "Mover full name is required").max(200),
@@ -21,10 +20,6 @@ const reimbursementSchema = z.object({
   hotelExpenses: z.number().min(0).optional(),
   otherExpenses: z.number().min(0).optional(),
 });
-
-// File validation constants
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 interface ReimbursementFormProps {
   userId: string;
@@ -45,54 +40,9 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const [roadExpenses, setRoadExpenses] = useState("");
   const [hotelExpenses, setHotelExpenses] = useState("");
   const [otherExpenses, setOtherExpenses] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-
-  const validateFile = (file: File): string | null => {
-    if (file.size > MAX_FILE_SIZE) {
-      return `File "${file.name}" is too large (max 5MB)`;
-    }
-    if (!VALID_FILE_TYPES.includes(file.type)) {
-      return `File "${file.name}" is not a valid image type. Please use JPEG, PNG, GIF, or WebP.`;
-    }
-    return null;
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      const validFiles: File[] = [];
-      
-      for (const file of newFiles) {
-        const error = validateFile(file);
-        if (error) {
-          toast.error(error);
-        } else {
-          validFiles.push(file);
-        }
-      }
-      
-      setFiles((prev) => [...prev, ...validFiles]);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const sanitizeFilename = (filename: string): string => {
-    return filename
-      .replace(/[^a-zA-Z0-9.-]/g, '_')
-      .replace(/\.{2,}/g, '.')
-      .substring(0, 100);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (files.length === 0) {
-      toast.error("Please attach at least one picture");
-      return;
-    }
 
     try {
       const validated = reimbursementSchema.parse({
@@ -131,31 +81,6 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
 
       if (reimbursementError) throw reimbursementError;
 
-      // Upload files
-      const uploadPromises = files.map(async (file) => {
-        const fileExt = file.name.split(".").pop();
-        const safeFilename = sanitizeFilename(file.name);
-        const fileName = `${userId}/${reimbursement.id}/${Date.now()}_${safeFilename}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("reimbursement-attachments")
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("reimbursement-attachments")
-          .getPublicUrl(fileName);
-
-        return supabase.from("reimbursement_attachments").insert({
-          reimbursement_id: reimbursement.id,
-          file_url: publicUrl,
-          file_name: file.name,
-        });
-      });
-
-      await Promise.all(uploadPromises);
-
       // Send notification email
       await supabase.functions.invoke("send-reimbursement-notification", {
         body: {
@@ -170,7 +95,6 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           otherExpenses: validated.otherExpenses || 0,
           totalExpenses: validated.totalReimbursement,
           zelleInfo: validated.zelleInfo,
-          attachmentCount: files.length,
         },
       });
 
@@ -179,13 +103,6 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
-      } else if (error && typeof error === 'object' && 'message' in error) {
-        const msg = (error as { message: string }).message.toLowerCase();
-        if (msg.includes('storage') || msg.includes('upload') || msg.includes('file')) {
-          toast.error(handleUploadError(error));
-        } else {
-          toast.error(handleError(error));
-        }
       } else {
         toast.error(handleError(error));
       }
@@ -313,52 +230,6 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           placeholder="email@example.com or phone number"
           required
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="attachments">Attach Pictures * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            id="attachments"
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById("attachments")?.click()}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Select Files
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {files.length} file(s) selected
-          </span>
-        </div>
-
-        {files.length > 0 && (
-          <div className="space-y-2 mt-2">
-            {files.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 bg-muted rounded"
-              >
-                <span className="text-sm truncate">{file.name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFile(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>

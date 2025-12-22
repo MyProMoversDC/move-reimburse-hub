@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.send-performance-report-notification]
 verify_jwt = true
+
+[functions.send-mover-approval-notification]
+verify_jwt = true
+
+[functions.send-appeal-notification]
+verify_jwt = true
