@@ -36,13 +36,22 @@ interface UserRoleManagerProps {
   language: DashboardLanguage;
 }
 
-const availableRoles = ["mover", "admin", "accountant", "operations_manager"] as const;
+const availableRoles = ["mover", "admin", "accountant", "operations_manager", "reviews_admin"] as const;
 
 const roleColors: Record<string, string> = {
   mover: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
   admin: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
   accountant: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   operations_manager: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  reviews_admin: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
+};
+
+const roleDisplayNames: Record<string, string> = {
+  mover: "Mover",
+  admin: "Admin",
+  accountant: "Accountant",
+  operations_manager: "Operations Manager",
+  reviews_admin: "Customer Review Manager",
 };
 
 const UserRoleManager = ({ language }: UserRoleManagerProps) => {
@@ -189,7 +198,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
                             className={`${roleColors[role] || ""} cursor-pointer group`}
                             onClick={() => handleRemoveRole(user.id, role)}
                           >
-                            {role.replace("_", " ")}
+                            {roleDisplayNames[role] || role.replace("_", " ")}
                             {removingRole?.userId === user.id && removingRole?.role === role ? (
                               <span className="ml-1">...</span>
                             ) : (
@@ -216,7 +225,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
                             .filter((role) => !user.roles.includes(role))
                             .map((role) => (
                               <SelectItem key={role} value={role}>
-                                {role.replace("_", " ")}
+                                {roleDisplayNames[role] || role.replace("_", " ")}
                               </SelectItem>
                             ))}
                         </SelectContent>
