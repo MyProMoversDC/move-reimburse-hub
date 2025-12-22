@@ -6,7 +6,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
-import { handleError } from "@/lib/errorHandler";
+import { handleError, handleUploadError } from "@/lib/errorHandler";
+
+// File validation constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 const reimbursementSchema = z.object({
   moverFullName: z.string().trim().min(1, "Mover full name is required").max(200),
@@ -40,9 +44,48 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const [roadExpenses, setRoadExpenses] = useState("");
   const [hotelExpenses, setHotelExpenses] = useState("");
   const [otherExpenses, setOtherExpenses] = useState("");
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `File "${file.name}" is too large (max 5MB)`;
+    }
+    if (!VALID_FILE_TYPES.includes(file.type)) {
+      return `File "${file.name}" has invalid type. Please use JPEG, PNG, GIF, or WebP.`;
+    }
+    return null;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      for (const file of files) {
+        const error = validateFile(file);
+        if (error) {
+          toast.error(error);
+          e.target.value = '';
+          return;
+        }
+      }
+      setAttachmentFiles(files);
+    }
+  };
+
+  const sanitizeFilename = (filename: string): string => {
+    return filename
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/\.{2,}/g, '.')
+      .substring(0, 100);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate attachments are provided
+    if (attachmentFiles.length === 0) {
+      toast.error("Please attach at least one receipt image");
+      return;
+    }
 
     try {
       const validated = reimbursementSchema.parse({
@@ -81,6 +124,29 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
 
       if (reimbursementError) throw reimbursementError;
 
+      // Upload attachments
+      for (const file of attachmentFiles) {
+        const safeFilename = sanitizeFilename(file.name);
+        const fileName = `${userId}/${reimbursement.id}/${Date.now()}_${safeFilename}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("reimbursement-attachments")
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // Save attachment record
+        const { error: attachmentError } = await supabase
+          .from("reimbursement_attachments")
+          .insert({
+            reimbursement_id: reimbursement.id,
+            file_url: `reimbursement-attachments/${fileName}`,
+            file_name: file.name,
+          });
+
+        if (attachmentError) throw attachmentError;
+      }
+
       // Send notification email
       await supabase.functions.invoke("send-reimbursement-notification", {
         body: {
@@ -103,6 +169,13 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        const msg = (error as { message: string }).message.toLowerCase();
+        if (msg.includes('storage') || msg.includes('upload') || msg.includes('file')) {
+          toast.error(handleUploadError(error));
+        } else {
+          toast.error(handleError(error));
+        }
       } else {
         toast.error(handleError(error));
       }
@@ -230,6 +303,24 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           placeholder="email@example.com or phone number"
           required
         />
+      </div>
+
+      {/* Receipt Attachments */}
+      <div className="space-y-2">
+        <Label htmlFor="attachments">Receipt Images * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
+        <Input
+          id="attachments"
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          multiple
+          onChange={handleFileChange}
+          required
+        />
+        {attachmentFiles.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {attachmentFiles.length} file(s) selected: {attachmentFiles.map(f => f.name).join(", ")}
+          </p>
+        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
