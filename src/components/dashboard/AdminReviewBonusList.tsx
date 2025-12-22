@@ -93,6 +93,8 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
         return <Badge className="bg-green-500">Confirmed</Badge>;
       case "declined":
         return <Badge variant="destructive">Declined</Badge>;
+      case "appeal":
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">Under Appeal</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -111,7 +113,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
     }
   };
 
-  const handleConfirm = async (reviewId: string) => {
+  const handleConfirm = async (reviewId: string, moverId: string, invoiceNumber: string) => {
     setProcessingId(reviewId);
     try {
       const { error } = await supabase
@@ -123,6 +125,26 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
         .eq("id", reviewId);
 
       if (error) throw error;
+
+      // Get mover's email for approval notification
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email, first_name, last_name")
+        .eq("id", moverId)
+        .maybeSingle();
+
+      if (profileData?.email) {
+        // Send approval notification to mover
+        await supabase.functions.invoke("send-mover-approval-notification", {
+          body: {
+            type: "review_approved",
+            moverEmail: profileData.email,
+            moverName: `${profileData.first_name} ${profileData.last_name}`,
+            invoiceNumber: invoiceNumber,
+          },
+        });
+      }
+
       toast.success("Review confirmed successfully");
       fetchReviews();
       setSelectedReview(null);
@@ -240,11 +262,11 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                 <Button variant="outline" onClick={() => handleViewDetails(review)}>
                   View Details
                 </Button>
-                {review.status === "pending" && (
+                {(review.status === "pending" || review.status === "appeal") && (
                   <>
                     <Button
                       size="sm"
-                      onClick={() => handleConfirm(review.id)}
+                      onClick={() => handleConfirm(review.id, review.mover_id, review.invoice_number)}
                       disabled={processingId === review.id}
                       className="bg-green-500 hover:bg-green-600"
                     >
@@ -329,6 +351,18 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                 </div>
               )}
 
+              {selectedReview.appeal_note && (
+                <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-orange-700">Appeal Note</p>
+                  <p className="mt-1">{selectedReview.appeal_note}</p>
+                  {selectedReview.appeal_at && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Appealed on: {format(new Date(selectedReview.appeal_at), "MM/dd/yyyy HH:mm")}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {screenshotUrl && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Review Screenshot</p>
@@ -337,10 +371,10 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
               )}
 
               <div className="flex gap-2">
-                {selectedReview.status === "pending" && (
+                {(selectedReview.status === "pending" || selectedReview.status === "appeal") && (
                   <>
                     <Button
-                      onClick={() => handleConfirm(selectedReview.id)}
+                      onClick={() => handleConfirm(selectedReview.id, selectedReview.mover_id, selectedReview.invoice_number)}
                       disabled={processingId === selectedReview.id}
                       className="flex-1 bg-green-500 hover:bg-green-600"
                     >
@@ -356,7 +390,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                     </Button>
                   </>
                 )}
-                <Button variant="outline" onClick={() => setSelectedReview(null)} className={selectedReview.status === "pending" ? "" : "w-full"}>
+                <Button variant="outline" onClick={() => setSelectedReview(null)} className={(selectedReview.status === "pending" || selectedReview.status === "appeal") ? "" : "w-full"}>
                   Close
                 </Button>
               </div>

@@ -12,16 +12,16 @@ import { toast } from "sonner";
 interface AppealFormProps {
   type: "reimbursement" | "review";
   itemId: string;
-  referenceNumber: string;
-  moverName: string;
+  itemNumber: string;
+  declineReason: string;
   onSuccess: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
-const AppealForm = ({ type, itemId, referenceNumber, moverName, onSuccess, onCancel }: AppealFormProps) => {
+const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClose }: AppealFormProps) => {
   const [appealNote, setAppealNote] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -148,12 +148,21 @@ const AppealForm = ({ type, itemId, referenceNumber, moverName, onSuccess, onCan
         }
       }
 
+      // Get mover info for notification
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const moverName = profileData ? `${profileData.first_name} ${profileData.last_name}` : "Unknown";
+
       // Send appeal notification to admins
       await supabase.functions.invoke("send-appeal-notification", {
         body: {
           type,
           moverName,
-          referenceNumber,
+          referenceNumber: itemNumber,
           appealNote: appealNote.trim(),
         },
       });
@@ -169,8 +178,16 @@ const AppealForm = ({ type, itemId, referenceNumber, moverName, onSuccess, onCan
   };
 
   return (
-    <Card className="p-6">
-      <Alert className="mb-6 border-blue-200 bg-blue-50">
+    <div className="space-y-6">
+      {declineReason && (
+        <Alert className="border-destructive/50 bg-destructive/10">
+          <AlertDescription className="text-destructive">
+            <strong>Reason for Decline:</strong> {declineReason}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Alert className="border-blue-200 bg-blue-50">
         <Info className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800">
           <strong>How Appeals Work:</strong>
@@ -247,12 +264,12 @@ const AppealForm = ({ type, itemId, referenceNumber, moverName, onSuccess, onCan
           <Button type="submit" disabled={loading} className="flex-1">
             {loading ? "Submitting..." : "Submit Appeal"}
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
         </div>
       </form>
-    </Card>
+    </div>
   );
 };
 
