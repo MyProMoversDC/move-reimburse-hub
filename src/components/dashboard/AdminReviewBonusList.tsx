@@ -28,7 +28,9 @@ interface ReviewBonus {
   crew_member_8: string | null;
   review_url: string | null;
   screenshot_url: string;
-  status: 'pending' | 'confirmed' | 'declined';
+  status: 'pending' | 'confirmed' | 'declined' | 'appeal';
+  appeal_note: string | null;
+  appeal_at: string | null;
   decline_reason: string | null;
   submission_date: string;
   review_month: string;
@@ -38,6 +40,7 @@ interface AdminReviewBonusListProps {
   language: DashboardLanguage;
   startDate?: Date;
   endDate?: Date;
+  userRole?: 'admin' | 'reviews_admin';
 }
 
 const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonusListProps) => {

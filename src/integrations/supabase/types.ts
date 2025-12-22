@@ -112,6 +112,38 @@ export type Database = {
         }
         Relationships: []
       }
+      reimbursement_appeal_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_url: string
+          id: string
+          reimbursement_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          reimbursement_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          reimbursement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reimbursement_appeal_attachments_reimbursement_id_fkey"
+            columns: ["reimbursement_id"]
+            isOneToOne: false
+            referencedRelation: "reimbursements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reimbursement_attachments: {
         Row: {
           created_at: string | null
@@ -146,6 +178,8 @@ export type Database = {
       }
       reimbursements: {
         Row: {
+          appeal_at: string | null
+          appeal_note: string | null
           confirmed_at: string | null
           created_at: string | null
           customer_name: string
@@ -166,6 +200,8 @@ export type Database = {
           zelle_info: string
         }
         Insert: {
+          appeal_at?: string | null
+          appeal_note?: string | null
           confirmed_at?: string | null
           created_at?: string | null
           customer_name: string
@@ -186,6 +222,8 @@ export type Database = {
           zelle_info: string
         }
         Update: {
+          appeal_at?: string | null
+          appeal_note?: string | null
           confirmed_at?: string | null
           created_at?: string | null
           customer_name?: string
@@ -207,8 +245,42 @@ export type Database = {
         }
         Relationships: []
       }
+      review_appeal_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_url: string
+          id: string
+          review_bonus_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          review_bonus_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          review_bonus_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_appeal_attachments_review_bonus_id_fkey"
+            columns: ["review_bonus_id"]
+            isOneToOne: false
+            referencedRelation: "review_bonuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_bonuses: {
         Row: {
+          appeal_at: string | null
+          appeal_note: string | null
           client_full_name: string
           created_at: string
           crew_member_1: string
@@ -233,6 +305,8 @@ export type Database = {
           submission_date: string
         }
         Insert: {
+          appeal_at?: string | null
+          appeal_note?: string | null
           client_full_name: string
           created_at?: string
           crew_member_1: string
@@ -257,6 +331,8 @@ export type Database = {
           submission_date?: string
         }
         Update: {
+          appeal_at?: string | null
+          appeal_note?: string | null
           client_full_name?: string
           created_at?: string
           crew_member_1?: string
@@ -325,9 +401,19 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "accountant" | "mover" | "operations_manager"
-      reimbursement_status: "pending" | "confirmed" | "paid" | "declined"
-      review_bonus_status: "pending" | "confirmed" | "declined"
+      app_role:
+        | "admin"
+        | "accountant"
+        | "mover"
+        | "operations_manager"
+        | "reviews_admin"
+      reimbursement_status:
+        | "pending"
+        | "confirmed"
+        | "paid"
+        | "declined"
+        | "appeal"
+      review_bonus_status: "pending" | "confirmed" | "declined" | "appeal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -455,9 +541,21 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "accountant", "mover", "operations_manager"],
-      reimbursement_status: ["pending", "confirmed", "paid", "declined"],
-      review_bonus_status: ["pending", "confirmed", "declined"],
+      app_role: [
+        "admin",
+        "accountant",
+        "mover",
+        "operations_manager",
+        "reviews_admin",
+      ],
+      reimbursement_status: [
+        "pending",
+        "confirmed",
+        "paid",
+        "declined",
+        "appeal",
+      ],
+      review_bonus_status: ["pending", "confirmed", "declined", "appeal"],
     },
   },
 } as const

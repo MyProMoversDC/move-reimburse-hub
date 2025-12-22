@@ -1,0 +1,110 @@
+import { useState } from "react";
+import AdminReviewBonusList from "./AdminReviewBonusList";
+import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
+import DateRangeFilter from "./DateRangeFilter";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Star, FileBarChart } from "lucide-react";
+import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { format } from "date-fns";
+
+const ReviewsAdminDashboard = () => {
+  const [exportingReviews, setExportingReviews] = useState(false);
+  const [language, setLanguage] = useState<DashboardLanguage>('en');
+  
+  const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
+  const [reviewEndDate, setReviewEndDate] = useState<Date | undefined>();
+  
+  const t = dashboardTranslations[language];
+
+  const handleExportReviews = async () => {
+    setExportingReviews(true);
+    try {
+      let query = supabase
+        .from("review_bonuses")
+        .select("*")
+        .order("submission_date", { ascending: false });
+
+      if (reviewStartDate) {
+        query = query.gte("submission_date", format(reviewStartDate, "yyyy-MM-dd"));
+      }
+      if (reviewEndDate) {
+        const endDatePlusOne = new Date(reviewEndDate);
+        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+        query = query.lt("submission_date", format(endDatePlusOne, "yyyy-MM-dd"));
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      if (data) {
+        exportReviewBonusesToExcel(data, "review-bonuses");
+        toast.success(t.exportComplete);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setExportingReviews(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <LanguageSelector language={language} onLanguageChange={setLanguage} />
+      </div>
+      
+      <Tabs defaultValue="reviews" className="w-full">
+        <TabsList>
+          <TabsTrigger value="reviews">
+            <Star className="h-4 w-4 mr-2" />
+            Review Submissions
+          </TabsTrigger>
+          <TabsTrigger value="reports">
+            <FileBarChart className="h-4 w-4 mr-2" />
+            Review Reports
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="reviews" className="space-y-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Customer Review Bonus Submissions</h2>
+              <Button onClick={handleExportReviews} disabled={exportingReviews}>
+                <Download className="h-4 w-4 mr-2" />
+                {exportingReviews ? t.exporting : t.exportToExcel}
+              </Button>
+            </div>
+            <DateRangeFilter
+              startDate={reviewStartDate}
+              endDate={reviewEndDate}
+              onStartDateChange={setReviewStartDate}
+              onEndDateChange={setReviewEndDate}
+              onClear={() => {
+                setReviewStartDate(undefined);
+                setReviewEndDate(undefined);
+              }}
+            />
+          </div>
+          <AdminReviewBonusList 
+            language={language} 
+            startDate={reviewStartDate}
+            endDate={reviewEndDate}
+          />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-6">
+          <h2 className="text-2xl font-bold">Customer Review Analytics</h2>
+          <CustomerReviewReportingDashboard language={language} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default ReviewsAdminDashboard;
