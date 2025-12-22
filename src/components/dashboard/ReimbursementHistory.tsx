@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReimbursementDetails from "./ReimbursementDetails";
+import AppealForm from "./AppealForm";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 
@@ -35,6 +36,8 @@ interface Reimbursement {
   confirmed_at: string | null;
   paid_at: string | null;
   decline_reason?: string | null;
+  appeal_note?: string | null;
+  appeal_at?: string | null;
 }
 
 interface ReimbursementHistoryProps {
@@ -51,6 +54,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
+  const [appealReimbursement, setAppealReimbursement] = useState<Reimbursement | null>(null);
   
   const t = dashboardTranslations[language];
 
@@ -94,16 +98,20 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive"> = {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       pending: "secondary",
       confirmed: "default",
       paid: "default",
+      declined: "destructive",
+      appeal: "outline",
     };
     
     const statusLabels: Record<string, string> = {
       pending: t.pending,
       confirmed: t.statusConfirmed,
       paid: t.paid,
+      declined: t.declined,
+      appeal: "Under Appeal",
     };
 
     return (
@@ -156,7 +164,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
                   <TableCell>{reimbursement.job_number}</TableCell>
                   <TableCell>${reimbursement.total_expenses.toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(reimbursement.status)}</TableCell>
-                  <TableCell>
+                  <TableCell className="space-x-1">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -164,6 +172,17 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {userRole === "mover" && reimbursement.status === "declined" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAppealReimbursement(reimbursement)}
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                      >
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        Appeal
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -189,6 +208,30 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
               }}
               onClose={() => setSelectedReimbursement(null)}
               language={language}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!appealReimbursement} onOpenChange={() => setAppealReimbursement(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Appeal Reimbursement #{appealReimbursement && String(appealReimbursement.reimbursement_number).padStart(5, "0")}
+            </DialogTitle>
+          </DialogHeader>
+          {appealReimbursement && (
+            <AppealForm
+              type="reimbursement"
+              itemId={appealReimbursement.id}
+              itemNumber={String(appealReimbursement.reimbursement_number).padStart(5, "0")}
+              declineReason={appealReimbursement.decline_reason || ""}
+              onSuccess={() => {
+                fetchReimbursements();
+                setAppealReimbursement(null);
+                if (onUpdate) onUpdate();
+              }}
+              onClose={() => setAppealReimbursement(null)}
             />
           )}
         </DialogContent>

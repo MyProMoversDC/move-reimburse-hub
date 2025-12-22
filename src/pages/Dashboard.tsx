@@ -5,12 +5,13 @@ import MoverDashboard from "@/components/dashboard/MoverDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import AccountantDashboard from "@/components/dashboard/AccountantDashboard";
 import OperationsManagerDashboard from "@/components/dashboard/OperationsManagerDashboard";
+import ReviewsAdminDashboard from "@/components/dashboard/ReviewsAdminDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-type UserRole = "mover" | "admin" | "accountant" | "operations_manager";
+type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -47,9 +48,11 @@ const Dashboard = () => {
         .eq("user_id", session.user.id);
 
       if (roles && roles.length > 0) {
-        // Priority: admin > accountant > operations_manager > mover
+        // Priority: admin > reviews_admin > accountant > operations_manager > mover
         if (roles.some((r) => r.role === "admin")) {
           setUserRole("admin");
+        } else if (roles.some((r) => r.role === "reviews_admin")) {
+          setUserRole("reviews_admin");
         } else if (roles.some((r) => r.role === "accountant")) {
           setUserRole("accountant");
         } else if (roles.some((r) => r.role === "operations_manager")) {
@@ -103,6 +106,7 @@ const Dashboard = () => {
             <div>
               <h1 className="text-xl font-bold">
                 {userRole === "admin" && "Admin Portal"}
+                {userRole === "reviews_admin" && "Reviews Admin Portal"}
                 {userRole === "accountant" && "Accountant Portal"}
                 {userRole === "operations_manager" && "Operations Manager Portal"}
                 {userRole === "mover" && "Mover Portal"}
@@ -120,6 +124,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         {userRole === "mover" && <MoverDashboard userId={userId} />}
         {userRole === "admin" && <AdminDashboard />}
+        {userRole === "reviews_admin" && <ReviewsAdminDashboard />}
         {userRole === "accountant" && <AccountantDashboard />}
         {userRole === "operations_manager" && <OperationsManagerDashboard />}
       </main>

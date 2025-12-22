@@ -35,6 +35,8 @@ interface Reimbursement {
   status: string;
   created_at: string;
   decline_reason?: string | null;
+  appeal_note?: string | null;
+  appeal_at?: string | null;
 }
 
 interface Attachment {
@@ -109,13 +111,33 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
 
       if (error) throw error;
 
-      // Send confirmation notification
+      // Send confirmation notification to admins
       await supabase.functions.invoke("send-confirmation-notification", {
         body: {
           reimbursementNumber: String(reimbursement.reimbursement_number).padStart(5, "0"),
           reimbursementId: reimbursement.id,
         },
       });
+
+      // Get mover's email for approval notification
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", reimbursement.mover_id)
+        .maybeSingle();
+
+      if (profileData?.email) {
+        // Send approval notification to mover
+        await supabase.functions.invoke("send-mover-approval-notification", {
+          body: {
+            type: "reimbursement_approved",
+            moverEmail: profileData.email,
+            moverName: reimbursement.mover_full_name,
+            reimbursementNumber: String(reimbursement.reimbursement_number).padStart(5, "0"),
+            amount: reimbursement.total_expenses,
+          },
+        });
+      }
 
       toast.success(t.reimbursementConfirmed);
       onUpdate();
@@ -139,6 +161,26 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
         .eq("id", reimbursement.id);
 
       if (error) throw error;
+
+      // Get mover's email for paid notification
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", reimbursement.mover_id)
+        .maybeSingle();
+
+      if (profileData?.email) {
+        // Send paid notification to mover
+        await supabase.functions.invoke("send-mover-approval-notification", {
+          body: {
+            type: "reimbursement_paid",
+            moverEmail: profileData.email,
+            moverName: reimbursement.mover_full_name,
+            reimbursementNumber: String(reimbursement.reimbursement_number).padStart(5, "0"),
+            amount: reimbursement.total_expenses,
+          },
+        });
+      }
 
       toast.success(t.markedPaid);
       onUpdate();

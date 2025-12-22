@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusTranslations";
+import { AlertCircle } from "lucide-react";
+import AppealForm from "./AppealForm";
 
 interface ReviewBonus {
   id: string;
@@ -42,6 +44,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
   const [reviews, setReviews] = useState<ReviewBonus[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState<ReviewBonus | null>(null);
+  const [appealReview, setAppealReview] = useState<ReviewBonus | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,6 +76,8 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
         return <Badge className="bg-green-500">{t.confirmed}</Badge>;
       case "declined":
         return <Badge variant="destructive">{t.declined}</Badge>;
+      case "appeal":
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">Under Appeal</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -138,9 +143,21 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                   </p>
                 )}
               </div>
-              <Button variant="outline" onClick={() => handleViewDetails(review)}>
-                {t.viewDetails}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleViewDetails(review)}>
+                  {t.viewDetails}
+                </Button>
+                {review.status === "declined" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setAppealReview(review)}
+                    className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                  >
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    Appeal
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
         ))}
@@ -208,6 +225,29 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 {t.close}
               </Button>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!appealReview} onOpenChange={() => setAppealReview(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Appeal Review Submission - {appealReview?.invoice_number}
+            </DialogTitle>
+          </DialogHeader>
+          {appealReview && (
+            <AppealForm
+              type="review"
+              itemId={appealReview.id}
+              itemNumber={appealReview.invoice_number}
+              declineReason={appealReview.decline_reason || ""}
+              onSuccess={() => {
+                fetchReviews();
+                setAppealReview(null);
+              }}
+              onClose={() => setAppealReview(null)}
+            />
           )}
         </DialogContent>
       </Dialog>
