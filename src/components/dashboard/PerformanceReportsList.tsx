@@ -11,12 +11,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { handleError } from "@/lib/errorHandler";
 import PerformanceReportForm from "./PerformanceReportForm";
 import PerformanceReportDetails from "./PerformanceReportDetails";
+import SendMoverEmailDialog from "./SendMoverEmailDialog";
 
 interface PerformanceReport {
   id: string;
@@ -48,6 +49,8 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedReport, setSelectedReport] = useState<PerformanceReport | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailReportTitle, setEmailReportTitle] = useState<string | undefined>();
 
   useEffect(() => {
     fetchReports();
@@ -73,6 +76,11 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
     setShowForm(false);
     onRefresh();
     toast.success("Report submitted successfully!");
+  };
+
+  const handleOpenEmailDialog = (reportTitle: string) => {
+    setEmailReportTitle(reportTitle);
+    setEmailDialogOpen(true);
   };
 
   if (loading) {
@@ -146,14 +154,26 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
                     {format(new Date(report.created_at), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedReport(report)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedReport(report)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                      {userRole === 'admin' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEmailDialog(report.title)}
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Email
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -161,6 +181,12 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
           </TableBody>
         </Table>
       </CardContent>
+
+      <SendMoverEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        reportTitle={emailReportTitle}
+      />
     </Card>
   );
 };
