@@ -42,6 +42,7 @@ const menuItems = [
   { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
   { id: "reimbursement-reports", label: "Reimbursement Reports", icon: FileBarChart },
   { id: "review-reports", label: "Review Reports", icon: FileBarChart },
+  { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
   { id: "performance-reports", label: "Performance Reports", icon: AlertTriangle },
   { id: "movers", label: "Movers Directory", icon: Users },
   { id: "roles", label: "Role Management", icon: UserCog },

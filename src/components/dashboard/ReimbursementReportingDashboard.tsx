@@ -5,10 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, AlertCircle } from "lucide-react";
 import DateRangeFilter from "./DateRangeFilter";
 import ColumnSelector from "./ColumnSelector";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
@@ -34,6 +35,7 @@ interface Reimbursement {
   total_expenses: number;
   zelle_info: string;
   status: string;
+  decline_reason: string | null;
   created_at: string;
 }
 
@@ -463,19 +465,29 @@ const ReimbursementReportingDashboard = ({ language }: ReimbursementReportingDas
                       <TableCell>{r.customer_name}</TableCell>
                       <TableCell className="text-right">${r.total_expenses.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            r.status === "paid"
-                              ? "default"
-                              : r.status === "confirmed"
-                              ? "secondary"
-                              : r.status === "declined"
-                              ? "destructive"
-                              : "outline"
-                          }
-                        >
-                          {r.status}
-                        </Badge>
+                        <div className="space-y-2">
+                          <Badge
+                            variant={
+                              r.status === "paid"
+                                ? "default"
+                                : r.status === "confirmed"
+                                ? "secondary"
+                                : r.status === "declined"
+                                ? "destructive"
+                                : "outline"
+                            }
+                          >
+                            {r.status}
+                          </Badge>
+                          {r.status === "declined" && r.decline_reason && (
+                            <Alert variant="destructive" className="mt-2">
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertDescription className="text-xs">
+                                <strong>Decline Reason:</strong> {r.decline_reason}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
