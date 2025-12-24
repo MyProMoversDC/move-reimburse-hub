@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
 import AdminReviewBonusList from "./AdminReviewBonusList";
+import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import DateRangeFilter from "./DateRangeFilter";
 import ReimbursementReportingDashboard from "./ReimbursementReportingDashboard";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
@@ -29,6 +30,7 @@ const AdminDashboard = () => {
     reimbursements: 0,
     reviews: 0,
     appeals: 0,
+    missingPayments: 0,
   });
   
   // Date filters for reimbursements
@@ -38,6 +40,10 @@ const AdminDashboard = () => {
   // Date filters for reviews
   const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
   const [reviewEndDate, setReviewEndDate] = useState<Date | undefined>();
+  
+  // Date filters for missing payments
+  const [missingPaymentStartDate, setMissingPaymentStartDate] = useState<Date | undefined>();
+  const [missingPaymentEndDate, setMissingPaymentEndDate] = useState<Date | undefined>();
   
   const t = dashboardTranslations[language];
 
@@ -67,10 +73,16 @@ const AdminDashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("status", "appeal");
 
+      const { count: missingPaymentCount } = await supabase
+        .from("missing_payments")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["pending", "appeal"]);
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
         appeals: (appealReimbCount || 0) + (appealReviewCount || 0),
+        missingPayments: missingPaymentCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
@@ -208,6 +220,31 @@ const AdminDashboard = () => {
               language={language} 
               startDate={reviewStartDate}
               endDate={reviewEndDate}
+            />
+          </div>
+        );
+      case "missing-payments":
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Missing Payment Submissions</h2>
+              </div>
+              <DateRangeFilter
+                startDate={missingPaymentStartDate}
+                endDate={missingPaymentEndDate}
+                onStartDateChange={setMissingPaymentStartDate}
+                onEndDateChange={setMissingPaymentEndDate}
+                onClear={() => {
+                  setMissingPaymentStartDate(undefined);
+                  setMissingPaymentEndDate(undefined);
+                }}
+              />
+            </div>
+            <AdminMissingPaymentList 
+              language={language} 
+              startDate={missingPaymentStartDate}
+              endDate={missingPaymentEndDate}
             />
           </div>
         );

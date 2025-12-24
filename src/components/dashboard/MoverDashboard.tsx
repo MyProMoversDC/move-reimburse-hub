@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, DollarSign } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
 import ReviewBonusHistory from "./ReviewBonusHistory";
+import MissingPaymentForm from "./MissingPaymentForm";
+import MissingPaymentHistory from "./MissingPaymentHistory";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
@@ -19,8 +21,10 @@ interface MoverDashboardProps {
 const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
+  const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   const [foremanName, setForemanName] = useState("");
   
@@ -53,6 +57,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setReviewRefreshKey((prev) => prev + 1);
   };
 
+  const handleMissingPaymentSuccess = () => {
+    setShowMissingPaymentForm(false);
+    setMissingPaymentRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -65,6 +74,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <TabsTrigger value="reviews">
             <Star className="h-4 w-4 mr-2" />
             {rt.formTitle}
+          </TabsTrigger>
+          <TabsTrigger value="missing-payments">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Missing Payments
           </TabsTrigger>
         </TabsList>
 
@@ -126,6 +139,34 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <div>
             <h2 className="text-2xl font-bold mb-4">{rt.reviewHistory}</h2>
             <ReviewBonusHistory userId={userId} refreshKey={reviewRefreshKey} language={language} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="missing-payments" className="space-y-6">
+          {!showMissingPaymentForm && (
+            <Card className="p-6">
+              <Button onClick={() => setShowMissingPaymentForm(true)} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Submit Missing Payment Request
+              </Button>
+            </Card>
+          )}
+
+          {showMissingPaymentForm && (
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Missing Payment Form</h2>
+                <Button variant="outline" onClick={() => setShowMissingPaymentForm(false)}>
+                  {t.close}
+                </Button>
+              </div>
+              <MissingPaymentForm userId={userId} onSuccess={handleMissingPaymentSuccess} language={language} />
+            </Card>
+          )}
+
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Missing Payment History</h2>
+            <MissingPaymentHistory userId={userId} refreshKey={missingPaymentRefreshKey} language={language} />
           </div>
         </TabsContent>
       </Tabs>
