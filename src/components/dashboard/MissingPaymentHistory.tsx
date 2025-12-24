@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
+import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { AlertCircle } from "lucide-react";
 import AppealForm from "./AppealForm";
 
@@ -18,7 +19,7 @@ interface MissingPayment {
   discrepancy_types: string[];
   discrepancy_details: string;
   missing_amount: string;
-  status: 'pending' | 'confirmed' | 'declined' | 'appeal';
+  status: "pending" | "confirmed" | "declined" | "appeal";
   decline_reason: string | null;
   appeal_note: string | null;
   appeal_at: string | null;
@@ -31,15 +32,17 @@ interface MissingPaymentHistoryProps {
   language: DashboardLanguage;
 }
 
-const discrepancyLabels: Record<string, string> = {
-  missing_hours: "Missing Hours",
-  incorrect_hourly_rate: "Incorrect Hourly Rate",
-  missing_tip: "Missing Tip",
-  missing_bonus: "Missing Bonus",
-  other: "Other",
-};
-
 const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentHistoryProps) => {
+  const t = missingPaymentTranslations[language];
+  
+  const discrepancyLabels: Record<string, string> = {
+    missing_hours: t.missingHours,
+    incorrect_hourly_rate: t.incorrectHourlyRate,
+    missing_tip: t.missingTip,
+    missing_bonus: t.missingBonus,
+    other: t.other,
+  };
+
   const [payments, setPayments] = useState<MissingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<MissingPayment | null>(null);
@@ -69,20 +72,16 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">{t.pending}</Badge>;
       case "confirmed":
-        return <Badge className="bg-green-500">Confirmed</Badge>;
+        return <Badge className="bg-green-500">{t.confirmed}</Badge>;
       case "declined":
-        return <Badge variant="destructive">Declined</Badge>;
+        return <Badge variant="destructive">{t.declined}</Badge>;
       case "appeal":
-        return <Badge variant="outline" className="border-orange-500 text-orange-600">Under Appeal</Badge>;
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">{t.underAppeal}</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
-  };
-
-  const getDiscrepancyLabels = (types: string[]) => {
-    return types.map((type) => discrepancyLabels[type] || type).join(", ");
   };
 
   if (loading) {
@@ -92,7 +91,7 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
   if (payments.length === 0) {
     return (
       <Card className="p-6">
-        <p className="text-center text-muted-foreground">No missing payment requests yet</p>
+        <p className="text-center text-muted-foreground">{t.noRequests}</p>
       </Card>
     );
   }
@@ -106,23 +105,23 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
               <div className="space-y-1">
                 <p className="font-medium">{payment.customer_name}</p>
                 <p className="text-sm text-muted-foreground">
-                  Job: {payment.job_number} | Date: {format(new Date(payment.discrepancy_date), "MM/dd/yyyy")}
+                  {t.jobNumber}: {payment.job_number} | {t.discrepancyDate}: {format(new Date(payment.discrepancy_date), "MM/dd/yyyy")}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Amount: {payment.missing_amount}
+                  {t.missingAmount}: {payment.missing_amount}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   {getStatusBadge(payment.status)}
                 </div>
                 {payment.status === "declined" && payment.decline_reason && (
                   <p className="text-sm text-destructive mt-2">
-                    <strong>Decline Reason:</strong> {payment.decline_reason}
+                    <strong>{t.declineReason}:</strong> {payment.decline_reason}
                   </p>
                 )}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setSelectedPayment(payment)}>
-                  View Details
+                  {t.viewDetails}
                 </Button>
                 {payment.status === "declined" && (
                   <Button
@@ -131,7 +130,7 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
                     className="text-orange-600 border-orange-600 hover:bg-orange-50"
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    Appeal
+                    {t.appeal}
                   </Button>
                 )}
               </div>
@@ -144,39 +143,39 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
       <Dialog open={!!selectedPayment} onOpenChange={() => setSelectedPayment(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Missing Payment Details</DialogTitle>
+            <DialogTitle>{t.detailsTitle}</DialogTitle>
           </DialogHeader>
           {selectedPayment && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Your Name</p>
+                  <p className="text-sm text-muted-foreground">{t.yourName}</p>
                   <p className="font-medium">{selectedPayment.mover_full_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Customer Name</p>
+                  <p className="text-sm text-muted-foreground">{t.customerName}</p>
                   <p className="font-medium">{selectedPayment.customer_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Job/Invoice Number</p>
+                  <p className="text-sm text-muted-foreground">{t.jobNumber}</p>
                   <p className="font-medium">{selectedPayment.job_number}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Discrepancy Date</p>
+                  <p className="text-sm text-muted-foreground">{t.discrepancyDate}</p>
                   <p className="font-medium">{format(new Date(selectedPayment.discrepancy_date), "MM/dd/yyyy")}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Missing Amount</p>
+                  <p className="text-sm text-muted-foreground">{t.missingAmount}</p>
                   <p className="font-medium">{selectedPayment.missing_amount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="text-sm text-muted-foreground">{t.status}</p>
                   {getStatusBadge(selectedPayment.status)}
                 </div>
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Discrepancy Types</p>
+                <p className="text-sm text-muted-foreground mb-2">{t.discrepancyTypes}</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedPayment.discrepancy_types.map((type, idx) => (
                     <Badge key={idx} variant="outline">{discrepancyLabels[type] || type}</Badge>
@@ -185,31 +184,31 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground">Discrepancy Details</p>
+                <p className="text-sm text-muted-foreground">{t.discrepancyDetails}</p>
                 <p className="mt-1 whitespace-pre-wrap">{selectedPayment.discrepancy_details}</p>
               </div>
 
               {selectedPayment.status === "declined" && selectedPayment.decline_reason && (
                 <div className="bg-destructive/10 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-destructive">Decline Reason</p>
+                  <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
                   <p className="mt-1">{selectedPayment.decline_reason}</p>
                 </div>
               )}
 
               {selectedPayment.appeal_note && (
                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-orange-700">Appeal Note</p>
+                  <p className="text-sm font-medium text-orange-700">{t.appealNote}</p>
                   <p className="mt-1">{selectedPayment.appeal_note}</p>
                   {selectedPayment.appeal_at && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Appealed on: {format(new Date(selectedPayment.appeal_at), "MM/dd/yyyy HH:mm")}
+                      {t.appealedOn}: {format(new Date(selectedPayment.appeal_at), "MM/dd/yyyy HH:mm")}
                     </p>
                   )}
                 </div>
               )}
 
               <Button variant="outline" onClick={() => setSelectedPayment(null)} className="w-full">
-                Close
+                {t.close}
               </Button>
             </div>
           )}
@@ -221,7 +220,7 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Appeal Missing Payment - {appealPayment?.job_number}
+              {t.appeal} - {appealPayment?.job_number}
             </DialogTitle>
           </DialogHeader>
           {appealPayment && (

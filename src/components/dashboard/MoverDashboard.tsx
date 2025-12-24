@@ -12,6 +12,7 @@ import MissingPaymentHistory from "./MissingPaymentHistory";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
+import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MoverDashboardProps {
@@ -30,6 +31,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   
   const t = dashboardTranslations[language];
   const rt = reviewBonusTranslations[language];
+  const mt = missingPaymentTranslations[language];
 
   useEffect(() => {
     fetchProfile();
@@ -77,7 +79,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           </TabsTrigger>
           <TabsTrigger value="missing-payments">
             <DollarSign className="h-4 w-4 mr-2" />
-            Missing Payments
+            {mt.formTitle}
           </TabsTrigger>
         </TabsList>
 
@@ -147,7 +149,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <Card className="p-6">
               <Button onClick={() => setShowMissingPaymentForm(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Submit Missing Payment Request
+                {mt.submitMissingPayment}
               </Button>
             </Card>
           )}
@@ -155,9 +157,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           {showMissingPaymentForm && (
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Missing Payment Form</h2>
+                <h2 className="text-2xl font-bold">{mt.formTitle}</h2>
                 <Button variant="outline" onClick={() => setShowMissingPaymentForm(false)}>
-                  {t.close}
+                  {mt.close}
                 </Button>
               </div>
               <MissingPaymentForm userId={userId} onSuccess={handleMissingPaymentSuccess} language={language} />
@@ -165,7 +167,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold mb-4">Missing Payment History</h2>
+            <h2 className="text-2xl font-bold mb-4">{mt.historyTitle}</h2>
             <MissingPaymentHistory userId={userId} refreshKey={missingPaymentRefreshKey} language={language} />
           </div>
         </TabsContent>
