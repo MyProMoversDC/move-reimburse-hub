@@ -6,6 +6,7 @@ import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import DateRangeFilter from "./DateRangeFilter";
 import ReimbursementReportingDashboard from "./ReimbursementReportingDashboard";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
+import MissingPaymentReportingDashboard from "./MissingPaymentReportingDashboard";
 import UserRoleManager from "./UserRoleManager";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminSidebar from "./AdminSidebar";
@@ -260,6 +261,13 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Customer Review Reporting</h2>
             <CustomerReviewReportingDashboard language={language} />
+          </div>
+        );
+      case "missing-payment-reports":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Missing Payment Reporting</h2>
+            <MissingPaymentReportingDashboard language={language} />
           </div>
         );
       case "performance-reports":
