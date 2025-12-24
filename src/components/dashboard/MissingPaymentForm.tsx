@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
+import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 
 interface MissingPaymentFormProps {
   userId: string;
@@ -19,17 +20,19 @@ interface MissingPaymentFormProps {
   language: DashboardLanguage;
 }
 
-const discrepancyOptions = [
-  { value: "missing_hours", label: "Missing Hours" },
-  { value: "incorrect_hourly_rate", label: "Incorrect Hourly Rate" },
-  { value: "missing_tip", label: "Missing Tip" },
-  { value: "missing_bonus", label: "Missing Bonus" },
-  { value: "other", label: "Other" },
-] as const;
-
-type DiscrepancyType = typeof discrepancyOptions[number]["value"];
+type DiscrepancyType = "missing_hours" | "incorrect_hourly_rate" | "missing_tip" | "missing_bonus" | "other";
 
 const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormProps) => {
+  const t = missingPaymentTranslations[language];
+  
+  const discrepancyOptions: { value: DiscrepancyType; label: string }[] = [
+    { value: "missing_hours", label: t.missingHours },
+    { value: "incorrect_hourly_rate", label: t.incorrectHourlyRate },
+    { value: "missing_tip", label: t.missingTip },
+    { value: "missing_bonus", label: t.missingBonus },
+    { value: "other", label: t.other },
+  ];
+
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -49,31 +52,31 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
     e.preventDefault();
 
     if (!fullName.trim()) {
-      toast.error("Please enter your full name");
+      toast.error(t.errorFullName);
       return;
     }
     if (!customerName.trim()) {
-      toast.error("Please enter the customer's name");
+      toast.error(t.errorCustomerName);
       return;
     }
     if (!jobNumber.trim()) {
-      toast.error("Please enter the job or invoice number");
+      toast.error(t.errorJobNumber);
       return;
     }
     if (!discrepancyDate) {
-      toast.error("Please select the date of discrepancy");
+      toast.error(t.errorDiscrepancyDate);
       return;
     }
     if (selectedDiscrepancies.length === 0) {
-      toast.error("Please select at least one discrepancy type");
+      toast.error(t.errorDiscrepancyType);
       return;
     }
     if (!discrepancyDetails.trim()) {
-      toast.error("Please explain the discrepancy in detail");
+      toast.error(t.errorDiscrepancyDetails);
       return;
     }
     if (!missingAmount.trim()) {
-      toast.error("Please enter the missing amount");
+      toast.error(t.errorMissingAmount);
       return;
     }
 
@@ -92,7 +95,7 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
 
       if (error) throw error;
 
-      toast.success("Missing payment request submitted successfully");
+      toast.success(t.submitSuccess);
       onSuccess();
     } catch (error: any) {
       console.error("Error submitting missing payment:", error);
@@ -105,40 +108,40 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="fullName">What is your full name? *</Label>
+        <Label htmlFor="fullName">{t.fullNameQuestion} *</Label>
         <Input
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Enter your full name"
+          placeholder={t.fullNamePlaceholder}
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="customerName">What is the customer's name associated with this job? *</Label>
+        <Label htmlFor="customerName">{t.customerNameQuestion} *</Label>
         <Input
           id="customerName"
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
-          placeholder="Enter customer's name"
+          placeholder={t.customerNamePlaceholder}
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="jobNumber">What is the job or invoice number? *</Label>
+        <Label htmlFor="jobNumber">{t.jobNumberQuestion} *</Label>
         <Input
           id="jobNumber"
           value={jobNumber}
           onChange={(e) => setJobNumber(e.target.value)}
-          placeholder="Enter job or invoice number"
+          placeholder={t.jobNumberPlaceholder}
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label>What is the date of the discrepancy you are requesting to be reviewed? *</Label>
+        <Label>{t.discrepancyDateQuestion} *</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -149,7 +152,7 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {discrepancyDate ? format(discrepancyDate, "MM/dd/yyyy") : "Select date"}
+              {discrepancyDate ? format(discrepancyDate, "MM/dd/yyyy") : t.selectDate}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -164,7 +167,7 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
       </div>
 
       <div className="space-y-2">
-        <Label>What do you believe is incorrect? (Choose all that apply) *</Label>
+        <Label>{t.discrepancyTypeQuestion} *</Label>
         <div className="space-y-3 mt-2">
           {discrepancyOptions.map((option) => (
             <div key={option.value} className="flex items-center space-x-2">
@@ -183,13 +186,13 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
 
       <div className="space-y-2">
         <Label htmlFor="discrepancyDetails">
-          Please explain the discrepancy in detail. Be as specific as possible (include dates, jobs, and any relevant information) *
+          {t.discrepancyDetailsQuestion} *
         </Label>
         <Textarea
           id="discrepancyDetails"
           value={discrepancyDetails}
           onChange={(e) => setDiscrepancyDetails(e.target.value)}
-          placeholder="Provide detailed explanation..."
+          placeholder={t.discrepancyDetailsPlaceholder}
           rows={5}
           required
         />
@@ -197,20 +200,20 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
 
       <div className="space-y-2">
         <Label htmlFor="missingAmount">
-          What is the total number of hours and/or dollar amount you believe is missing or incorrect? *
+          {t.missingAmountQuestion} *
         </Label>
         <Input
           id="missingAmount"
           value={missingAmount}
           onChange={(e) => setMissingAmount(e.target.value)}
-          placeholder="e.g., 3 hours or $150"
+          placeholder={t.missingAmountPlaceholder}
           required
         />
       </div>
 
       <Button type="submit" disabled={loading} className="w-full">
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Submit Missing Payment Request
+        {loading ? t.submitting : t.submitButton}
       </Button>
     </form>
   );
