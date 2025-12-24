@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AppealFormProps {
-  type: "reimbursement" | "review";
+  type: "reimbursement" | "review" | "missing_payment";
   itemId: string;
   itemNumber: string;
   declineReason: string;
@@ -113,7 +113,7 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
             file_name: file.name,
           });
         }
-      } else {
+      } else if (type === "review") {
         const { error } = await supabase
           .from("review_bonuses")
           .update({
@@ -146,6 +146,17 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
             file_name: file.name,
           });
         }
+      } else if (type === "missing_payment") {
+        const { error } = await supabase
+          .from("missing_payments")
+          .update({
+            status: "appeal",
+            appeal_note: appealNote.trim(),
+            appeal_at: new Date().toISOString(),
+          })
+          .eq("id", itemId);
+        
+        if (error) throw error;
       }
 
       // Get mover info for notification

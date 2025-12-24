@@ -1,10 +1,11 @@
 import { useState } from "react";
 import AdminReviewBonusList from "./AdminReviewBonusList";
+import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
 import DateRangeFilter from "./DateRangeFilter";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +19,9 @@ const ReviewsAdminDashboard = () => {
   
   const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
   const [reviewEndDate, setReviewEndDate] = useState<Date | undefined>();
+  
+  const [missingPaymentStartDate, setMissingPaymentStartDate] = useState<Date | undefined>();
+  const [missingPaymentEndDate, setMissingPaymentEndDate] = useState<Date | undefined>();
   
   const t = dashboardTranslations[language];
 
@@ -65,6 +69,10 @@ const ReviewsAdminDashboard = () => {
             <Star className="h-4 w-4 mr-2" />
             Review Submissions
           </TabsTrigger>
+          <TabsTrigger value="missing-payments">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Missing Payments
+          </TabsTrigger>
           <TabsTrigger value="reports">
             <FileBarChart className="h-4 w-4 mr-2" />
             Review Reports
@@ -95,6 +103,27 @@ const ReviewsAdminDashboard = () => {
             language={language} 
             startDate={reviewStartDate}
             endDate={reviewEndDate}
+          />
+        </TabsContent>
+
+        <TabsContent value="missing-payments" className="space-y-6">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-2xl font-bold">Missing Payment Submissions</h2>
+            <DateRangeFilter
+              startDate={missingPaymentStartDate}
+              endDate={missingPaymentEndDate}
+              onStartDateChange={setMissingPaymentStartDate}
+              onEndDateChange={setMissingPaymentEndDate}
+              onClear={() => {
+                setMissingPaymentStartDate(undefined);
+                setMissingPaymentEndDate(undefined);
+              }}
+            />
+          </div>
+          <AdminMissingPaymentList 
+            language={language} 
+            startDate={missingPaymentStartDate}
+            endDate={missingPaymentEndDate}
           />
         </TabsContent>
 

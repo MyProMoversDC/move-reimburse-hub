@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      missing_payments: {
+        Row: {
+          appeal_at: string | null
+          appeal_note: string | null
+          created_at: string
+          customer_name: string
+          decline_reason: string | null
+          discrepancy_date: string
+          discrepancy_details: string
+          discrepancy_types: Database["public"]["Enums"]["discrepancy_type"][]
+          id: string
+          job_number: string
+          missing_amount: string
+          mover_full_name: string
+          mover_id: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["missing_payment_status"]
+        }
+        Insert: {
+          appeal_at?: string | null
+          appeal_note?: string | null
+          created_at?: string
+          customer_name: string
+          decline_reason?: string | null
+          discrepancy_date: string
+          discrepancy_details: string
+          discrepancy_types: Database["public"]["Enums"]["discrepancy_type"][]
+          id?: string
+          job_number: string
+          missing_amount: string
+          mover_full_name: string
+          mover_id: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["missing_payment_status"]
+        }
+        Update: {
+          appeal_at?: string | null
+          appeal_note?: string | null
+          created_at?: string
+          customer_name?: string
+          decline_reason?: string | null
+          discrepancy_date?: string
+          discrepancy_details?: string
+          discrepancy_types?: Database["public"]["Enums"]["discrepancy_type"][]
+          id?: string
+          job_number?: string
+          missing_amount?: string
+          mover_full_name?: string
+          mover_id?: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["missing_payment_status"]
+        }
+        Relationships: []
+      }
       performance_report_attachments: {
         Row: {
           created_at: string | null
@@ -407,6 +461,13 @@ export type Database = {
         | "mover"
         | "operations_manager"
         | "reviews_admin"
+      discrepancy_type:
+        | "missing_hours"
+        | "incorrect_hourly_rate"
+        | "missing_tip"
+        | "missing_bonus"
+        | "other"
+      missing_payment_status: "pending" | "confirmed" | "declined" | "appeal"
       reimbursement_status:
         | "pending"
         | "confirmed"
@@ -548,6 +609,14 @@ export const Constants = {
         "operations_manager",
         "reviews_admin",
       ],
+      discrepancy_type: [
+        "missing_hours",
+        "incorrect_hourly_rate",
+        "missing_tip",
+        "missing_bonus",
+        "other",
+      ],
+      missing_payment_status: ["pending", "confirmed", "declined", "appeal"],
       reimbursement_status: [
         "pending",
         "confirmed",
