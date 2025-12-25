@@ -109,6 +109,7 @@ export type Database = {
           incident_datetime: string
           incident_description: string
           severity_level: string
+          taken_actions: string | null
           title: string
           worker_name: string
         }
@@ -120,6 +121,7 @@ export type Database = {
           incident_datetime: string
           incident_description: string
           severity_level: string
+          taken_actions?: string | null
           title: string
           worker_name: string
         }
@@ -131,6 +133,7 @@ export type Database = {
           incident_datetime?: string
           incident_description?: string
           severity_level?: string
+          taken_actions?: string | null
           title?: string
           worker_name?: string
         }

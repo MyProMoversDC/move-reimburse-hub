@@ -57,6 +57,7 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
     incident_category: "",
     incident_description: "",
     severity_level: "",
+    taken_actions: "",
   });
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,6 +155,7 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
           incident_category: formData.incident_category.trim(),
           incident_description: formData.incident_description.trim(),
           severity_level: formData.severity_level,
+          taken_actions: formData.taken_actions.trim() || null,
           created_by: user.id,
         })
         .select("id")
@@ -304,6 +306,17 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
               onChange={(e) => setFormData({ ...formData, incident_description: e.target.value })}
               placeholder="Provide a detailed description of the incident..."
               rows={6}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="taken_actions">Taken Actions (Optional)</Label>
+            <Textarea
+              id="taken_actions"
+              value={formData.taken_actions}
+              onChange={(e) => setFormData({ ...formData, taken_actions: e.target.value })}
+              placeholder="Describe any actions taken regarding this incident..."
+              rows={4}
             />
           </div>
 
