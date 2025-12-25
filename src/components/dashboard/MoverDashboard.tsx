@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Star, DollarSign } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
 import ReviewBonusHistory from "./ReviewBonusHistory";
 import MissingPaymentForm from "./MissingPaymentForm";
 import MissingPaymentHistory from "./MissingPaymentHistory";
+import MoverMisconductCases from "./MoverMisconductCases";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
@@ -71,7 +72,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       </div>
       
       <Tabs defaultValue="reimbursements" className="w-full">
-        <TabsList>
+        <TabsList className="flex flex-wrap">
           <TabsTrigger value="reimbursements">{t.reimbursementHistory}</TabsTrigger>
           <TabsTrigger value="reviews">
             <Star className="h-4 w-4 mr-2" />
@@ -80,6 +81,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <TabsTrigger value="missing-payments">
             <DollarSign className="h-4 w-4 mr-2" />
             {mt.formTitle}
+          </TabsTrigger>
+          <TabsTrigger value="misconduct">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {language === 'ru' ? 'Случаи поведения' : language === 'es' ? 'Casos de Conducta' : 'Misconduct Cases'}
           </TabsTrigger>
         </TabsList>
 
@@ -170,6 +175,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <h2 className="text-2xl font-bold mb-4">{mt.historyTitle}</h2>
             <MissingPaymentHistory userId={userId} refreshKey={missingPaymentRefreshKey} language={language} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="misconduct" className="space-y-6">
+          <MoverMisconductCases userId={userId} language={language} />
         </TabsContent>
       </Tabs>
     </div>

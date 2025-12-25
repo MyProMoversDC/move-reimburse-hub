@@ -68,6 +68,50 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_misconduct_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin_message: boolean
+          is_read: boolean
+          message: string
+          recipient_id: string
+          report_id: string | null
+          report_title: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_admin_message?: boolean
+          is_read?: boolean
+          message: string
+          recipient_id: string
+          report_id?: string | null
+          report_title: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin_message?: boolean
+          is_read?: boolean
+          message?: string
+          recipient_id?: string
+          report_id?: string | null
+          report_title?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_misconduct_messages_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "performance_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_report_attachments: {
         Row: {
           created_at: string | null

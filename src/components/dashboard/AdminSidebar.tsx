@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   LayoutDashboard,
   ChevronLeft,
-  DollarSign
+  DollarSign,
+  MessageSquare
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ interface AdminSidebarProps {
     reviews: number;
     appeals: number;
     missingPayments: number;
+    misconductReplies: number;
   };
 }
 
@@ -44,6 +46,7 @@ const menuItems = [
   { id: "review-reports", label: "Review Reports", icon: FileBarChart },
   { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
   { id: "performance-reports", label: "Performance Reports", icon: AlertTriangle },
+  { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "movers", label: "Movers Directory", icon: Users },
   { id: "roles", label: "Role Management", icon: UserCog },
 ];
@@ -56,7 +59,8 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts }: AdminSidebarPro
     if (id === "requests") return pendingCounts.reimbursements;
     if (id === "reviews") return pendingCounts.reviews;
     if (id === "missing-payments") return pendingCounts.missingPayments;
-    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments;
+    if (id === "misconduct-responses") return pendingCounts.misconductReplies;
+    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies;
     return 0;
   };
 

@@ -9,6 +9,7 @@ import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard
 import MissingPaymentReportingDashboard from "./MissingPaymentReportingDashboard";
 import UserRoleManager from "./UserRoleManager";
 import PerformanceReportsList from "./PerformanceReportsList";
+import AdminMisconductResponses from "./AdminMisconductResponses";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const AdminDashboard = () => {
     reviews: 0,
     appeals: 0,
     missingPayments: 0,
+    misconductReplies: 0,
   });
   
   // Date filters for reimbursements
@@ -79,11 +81,19 @@ const AdminDashboard = () => {
         .select("*", { count: "exact", head: true })
         .in("status", ["pending", "appeal"]);
 
+      // Count unread mover replies
+      const { count: misconductReplyCount } = await supabase
+        .from("performance_misconduct_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("is_admin_message", false)
+        .eq("is_read", false);
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
         appeals: (appealReimbCount || 0) + (appealReviewCount || 0),
         missingPayments: missingPaymentCount || 0,
+        misconductReplies: misconductReplyCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
@@ -279,6 +289,12 @@ const AdminDashboard = () => {
               onRefresh={() => setRefreshKey((prev) => prev + 1)} 
               userRole="admin" 
             />
+          </div>
+        );
+      case "misconduct-responses":
+        return (
+          <div className="space-y-6">
+            <AdminMisconductResponses />
           </div>
         );
       case "movers":
