@@ -2,10 +2,11 @@ import { useState } from "react";
 import AdminReviewBonusList from "./AdminReviewBonusList";
 import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
+import DeductiblesReport from "./DeductiblesReport";
 import DateRangeFilter from "./DateRangeFilter";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart, DollarSign } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign, MinusCircle } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -77,6 +78,10 @@ const ReviewsAdminDashboard = () => {
             <FileBarChart className="h-4 w-4 mr-2" />
             Review Reports
           </TabsTrigger>
+          <TabsTrigger value="deductibles">
+            <MinusCircle className="h-4 w-4 mr-2" />
+            Deductibles
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reviews" className="space-y-6">
@@ -130,6 +135,11 @@ const ReviewsAdminDashboard = () => {
         <TabsContent value="reports" className="space-y-6">
           <h2 className="text-2xl font-bold">Customer Review Analytics</h2>
           <CustomerReviewReportingDashboard language={language} />
+        </TabsContent>
+
+        <TabsContent value="deductibles" className="space-y-6">
+          <h2 className="text-2xl font-bold">Deductibles Report</h2>
+          <DeductiblesReport isAdmin={false} />
         </TabsContent>
       </Tabs>
     </div>

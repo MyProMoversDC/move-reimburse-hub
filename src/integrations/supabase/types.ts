@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      deductibles: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          id: string
+          mover_id: string
+          mover_name: string
+          reason: string | null
+          report_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          id?: string
+          mover_id: string
+          mover_name: string
+          reason?: string | null
+          report_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          mover_id?: string
+          mover_name?: string
+          reason?: string | null
+          report_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deductibles_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "performance_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missing_payments: {
         Row: {
           appeal_at: string | null

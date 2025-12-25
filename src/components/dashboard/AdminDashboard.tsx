@@ -10,6 +10,7 @@ import MissingPaymentReportingDashboard from "./MissingPaymentReportingDashboard
 import UserRoleManager from "./UserRoleManager";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminMisconductResponses from "./AdminMisconductResponses";
+import DeductiblesReport from "./DeductiblesReport";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import { Button } from "@/components/ui/button";
@@ -295,6 +296,13 @@ const AdminDashboard = () => {
         return (
           <div className="space-y-6">
             <AdminMisconductResponses />
+          </div>
+        );
+      case "deductibles":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Deductibles Report</h2>
+            <DeductiblesReport isAdmin={true} />
           </div>
         );
       case "movers":
