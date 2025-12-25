@@ -107,22 +107,49 @@ const SendMoverEmailDialog = ({ open, onOpenChange, reportTitle }: SendMoverEmai
 
     setLoading(true);
     try {
+      // Get current user ID for sender
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const recipients = selectedMovers.map(id => {
         const mover = movers.find(m => m.id === id);
         return {
+          id: mover!.id,
           email: mover!.email,
           name: `${mover!.first_name} ${mover!.last_name}`,
         };
       });
 
+      // Send emails via edge function
       const { data, error } = await supabase.functions.invoke("send-mover-email", {
         body: {
-          recipients,
+          recipients: recipients.map(r => ({ email: r.email, name: r.name })),
           additionalMessage: additionalMessage.trim(),
         },
       });
 
       if (error) throw error;
+
+      // Save messages to database for each recipient
+      const fullMessage = `Dear ${recipients.map(r => r.name).join(", ")},\n\nI am reaching out to you on behalf of the MyProMovers management with a following statement:\n\n${additionalMessage.trim()}`;
+      
+      const messageInserts = recipients.map(recipient => ({
+        report_title: reportTitle || "Performance/Misconduct Notice",
+        sender_id: user.id,
+        recipient_id: recipient.id,
+        message: fullMessage,
+        is_admin_message: true,
+        is_read: false,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("performance_misconduct_messages")
+        .insert(messageInserts);
+
+      if (insertError) {
+        console.error("Error saving messages:", insertError);
+        // Don't fail the whole operation, email was already sent
+      }
 
       toast.success(`Email sent to ${recipients.length} mover(s)`);
       onOpenChange(false);
