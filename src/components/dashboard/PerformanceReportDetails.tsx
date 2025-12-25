@@ -14,6 +14,7 @@ interface PerformanceReport {
   severity_level: string;
   created_at: string;
   created_by: string;
+  taken_actions?: string | null;
 }
 
 interface PerformanceReportDetailsProps {
@@ -72,6 +73,15 @@ const PerformanceReportDetails = ({ report, onClose }: PerformanceReportDetailsP
             <p className="whitespace-pre-wrap">{report.incident_description}</p>
           </div>
         </div>
+
+        {report.taken_actions && (
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Taken Actions</h4>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="whitespace-pre-wrap text-blue-800 dark:text-blue-200">{report.taken_actions}</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <Button variant="outline" onClick={onClose}>

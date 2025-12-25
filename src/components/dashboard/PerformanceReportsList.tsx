@@ -29,6 +29,7 @@ interface PerformanceReport {
   severity_level: string;
   created_at: string;
   created_by: string;
+  taken_actions?: string | null;
 }
 
 interface PerformanceReportsListProps {
