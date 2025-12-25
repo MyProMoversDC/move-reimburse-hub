@@ -11,13 +11,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, Mail } from "lucide-react";
+import { Plus, Eye, Mail, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { handleError } from "@/lib/errorHandler";
 import PerformanceReportForm from "./PerformanceReportForm";
 import PerformanceReportDetails from "./PerformanceReportDetails";
 import SendMoverEmailDialog from "./SendMoverEmailDialog";
+import ApplyDeductibleDialog from "./ApplyDeductibleDialog";
 
 interface PerformanceReport {
   id: string;
@@ -52,6 +53,9 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
   const [selectedReport, setSelectedReport] = useState<PerformanceReport | null>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailReportTitle, setEmailReportTitle] = useState<string | undefined>();
+  const [deductibleDialogOpen, setDeductibleDialogOpen] = useState(false);
+  const [deductibleReportId, setDeductibleReportId] = useState<string | undefined>();
+  const [deductibleReportTitle, setDeductibleReportTitle] = useState<string | undefined>();
 
   useEffect(() => {
     fetchReports();
@@ -82,6 +86,12 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
   const handleOpenEmailDialog = (reportTitle: string) => {
     setEmailReportTitle(reportTitle);
     setEmailDialogOpen(true);
+  };
+
+  const handleOpenDeductibleDialog = (reportId: string, reportTitle: string) => {
+    setDeductibleReportId(reportId);
+    setDeductibleReportTitle(reportTitle);
+    setDeductibleDialogOpen(true);
   };
 
   if (loading) {
@@ -165,14 +175,24 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
                         View
                       </Button>
                       {userRole === 'admin' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenEmailDialog(report.title)}
-                        >
-                          <Mail className="h-4 w-4 mr-2" />
-                          Email
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEmailDialog(report.title)}
+                          >
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenDeductibleDialog(report.id, report.title)}
+                          >
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Deduct
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -187,6 +207,13 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
         open={emailDialogOpen}
         onOpenChange={setEmailDialogOpen}
         reportTitle={emailReportTitle}
+      />
+
+      <ApplyDeductibleDialog
+        open={deductibleDialogOpen}
+        onOpenChange={setDeductibleDialogOpen}
+        reportId={deductibleReportId}
+        reportTitle={deductibleReportTitle}
       />
     </Card>
   );

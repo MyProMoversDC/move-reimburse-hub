@@ -47,6 +47,7 @@ const menuItems = [
   { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
   { id: "performance-reports", label: "Performance Reports", icon: AlertTriangle },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
+  { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "movers", label: "Movers Directory", icon: Users },
   { id: "roles", label: "Role Management", icon: UserCog },
 ];
