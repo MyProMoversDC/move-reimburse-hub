@@ -125,17 +125,8 @@ const NewChatDialog = ({
           .map(r => r.role)
       }));
 
-      // Filter users based on current user's role
-      let filteredUsers = usersWithRoles;
-      if (userRole === 'mover') {
-        // Movers can only chat with admins, operations managers, reviews admins, accountants
-        filteredUsers = usersWithRoles.filter(u => 
-          u.roles.includes('admin') || 
-          u.roles.includes('operations_manager') || 
-          u.roles.includes('reviews_admin') ||
-          u.roles.includes('accountant')
-        );
-      }
+      // No role-based filtering: every user can message any user
+      const filteredUsers = usersWithRoles;
 
       setUsers(filteredUsers);
     } catch (error) {
@@ -319,27 +310,29 @@ const NewChatDialog = ({
     setCreating(true);
     try {
       const selectedRef = topicReferences.find(r => r.id === selectedReference);
-      
-      // Create conversation
-      const { data: conversation, error: convError } = await supabase
+
+      // IMPORTANT: avoid RLS issues with "returning/select" before participants exist.
+      // We generate the UUID client-side so we don't need to SELECT the inserted row.
+      const conversationId = crypto.randomUUID();
+
+      const { error: convError } = await supabase
         .from('conversations')
         .insert({
+          id: conversationId,
           name: isGroupChat ? groupName : null,
           is_group: isGroupChat,
           topic_type: topicType as ChatTopicType,
           topic_reference_id: selectedReference || null,
           topic_reference_label: selectedRef?.label || null,
           created_by: userId,
-        })
-        .select()
-        .single();
+        });
 
       if (convError) throw convError;
 
       // Add all participants
       const participantIds = [userId, ...selectedUsers.map(u => u.id)];
       const participants = participantIds.map(id => ({
-        conversation_id: conversation.id,
+        conversation_id: conversationId,
         user_id: id,
       }));
 
@@ -350,7 +343,7 @@ const NewChatDialog = ({
       if (partError) throw partError;
 
       toast.success(isGroupChat ? t.groupCreated : t.chatCreated);
-      onChatCreated(conversation.id);
+      onChatCreated(conversationId);
       handleClose();
     } catch (error) {
       console.error('Error creating chat:', error);
