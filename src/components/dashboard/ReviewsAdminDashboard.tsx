@@ -4,9 +4,10 @@ import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
 import DeductiblesReport from "./DeductiblesReport";
 import DateRangeFilter from "./DateRangeFilter";
+import ChatContainer from "./chat/ChatContainer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart, DollarSign, MinusCircle } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,7 +15,11 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 
-const ReviewsAdminDashboard = () => {
+interface ReviewsAdminDashboardProps {
+  userId: string;
+}
+
+const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
   const [exportingReviews, setExportingReviews] = useState(false);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   
@@ -82,6 +87,10 @@ const ReviewsAdminDashboard = () => {
             <MinusCircle className="h-4 w-4 mr-2" />
             Deductibles
           </TabsTrigger>
+          <TabsTrigger value="chat">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Chat
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reviews" className="space-y-6">
@@ -140,6 +149,11 @@ const ReviewsAdminDashboard = () => {
         <TabsContent value="deductibles" className="space-y-6">
           <h2 className="text-2xl font-bold">Deductibles Report</h2>
           <DeductiblesReport isAdmin={false} />
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-6">
+          <h2 className="text-2xl font-bold">Chat</h2>
+          <ChatContainer userId={userId} userRole="reviews_admin" language={language} />
         </TabsContent>
       </Tabs>
     </div>

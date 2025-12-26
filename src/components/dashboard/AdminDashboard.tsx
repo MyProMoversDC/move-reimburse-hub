@@ -14,6 +14,7 @@ import DeductiblesReport from "./DeductiblesReport";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
+import ChatContainer from "./chat/ChatContainer";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
@@ -24,7 +25,11 @@ import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTransla
 import { format } from "date-fns";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 
-const AdminDashboard = () => {
+interface AdminDashboardProps {
+  userId: string;
+}
+
+const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
@@ -311,6 +316,13 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
             <AdminViolenceIncidentList userRole="admin" />
+          </div>
+        );
+      case "chat":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Chat</h2>
+            <ChatContainer userId={userId} userRole="admin" language={language} />
           </div>
         );
       case "movers":
