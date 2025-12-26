@@ -521,6 +521,110 @@ export type Database = {
         }
         Relationships: []
       }
+      violence_incident_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_url: string
+          id: string
+          incident_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          incident_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          incident_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "violence_incident_attachments_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "violence_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      violence_incidents: {
+        Row: {
+          admin_actions: string | null
+          anyone_injured: boolean
+          client_name: string
+          created_at: string
+          damage_description: string | null
+          emergency_services_called: boolean
+          id: string
+          incident_address: string
+          incident_date: string
+          incident_description: string
+          incident_time: string
+          incident_types: Database["public"]["Enums"]["violence_incident_type"][]
+          injury_description: string | null
+          job_id: string
+          mover_id: string
+          mover_name: string
+          operations_manager_actions: string | null
+          phone_number: string
+          police_contacted: boolean
+          property_damaged: boolean
+          severity_level: Database["public"]["Enums"]["violence_severity_level"]
+        }
+        Insert: {
+          admin_actions?: string | null
+          anyone_injured?: boolean
+          client_name: string
+          created_at?: string
+          damage_description?: string | null
+          emergency_services_called?: boolean
+          id?: string
+          incident_address: string
+          incident_date: string
+          incident_description: string
+          incident_time: string
+          incident_types: Database["public"]["Enums"]["violence_incident_type"][]
+          injury_description?: string | null
+          job_id: string
+          mover_id: string
+          mover_name: string
+          operations_manager_actions?: string | null
+          phone_number: string
+          police_contacted?: boolean
+          property_damaged?: boolean
+          severity_level: Database["public"]["Enums"]["violence_severity_level"]
+        }
+        Update: {
+          admin_actions?: string | null
+          anyone_injured?: boolean
+          client_name?: string
+          created_at?: string
+          damage_description?: string | null
+          emergency_services_called?: boolean
+          id?: string
+          incident_address?: string
+          incident_date?: string
+          incident_description?: string
+          incident_time?: string
+          incident_types?: Database["public"]["Enums"]["violence_incident_type"][]
+          injury_description?: string | null
+          job_id?: string
+          mover_id?: string
+          mover_name?: string
+          operations_manager_actions?: string | null
+          phone_number?: string
+          police_contacted?: boolean
+          property_damaged?: boolean
+          severity_level?: Database["public"]["Enums"]["violence_severity_level"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -563,6 +667,14 @@ export type Database = {
         | "declined"
         | "appeal"
       review_bonus_status: "pending" | "confirmed" | "declined" | "appeal"
+      violence_incident_type:
+        | "verbal_threat"
+        | "physical_contact"
+        | "property_damage"
+        | "harassment"
+        | "weapon_seen"
+        | "other"
+      violence_severity_level: "low" | "medium" | "high" | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -713,6 +825,15 @@ export const Constants = {
         "appeal",
       ],
       review_bonus_status: ["pending", "confirmed", "declined", "appeal"],
+      violence_incident_type: [
+        "verbal_threat",
+        "physical_contact",
+        "property_damage",
+        "harassment",
+        "weapon_seen",
+        "other",
+      ],
+      violence_severity_level: ["low", "medium", "high", "critical"],
     },
   },
 } as const
