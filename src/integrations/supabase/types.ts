@@ -854,6 +854,15 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      list_chat_users_for_picker: {
+        Args: { exclude_user_id?: string }
+        Returns: {
+          first_name: string
+          id: string
+          last_name: string
+          roles: string[]
+        }[]
+      }
     }
     Enums: {
       app_role:
