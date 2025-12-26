@@ -336,8 +336,9 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
                   className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-                    {!isOwnMessage && conversation.is_group && (
-                      <p className="text-xs text-muted-foreground mb-1">
+                    {/* Always show sender name for messages from others */}
+                    {!isOwnMessage && (
+                      <p className="text-xs text-muted-foreground mb-1 font-medium">
                         {getSenderName(message.sender_id)}
                       </p>
                     )}

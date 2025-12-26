@@ -4,27 +4,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
-import { Database } from "@/integrations/supabase/types";
-
-type ChatTopicType = Database['public']['Enums']['chat_topic_type'] | undefined;
 
 interface User {
   id: string;
   first_name: string;
   last_name: string;
   roles: string[];
-}
-
-interface TopicReference {
-  id: string;
-  label: string;
 }
 
 interface NewChatDialogProps {
@@ -50,41 +41,9 @@ const NewChatDialog = ({
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [topicType, setTopicType] = useState<string>("general");
-  const [topicReferences, setTopicReferences] = useState<TopicReference[]>([]);
-  const [selectedReference, setSelectedReference] = useState<string>("");
   const [groupName, setGroupName] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [loadingReferences, setLoadingReferences] = useState(false);
-
-  // Get available topics based on user role
-  const getAvailableTopics = () => {
-    const baseTopics = [
-      { value: 'general', label: t.topicGeneral },
-    ];
-
-    if (userRole === 'mover') {
-      return [
-        ...baseTopics,
-        { value: 'reimbursement', label: t.topicReimbursement },
-        { value: 'review_bonus', label: t.topicReviewBonus },
-        { value: 'missing_payment', label: t.topicMissingPayment },
-        { value: 'violence_incident', label: t.topicViolenceIncident },
-      ];
-    }
-
-    // Admin and other roles get all topics
-    return [
-      ...baseTopics,
-      { value: 'reimbursement', label: t.topicReimbursement },
-      { value: 'review_bonus', label: t.topicReviewBonus },
-      { value: 'missing_payment', label: t.topicMissingPayment },
-      { value: 'violence_incident', label: t.topicViolenceIncident },
-      { value: 'performance_report', label: t.topicPerformanceReport },
-      { value: 'deductible', label: t.topicDeductible },
-    ];
-  };
 
   useEffect(() => {
     if (open) {
@@ -92,18 +51,9 @@ const NewChatDialog = ({
     }
   }, [open]);
 
-  useEffect(() => {
-    if (topicType && topicType !== 'general') {
-      fetchTopicReferences();
-    } else {
-      setTopicReferences([]);
-      setSelectedReference("");
-    }
-  }, [topicType]);
-
   const fetchUsers = async () => {
     try {
-      // Fetch all profiles
+      // Fetch all profiles - every user can message any user
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name')
@@ -125,151 +75,11 @@ const NewChatDialog = ({
           .map(r => r.role)
       }));
 
-      // No role-based filtering: every user can message any user
-      const filteredUsers = usersWithRoles;
-
-      setUsers(filteredUsers);
+      setUsers(usersWithRoles);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchTopicReferences = async () => {
-    setLoadingReferences(true);
-    try {
-      let references: TopicReference[] = [];
-      
-      if (userRole === 'mover') {
-        // Movers can only see their own records
-        switch (topicType) {
-          case 'reimbursement':
-            const { data: reimbursements } = await supabase
-              .from('reimbursements')
-              .select('id, reimbursement_number, job_number')
-              .eq('mover_id', userId)
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (reimbursements || []).map(r => ({
-              id: r.id,
-              label: `${t.reimbursementForm}${r.reimbursement_number} - ${r.job_number}`
-            }));
-            break;
-          case 'review_bonus':
-            const { data: reviews } = await supabase
-              .from('review_bonuses')
-              .select('id, invoice_number, client_full_name')
-              .eq('mover_id', userId)
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (reviews || []).map(r => ({
-              id: r.id,
-              label: `${t.reviewForm}${r.invoice_number} - ${r.client_full_name}`
-            }));
-            break;
-          case 'missing_payment':
-            const { data: payments } = await supabase
-              .from('missing_payments')
-              .select('id, job_number, customer_name')
-              .eq('mover_id', userId)
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (payments || []).map(r => ({
-              id: r.id,
-              label: `${t.missingPaymentForm}${r.job_number} - ${r.customer_name}`
-            }));
-            break;
-          case 'violence_incident':
-            const { data: incidents } = await supabase
-              .from('violence_incidents')
-              .select('id, job_id, client_name')
-              .eq('mover_id', userId)
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (incidents || []).map(r => ({
-              id: r.id,
-              label: `${t.violenceIncidentForm}${r.job_id} - ${r.client_name}`
-            }));
-            break;
-        }
-      } else {
-        // Admin and other roles can see all records
-        switch (topicType) {
-          case 'reimbursement':
-            const { data: reimbursements } = await supabase
-              .from('reimbursements')
-              .select('id, reimbursement_number, job_number, mover_full_name')
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (reimbursements || []).map(r => ({
-              id: r.id,
-              label: `${t.reimbursementForm}${r.reimbursement_number} - ${r.mover_full_name}`
-            }));
-            break;
-          case 'review_bonus':
-            const { data: reviews } = await supabase
-              .from('review_bonuses')
-              .select('id, invoice_number, foreman_name')
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (reviews || []).map(r => ({
-              id: r.id,
-              label: `${t.reviewForm}${r.invoice_number} - ${r.foreman_name}`
-            }));
-            break;
-          case 'missing_payment':
-            const { data: payments } = await supabase
-              .from('missing_payments')
-              .select('id, job_number, mover_full_name')
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (payments || []).map(r => ({
-              id: r.id,
-              label: `${t.missingPaymentForm}${r.job_number} - ${r.mover_full_name}`
-            }));
-            break;
-          case 'violence_incident':
-            const { data: incidents } = await supabase
-              .from('violence_incidents')
-              .select('id, job_id, mover_name')
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (incidents || []).map(r => ({
-              id: r.id,
-              label: `${t.violenceIncidentForm}${r.job_id} - ${r.mover_name}`
-            }));
-            break;
-          case 'performance_report':
-            const { data: reports } = await supabase
-              .from('performance_reports')
-              .select('id, title, worker_name')
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (reports || []).map(r => ({
-              id: r.id,
-              label: `${t.performanceReportForm}${r.title} - ${r.worker_name}`
-            }));
-            break;
-          case 'deductible':
-            const { data: deductibles } = await supabase
-              .from('deductibles')
-              .select('id, amount, mover_name')
-              .order('created_at', { ascending: false })
-              .limit(20);
-            references = (deductibles || []).map(r => ({
-              id: r.id,
-              label: `${t.deductibleForm}$${r.amount} - ${r.mover_name}`
-            }));
-            break;
-        }
-      }
-
-      setTopicReferences(references);
-    } catch (error) {
-      console.error('Error fetching topic references:', error);
-    } finally {
-      setLoadingReferences(false);
     }
   };
 
@@ -309,10 +119,7 @@ const NewChatDialog = ({
 
     setCreating(true);
     try {
-      const selectedRef = topicReferences.find(r => r.id === selectedReference);
-
-      // IMPORTANT: avoid RLS issues with "returning/select" before participants exist.
-      // We generate the UUID client-side so we don't need to SELECT the inserted row.
+      // Generate UUID client-side to avoid RLS issues
       const conversationId = crypto.randomUUID();
 
       const { error: convError } = await supabase
@@ -321,9 +128,9 @@ const NewChatDialog = ({
           id: conversationId,
           name: isGroupChat ? groupName : null,
           is_group: isGroupChat,
-          topic_type: topicType as ChatTopicType,
-          topic_reference_id: selectedReference || null,
-          topic_reference_label: selectedRef?.label || null,
+          topic_type: 'general',
+          topic_reference_id: null,
+          topic_reference_label: null,
           created_by: userId,
         });
 
@@ -355,8 +162,6 @@ const NewChatDialog = ({
 
   const handleClose = () => {
     setSelectedUsers([]);
-    setTopicType("general");
-    setSelectedReference("");
     setGroupName("");
     setSearchQuery("");
     onClose();
@@ -423,7 +228,7 @@ const NewChatDialog = ({
               />
             </div>
 
-            <ScrollArea className="h-[150px] border rounded-md">
+            <ScrollArea className="h-[200px] border rounded-md">
               {loading ? (
                 <div className="flex justify-center p-4">
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -454,49 +259,6 @@ const NewChatDialog = ({
               )}
             </ScrollArea>
           </div>
-
-          {/* Topic selection */}
-          <div className="space-y-2">
-            <Label>{t.selectTopic}</Label>
-            <Select value={topicType} onValueChange={setTopicType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {getAvailableTopics().map(topic => (
-                  <SelectItem key={topic.value} value={topic.value}>
-                    {topic.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Topic reference selection */}
-          {topicType !== 'general' && topicReferences.length > 0 && (
-            <div className="space-y-2">
-              <Label>{t.selectReference}</Label>
-              <Select value={selectedReference} onValueChange={setSelectedReference}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t.skipTopic} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{t.skipTopic}</SelectItem>
-                  {topicReferences.map(ref => (
-                    <SelectItem key={ref.id} value={ref.id}>
-                      {ref.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {loadingReferences && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  {t.loading}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Actions */}
           <div className="flex gap-2 justify-end">
