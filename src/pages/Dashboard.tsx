@@ -123,10 +123,10 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         {userRole === "mover" && <MoverDashboard userId={userId} />}
-        {userRole === "admin" && <AdminDashboard />}
-        {userRole === "reviews_admin" && <ReviewsAdminDashboard />}
-        {userRole === "accountant" && <AccountantDashboard />}
-        {userRole === "operations_manager" && <OperationsManagerDashboard />}
+        {userRole === "admin" && <AdminDashboard userId={userId} />}
+        {userRole === "reviews_admin" && <ReviewsAdminDashboard userId={userId} />}
+        {userRole === "accountant" && <AccountantDashboard userId={userId} />}
+        {userRole === "operations_manager" && <OperationsManagerDashboard userId={userId} />}
       </main>
     </div>
   );

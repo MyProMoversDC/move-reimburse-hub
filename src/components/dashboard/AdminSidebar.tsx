@@ -50,6 +50,7 @@ const menuItems = [
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
+  { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "movers", label: "Movers Directory", icon: Users },
   { id: "roles", label: "Role Management", icon: UserCog },
 ];

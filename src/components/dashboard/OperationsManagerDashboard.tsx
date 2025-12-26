@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Shield } from "lucide-react";
+import { FileText, Shield, MessageSquare } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
+import ChatContainer from "./chat/ChatContainer";
+import { supabase } from "@/integrations/supabase/client";
 
-const OperationsManagerDashboard = () => {
+interface OperationsManagerDashboardProps {
+  userId: string;
+}
+
+const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps) => {
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -26,6 +32,10 @@ const OperationsManagerDashboard = () => {
             <Shield className="h-4 w-4 mr-2" />
             Violence Incidents
           </TabsTrigger>
+          <TabsTrigger value="chat">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Chat
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="reports" className="space-y-6">
@@ -38,6 +48,11 @@ const OperationsManagerDashboard = () => {
         <TabsContent value="violence" className="space-y-6">
           <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
           <AdminViolenceIncidentList userRole="operations_manager" />
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-6">
+          <h2 className="text-2xl font-bold">Chat</h2>
+          <ChatContainer userId={userId} userRole="operations_manager" language={language} />
         </TabsContent>
       </Tabs>
     </div>

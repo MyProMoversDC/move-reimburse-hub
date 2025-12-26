@@ -1,16 +1,21 @@
 import { useState } from "react";
 import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
+import ChatContainer from "./chat/ChatContainer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download } from "lucide-react";
+import { Download, MessageSquare } from "lucide-react";
 import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 
-const AccountantDashboard = () => {
+interface AccountantDashboardProps {
+  userId: string;
+}
+
+const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
@@ -48,6 +53,10 @@ const AccountantDashboard = () => {
         <TabsList>
           <TabsTrigger value="requests">{t.confirmedReimbursements}</TabsTrigger>
           <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
+          <TabsTrigger value="chat">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Chat
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="requests" className="space-y-6">
@@ -63,6 +72,11 @@ const AccountantDashboard = () => {
         
         <TabsContent value="movers">
           <MoversList language={language} />
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-6">
+          <h2 className="text-2xl font-bold">Chat</h2>
+          <ChatContainer userId={userId} userRole="accountant" language={language} />
         </TabsContent>
       </Tabs>
     </div>
