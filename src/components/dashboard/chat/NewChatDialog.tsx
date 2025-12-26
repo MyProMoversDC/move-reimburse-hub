@@ -53,29 +53,13 @@ const NewChatDialog = ({
 
   const fetchUsers = async () => {
     try {
-      // Fetch all profiles - every user can message any user
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .neq('id', userId);
+      // Use the security definer function that bypasses RLS
+      const { data, error } = await supabase
+        .rpc('list_chat_users_for_picker', { exclude_user_id: userId });
 
-      if (profilesError) throw profilesError;
+      if (error) throw error;
 
-      // Fetch roles for all users
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) throw rolesError;
-
-      const usersWithRoles = (profiles || []).map(profile => ({
-        ...profile,
-        roles: (roles || [])
-          .filter(r => r.user_id === profile.id)
-          .map(r => r.role)
-      }));
-
-      setUsers(usersWithRoles);
+      setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
