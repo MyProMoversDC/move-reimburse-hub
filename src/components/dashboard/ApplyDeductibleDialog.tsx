@@ -11,13 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
@@ -44,10 +41,11 @@ const ApplyDeductibleDialog = ({
   onSuccess,
 }: ApplyDeductibleDialogProps) => {
   const [movers, setMovers] = useState<Mover[]>([]);
-  const [selectedMoverId, setSelectedMoverId] = useState<string>("");
+  const [selectedMoverIds, setSelectedMoverIds] = useState<string[]>([]);
   const [amount, setAmount] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -72,9 +70,21 @@ const ApplyDeductibleDialog = ({
     }
   };
 
+  const handleMoverToggle = (moverId: string) => {
+    setSelectedMoverIds((prev) =>
+      prev.includes(moverId)
+        ? prev.filter((id) => id !== moverId)
+        : [...prev, moverId]
+    );
+  };
+
+  const removeMover = (moverId: string) => {
+    setSelectedMoverIds((prev) => prev.filter((id) => id !== moverId));
+  };
+
   const handleSubmit = async () => {
-    if (!selectedMoverId) {
-      toast.error("Please select a mover");
+    if (selectedMoverIds.length === 0) {
+      toast.error("Please select at least one mover");
       return;
     }
 
@@ -88,23 +98,28 @@ const ApplyDeductibleDialog = ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
-      const selectedMover = movers.find((m) => m.id === selectedMoverId);
-      const moverName = selectedMover
-        ? `${selectedMover.first_name} ${selectedMover.last_name}`
-        : "Unknown";
+      // Create deductible for each selected mover
+      const deductibles = selectedMoverIds.map((moverId) => {
+        const selectedMover = movers.find((m) => m.id === moverId);
+        const moverName = selectedMover
+          ? `${selectedMover.first_name} ${selectedMover.last_name}`
+          : "Unknown";
 
-      const { error } = await supabase.from("deductibles").insert({
-        report_id: reportId || null,
-        mover_id: selectedMoverId,
-        mover_name: moverName,
-        amount: parseFloat(amount),
-        reason: reason.trim() || null,
-        created_by: userData.user.id,
+        return {
+          report_id: reportId || null,
+          mover_id: moverId,
+          mover_name: moverName,
+          amount: parseFloat(amount),
+          reason: reason.trim() || null,
+          created_by: userData.user.id,
+        };
       });
+
+      const { error } = await supabase.from("deductibles").insert(deductibles);
 
       if (error) throw error;
 
-      toast.success("Deductible applied successfully");
+      toast.success(`Deductible applied to ${selectedMoverIds.length} mover(s) successfully`);
       onOpenChange(false);
       resetForm();
       onSuccess?.();
@@ -116,40 +131,88 @@ const ApplyDeductibleDialog = ({
   };
 
   const resetForm = () => {
-    setSelectedMoverId("");
+    setSelectedMoverIds([]);
     setAmount("");
     setReason("");
+    setSearchQuery("");
   };
+
+  const filteredMovers = movers.filter((mover) => {
+    const fullName = `${mover.first_name} ${mover.last_name}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase());
+  });
+
+  const selectedMovers = movers.filter((m) => selectedMoverIds.includes(m.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Apply Deductible</DialogTitle>
           <DialogDescription>
-            Select a mover and enter the deduction amount.
+            Select one or more movers and enter the deduction amount.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="mover">Select Mover</Label>
-            <Select value={selectedMoverId} onValueChange={setSelectedMoverId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a mover..." />
-              </SelectTrigger>
-              <SelectContent>
-                {movers.map((mover) => (
-                  <SelectItem key={mover.id} value={mover.id}>
+          {/* Selected Movers Display */}
+          {selectedMovers.length > 0 && (
+            <div className="space-y-2">
+              <Label>Selected Movers ({selectedMovers.length})</Label>
+              <div className="flex flex-wrap gap-2">
+                {selectedMovers.map((mover) => (
+                  <Badge key={mover.id} variant="secondary" className="pl-2 pr-1">
                     {mover.first_name} {mover.last_name}
-                  </SelectItem>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                      onClick={() => removeMover(mover.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Mover Selection */}
+          <div className="space-y-2">
+            <Label>Select Movers</Label>
+            <Input
+              placeholder="Search movers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <ScrollArea className="h-[150px] border rounded-md p-2">
+              <div className="space-y-2">
+                {filteredMovers.map((mover) => (
+                  <div key={mover.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={mover.id}
+                      checked={selectedMoverIds.includes(mover.id)}
+                      onCheckedChange={() => handleMoverToggle(mover.id)}
+                    />
+                    <label
+                      htmlFor={mover.id}
+                      className="text-sm cursor-pointer flex-1"
+                    >
+                      {mover.first_name} {mover.last_name}
+                    </label>
+                  </div>
+                ))}
+                {filteredMovers.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No movers found
+                  </p>
+                )}
+              </div>
+            </ScrollArea>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ($)</Label>
+            <Label htmlFor="amount">Amount per Mover ($)</Label>
             <Input
               id="amount"
               type="number"
@@ -159,6 +222,11 @@ const ApplyDeductibleDialog = ({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
+            {selectedMoverIds.length > 1 && amount && (
+              <p className="text-sm text-muted-foreground">
+                Total: ${(parseFloat(amount) * selectedMoverIds.length).toFixed(2)} ({selectedMoverIds.length} movers × ${parseFloat(amount).toFixed(2)})
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -178,7 +246,7 @@ const ApplyDeductibleDialog = ({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? "Applying..." : "Apply Deductible"}
+            {loading ? "Applying..." : `Apply to ${selectedMoverIds.length || 0} Mover(s)`}
           </Button>
         </DialogFooter>
       </DialogContent>

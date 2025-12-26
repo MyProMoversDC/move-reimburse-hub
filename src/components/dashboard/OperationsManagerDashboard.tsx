@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText } from "lucide-react";
+import { FileText, Shield } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import PerformanceReportsList from "./PerformanceReportsList";
+import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 
 const OperationsManagerDashboard = () => {
   const [language, setLanguage] = useState<DashboardLanguage>('en');
@@ -21,6 +22,10 @@ const OperationsManagerDashboard = () => {
             <FileText className="h-4 w-4 mr-2" />
             Performance Reports
           </TabsTrigger>
+          <TabsTrigger value="violence">
+            <Shield className="h-4 w-4 mr-2" />
+            Violence Incidents
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="reports" className="space-y-6">
@@ -28,6 +33,11 @@ const OperationsManagerDashboard = () => {
             refreshKey={refreshKey} 
             onRefresh={() => setRefreshKey(prev => prev + 1)} 
           />
+        </TabsContent>
+
+        <TabsContent value="violence" className="space-y-6">
+          <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
+          <AdminViolenceIncidentList userRole="operations_manager" />
         </TabsContent>
       </Tabs>
     </div>

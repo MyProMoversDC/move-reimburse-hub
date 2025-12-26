@@ -10,6 +10,14 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -39,21 +47,47 @@ interface Deductible {
   created_by: string;
 }
 
+interface Mover {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
 interface DeductiblesReportProps {
   isAdmin?: boolean;
 }
 
 const DeductiblesReport = ({ isAdmin = false }: DeductiblesReportProps) => {
   const [deductibles, setDeductibles] = useState<Deductible[]>([]);
+  const [movers, setMovers] = useState<Mover[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [selectedMoverId, setSelectedMoverId] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
 
   useEffect(() => {
+    fetchMovers();
+  }, []);
+
+  useEffect(() => {
     fetchDeductibles();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, selectedMoverId]);
+
+  const fetchMovers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name")
+        .order("first_name");
+
+      if (error) throw error;
+      setMovers(data || []);
+    } catch (error) {
+      console.error("Error fetching movers:", error);
+    }
+  };
 
   const fetchDeductibles = async () => {
     try {
@@ -70,6 +104,9 @@ const DeductiblesReport = ({ isAdmin = false }: DeductiblesReportProps) => {
         const endDatePlusOne = new Date(endDate);
         endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
         query = query.lt("created_at", format(endDatePlusOne, "yyyy-MM-dd"));
+      }
+      if (selectedMoverId && selectedMoverId !== "all") {
+        query = query.eq("mover_id", selectedMoverId);
       }
 
       const { data, error } = await query;
@@ -118,22 +155,47 @@ const DeductiblesReport = ({ isAdmin = false }: DeductiblesReportProps) => {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        <DateRangeFilter
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          onClear={() => {
-            setStartDate(undefined);
-            setEndDate(undefined);
-          }}
-        />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <DateRangeFilter
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onClear={() => {
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }}
+            />
+          </div>
+          <div className="w-full md:w-64 space-y-2">
+            <Label>Filter by Mover</Label>
+            <Select value={selectedMoverId} onValueChange={setSelectedMoverId}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Movers" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Movers</SelectItem>
+                {movers.map((mover) => (
+                  <SelectItem key={mover.id} value={mover.id}>
+                    {mover.first_name} {mover.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <div className="bg-muted p-4 rounded-lg">
           <p className="text-sm text-muted-foreground">Total Deductions</p>
           <p className="text-2xl font-bold text-destructive">
             ${totalAmount.toFixed(2)}
           </p>
+          {selectedMoverId !== "all" && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Showing deductibles for: {movers.find(m => m.id === selectedMoverId)?.first_name} {movers.find(m => m.id === selectedMoverId)?.last_name}
+            </p>
+          )}
         </div>
 
         <Table>
