@@ -13,6 +13,7 @@ import MoverMisconductCases from "./MoverMisconductCases";
 import ViolenceIncidentForm from "./ViolenceIncidentForm";
 import ViolenceIncidentHistory from "./ViolenceIncidentHistory";
 import ChatContainer from "./chat/ChatContainer";
+import MoverSettings from "./MoverSettings";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
@@ -81,7 +82,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <MoverSettings userId={userId} language={language} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
       

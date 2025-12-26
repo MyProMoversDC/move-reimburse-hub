@@ -250,6 +250,63 @@ export type Database = {
         }
         Relationships: []
       }
+      mover_balances: {
+        Row: {
+          balance: number
+          id: string
+          mover_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          id?: string
+          mover_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          id?: string
+          mover_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mover_bonus_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          mover_id: string
+          reference_id: string | null
+          reference_type: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          mover_id: string
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          mover_id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_type?: string
+        }
+        Relationships: []
+      }
       performance_misconduct_messages: {
         Row: {
           created_at: string
@@ -370,6 +427,7 @@ export type Database = {
           created_at: string | null
           email: string
           first_name: string
+          hourly_rate: number | null
           id: string
           last_name: string
           phone: string
@@ -379,6 +437,7 @@ export type Database = {
           created_at?: string | null
           email: string
           first_name: string
+          hourly_rate?: number | null
           id: string
           last_name: string
           phone: string
@@ -388,6 +447,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           first_name?: string
+          hourly_rate?: number | null
           id?: string
           last_name?: string
           phone?: string
