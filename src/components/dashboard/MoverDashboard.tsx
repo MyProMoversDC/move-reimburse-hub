@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Star, DollarSign, AlertTriangle } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
@@ -10,10 +10,13 @@ import ReviewBonusHistory from "./ReviewBonusHistory";
 import MissingPaymentForm from "./MissingPaymentForm";
 import MissingPaymentHistory from "./MissingPaymentHistory";
 import MoverMisconductCases from "./MoverMisconductCases";
+import ViolenceIncidentForm from "./ViolenceIncidentForm";
+import ViolenceIncidentHistory from "./ViolenceIncidentHistory";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
+import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MoverDashboardProps {
@@ -24,15 +27,18 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
+  const [showViolenceForm, setShowViolenceForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
+  const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   const [foremanName, setForemanName] = useState("");
   
   const t = dashboardTranslations[language];
   const rt = reviewBonusTranslations[language];
   const mt = missingPaymentTranslations[language];
+  const vt = violenceIncidentTranslations[language];
 
   useEffect(() => {
     fetchProfile();
@@ -65,6 +71,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setMissingPaymentRefreshKey((prev) => prev + 1);
   };
 
+  const handleViolenceSuccess = () => {
+    setShowViolenceForm(false);
+    setViolenceRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -85,6 +96,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <TabsTrigger value="misconduct">
             <AlertTriangle className="h-4 w-4 mr-2" />
             {language === 'ru' ? 'Случаи поведения' : language === 'es' ? 'Casos de Conducta' : 'Misconduct Cases'}
+          </TabsTrigger>
+          <TabsTrigger value="violence">
+            <Shield className="h-4 w-4 mr-2" />
+            {vt.formTitle}
           </TabsTrigger>
         </TabsList>
 
@@ -179,6 +194,34 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
         <TabsContent value="misconduct" className="space-y-6">
           <MoverMisconductCases userId={userId} language={language} />
+        </TabsContent>
+
+        <TabsContent value="violence" className="space-y-6">
+          {!showViolenceForm && (
+            <Card className="p-6">
+              <Button onClick={() => setShowViolenceForm(true)} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                {vt.submitReport}
+              </Button>
+            </Card>
+          )}
+
+          {showViolenceForm && (
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">{vt.formTitle}</h2>
+                <Button variant="outline" onClick={() => setShowViolenceForm(false)}>
+                  {vt.close}
+                </Button>
+              </div>
+              <ViolenceIncidentForm userId={userId} onSuccess={handleViolenceSuccess} language={language} />
+            </Card>
+          )}
+
+          <div>
+            <h2 className="text-2xl font-bold mb-4">{vt.historyTitle}</h2>
+            <ViolenceIncidentHistory userId={userId} refreshKey={violenceRefreshKey} language={language} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
