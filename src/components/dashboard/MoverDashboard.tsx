@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Star, DollarSign, AlertTriangle, Shield } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
@@ -12,11 +12,13 @@ import MissingPaymentHistory from "./MissingPaymentHistory";
 import MoverMisconductCases from "./MoverMisconductCases";
 import ViolenceIncidentForm from "./ViolenceIncidentForm";
 import ViolenceIncidentHistory from "./ViolenceIncidentHistory";
+import ChatContainer from "./chat/ChatContainer";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
+import { chatTranslations } from "@/lib/chatTranslations";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MoverDashboardProps {
@@ -39,6 +41,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const rt = reviewBonusTranslations[language];
   const mt = missingPaymentTranslations[language];
   const vt = violenceIncidentTranslations[language];
+  const ct = chatTranslations[language];
 
   useEffect(() => {
     fetchProfile();
@@ -100,6 +103,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <TabsTrigger value="violence">
             <Shield className="h-4 w-4 mr-2" />
             {vt.formTitle}
+          </TabsTrigger>
+          <TabsTrigger value="chat">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            {ct.chat}
           </TabsTrigger>
         </TabsList>
 
@@ -222,6 +229,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <h2 className="text-2xl font-bold mb-4">{vt.historyTitle}</h2>
             <ViolenceIncidentHistory userId={userId} refreshKey={violenceRefreshKey} language={language} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="chat">
+          <ChatContainer userId={userId} userRole="mover" language={language} />
         </TabsContent>
       </Tabs>
     </div>

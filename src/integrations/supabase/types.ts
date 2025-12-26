@@ -14,6 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          content: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_group: boolean
+          name: string | null
+          topic_reference_id: string | null
+          topic_reference_label: string | null
+          topic_type: Database["public"]["Enums"]["chat_topic_type"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_group?: boolean
+          name?: string | null
+          topic_reference_id?: string | null
+          topic_reference_label?: string | null
+          topic_type?: Database["public"]["Enums"]["chat_topic_type"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_group?: boolean
+          name?: string | null
+          topic_reference_id?: string | null
+          topic_reference_label?: string | null
+          topic_type?: Database["public"]["Enums"]["chat_topic_type"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deductibles: {
         Row: {
           amount: number
@@ -653,6 +794,14 @@ export type Database = {
         | "mover"
         | "operations_manager"
         | "reviews_admin"
+      chat_topic_type:
+        | "general"
+        | "reimbursement"
+        | "review_bonus"
+        | "missing_payment"
+        | "violence_incident"
+        | "performance_report"
+        | "deductible"
       discrepancy_type:
         | "missing_hours"
         | "incorrect_hourly_rate"
@@ -808,6 +957,15 @@ export const Constants = {
         "mover",
         "operations_manager",
         "reviews_admin",
+      ],
+      chat_topic_type: [
+        "general",
+        "reimbursement",
+        "review_bonus",
+        "missing_payment",
+        "violence_incident",
+        "performance_report",
+        "deductible",
       ],
       discrepancy_type: [
         "missing_hours",
