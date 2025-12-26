@@ -8,7 +8,8 @@ import {
   LayoutDashboard,
   ChevronLeft,
   DollarSign,
-  MessageSquare
+  MessageSquare,
+  Shield
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const menuItems = [
   { id: "review-reports", label: "Review Reports", icon: FileBarChart },
   { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
   { id: "performance-reports", label: "Performance Reports", icon: AlertTriangle },
+  { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "movers", label: "Movers Directory", icon: Users },

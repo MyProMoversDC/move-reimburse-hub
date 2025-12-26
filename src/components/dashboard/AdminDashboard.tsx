@@ -11,6 +11,7 @@ import UserRoleManager from "./UserRoleManager";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminMisconductResponses from "./AdminMisconductResponses";
 import DeductiblesReport from "./DeductiblesReport";
+import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import { Button } from "@/components/ui/button";
@@ -303,6 +304,13 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Deductibles Report</h2>
             <DeductiblesReport isAdmin={true} />
+          </div>
+        );
+      case "violence-incidents":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
+            <AdminViolenceIncidentList userRole="admin" />
           </div>
         );
       case "movers":
