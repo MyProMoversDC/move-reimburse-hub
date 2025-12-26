@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,10 +21,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit, DollarSign, Save } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError } from "@/lib/errorHandler";
+import { Label } from "@/components/ui/label";
 
 interface Mover {
   id: string;
@@ -32,6 +40,12 @@ interface Mover {
   last_name: string;
   email: string;
   phone: string;
+  hourly_rate: number;
+}
+
+interface MoverBalance {
+  mover_id: string;
+  balance: number;
 }
 
 interface MoversListProps {
@@ -40,51 +54,101 @@ interface MoversListProps {
 
 const MoversList = ({ language }: MoversListProps) => {
   const [movers, setMovers] = useState<Mover[]>([]);
+  const [balances, setBalances] = useState<MoverBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [moverToDelete, setMoverToDelete] = useState<Mover | null>(null);
   
+  // Edit hourly rate state
+  const [editingMover, setEditingMover] = useState<Mover | null>(null);
+  const [newHourlyRate, setNewHourlyRate] = useState<string>("");
+  const [savingRate, setSavingRate] = useState(false);
+  
   const t = dashboardTranslations[language];
 
+  const extraTranslations = {
+    en: {
+      hourlyRate: "Hourly Rate",
+      balance: "Balance",
+      editHourlyRate: "Edit Hourly Rate",
+      save: "Save",
+      saving: "Saving...",
+      hourlyRateUpdated: "Hourly rate updated successfully!",
+    },
+    es: {
+      hourlyRate: "Tarifa por Hora",
+      balance: "Balance",
+      editHourlyRate: "Editar Tarifa por Hora",
+      save: "Guardar",
+      saving: "Guardando...",
+      hourlyRateUpdated: "¡Tarifa por hora actualizada exitosamente!",
+    },
+    ru: {
+      hourlyRate: "Почасовая Ставка",
+      balance: "Баланс",
+      editHourlyRate: "Изменить Почасовую Ставку",
+      save: "Сохранить",
+      saving: "Сохранение...",
+      hourlyRateUpdated: "Почасовая ставка успешно обновлена!",
+    },
+  };
+
+  const et = extraTranslations[language];
+
   useEffect(() => {
-    const fetchMovers = async () => {
-      try {
-        // Get all users with mover role
-        const { data: moverRoles, error: rolesError } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "mover");
-
-        if (rolesError) throw rolesError;
-
-        const moverIds = moverRoles?.map((r) => r.user_id) || [];
-
-        if (moverIds.length === 0) {
-          setMovers([]);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch profiles for all movers
-        const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("id", moverIds)
-          .order("first_name");
-
-        if (profilesError) throw profilesError;
-
-        setMovers(profiles || []);
-      } catch (error: unknown) {
-        toast.error(handleError(error));
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMovers();
   }, []);
+
+  const fetchMovers = async () => {
+    try {
+      // Get all users with mover role
+      const { data: moverRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "mover");
+
+      if (rolesError) throw rolesError;
+
+      const moverIds = moverRoles?.map((r) => r.user_id) || [];
+
+      if (moverIds.length === 0) {
+        setMovers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profiles for all movers
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, username, first_name, last_name, email, phone, hourly_rate")
+        .in("id", moverIds)
+        .order("first_name");
+
+      if (profilesError) throw profilesError;
+
+      setMovers(profiles || []);
+
+      // Fetch balances for all movers
+      const { data: balanceData, error: balanceError } = await supabase
+        .from("mover_balances")
+        .select("mover_id, balance")
+        .in("mover_id", moverIds);
+
+      if (balanceError) throw balanceError;
+
+      setBalances(balanceData || []);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBalance = (moverId: string) => {
+    const balance = balances.find((b) => b.mover_id === moverId);
+    return balance?.balance || 0;
+  };
 
   const handleDeleteClick = (mover: Mover) => {
     setMoverToDelete(mover);
@@ -113,59 +177,154 @@ const MoversList = ({ language }: MoversListProps) => {
     }
   };
 
+  const handleEditHourlyRate = (mover: Mover) => {
+    setEditingMover(mover);
+    setNewHourlyRate(mover.hourly_rate?.toString() || "0");
+  };
+
+  const handleSaveHourlyRate = async () => {
+    if (!editingMover) return;
+
+    setSavingRate(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ hourly_rate: parseFloat(newHourlyRate) || 0 })
+        .eq("id", editingMover.id);
+
+      if (error) throw error;
+
+      toast.success(et.hourlyRateUpdated);
+      setMovers(movers.map((m) =>
+        m.id === editingMover.id
+          ? { ...m, hourly_rate: parseFloat(newHourlyRate) || 0 }
+          : m
+      ));
+      setEditingMover(null);
+    } catch (error: unknown) {
+      toast.error(handleError(error));
+    } finally {
+      setSavingRate(false);
+    }
+  };
+
   if (loading) {
     return <div>{t.loading}</div>;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t.moversDirectory}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t.name}</TableHead>
-              <TableHead>{t.username}</TableHead>
-              <TableHead>{t.email}</TableHead>
-              <TableHead>{t.phone}</TableHead>
-              <TableHead className="text-right">{t.actions}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {movers.length === 0 ? (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.moversDirectory}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  {t.noMoversFound}
-                </TableCell>
+                <TableHead>{t.name}</TableHead>
+                <TableHead>{t.username}</TableHead>
+                <TableHead>{t.email}</TableHead>
+                <TableHead>{t.phone}</TableHead>
+                <TableHead>{et.hourlyRate}</TableHead>
+                <TableHead>{et.balance}</TableHead>
+                <TableHead className="text-right">{t.actions}</TableHead>
               </TableRow>
-            ) : (
-              movers.map((mover) => (
-                <TableRow key={mover.id}>
-                  <TableCell className="font-medium">
-                    {mover.first_name} {mover.last_name}
-                  </TableCell>
-                  <TableCell>{mover.username}</TableCell>
-                  <TableCell>{mover.email}</TableCell>
-                  <TableCell>{mover.phone}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteClick(mover)}
-                      disabled={deletingId === mover.id}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {deletingId === mover.id ? t.deleting : t.deleteMover}
-                    </Button>
+            </TableHeader>
+            <TableBody>
+              {movers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    {t.noMoversFound}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
+              ) : (
+                movers.map((mover) => {
+                  const balance = getBalance(mover.id);
+                  return (
+                    <TableRow key={mover.id}>
+                      <TableCell className="font-medium">
+                        {mover.first_name} {mover.last_name}
+                      </TableCell>
+                      <TableCell>{mover.username}</TableCell>
+                      <TableCell>{mover.email}</TableCell>
+                      <TableCell>{mover.phone}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>${mover.hourly_rate?.toFixed(2) || "0.00"}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditHourlyRate(mover)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${balance.toFixed(2)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteClick(mover)}
+                          disabled={deletingId === mover.id}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {deletingId === mover.id ? t.deleting : t.deleteMover}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Edit Hourly Rate Dialog */}
+      <Dialog open={!!editingMover} onOpenChange={(open) => !open && setEditingMover(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              {et.editHourlyRate}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t.name}</Label>
+              <Input
+                value={`${editingMover?.first_name} ${editingMover?.last_name}`}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{et.hourlyRate} ($)</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={newHourlyRate}
+                onChange={(e) => setNewHourlyRate(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={handleSaveHourlyRate}
+              disabled={savingRate}
+              className="w-full"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {savingRate ? et.saving : et.save}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
@@ -184,7 +343,7 @@ const MoversList = ({ language }: MoversListProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </>
   );
 };
 

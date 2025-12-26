@@ -5,6 +5,7 @@ import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard
 import DeductiblesReport from "./DeductiblesReport";
 import DateRangeFilter from "./DateRangeFilter";
 import ChatContainer from "./chat/ChatContainer";
+import AddBonusDialog from "./AddBonusDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare } from "lucide-react";
@@ -95,12 +96,15 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
 
         <TabsContent value="reviews" className="space-y-6">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <h2 className="text-2xl font-bold">Customer Review Bonus Submissions</h2>
-              <Button onClick={handleExportReviews} disabled={exportingReviews}>
-                <Download className="h-4 w-4 mr-2" />
-                {exportingReviews ? t.exporting : t.exportToExcel}
-              </Button>
+              <div className="flex items-center gap-2">
+                <AddBonusDialog userId={userId} language={language} />
+                <Button onClick={handleExportReviews} disabled={exportingReviews}>
+                  <Download className="h-4 w-4 mr-2" />
+                  {exportingReviews ? t.exporting : t.exportToExcel}
+                </Button>
+              </div>
             </div>
             <DateRangeFilter
               startDate={reviewStartDate}
