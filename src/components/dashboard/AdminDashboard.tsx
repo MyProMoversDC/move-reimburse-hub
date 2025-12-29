@@ -15,6 +15,7 @@ import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import ChatContainer from "./chat/ChatContainer";
+import { AdminFeedbackList } from "./AdminFeedbackList";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
@@ -316,6 +317,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
             <AdminViolenceIncidentList userRole="admin" />
+          </div>
+        );
+      case "mover-feedback":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Mover Feedback & Suggestions</h2>
+            <AdminFeedbackList />
           </div>
         );
       case "chat":
