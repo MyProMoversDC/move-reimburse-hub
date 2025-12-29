@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare, Lightbulb } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
@@ -12,6 +12,8 @@ import MissingPaymentHistory from "./MissingPaymentHistory";
 import MoverMisconductCases from "./MoverMisconductCases";
 import ViolenceIncidentForm from "./ViolenceIncidentForm";
 import ViolenceIncidentHistory from "./ViolenceIncidentHistory";
+import { MoverFeedbackForm } from "./MoverFeedbackForm";
+import { MoverFeedbackHistory } from "./MoverFeedbackHistory";
 import ChatContainer from "./chat/ChatContainer";
 import MoverSettings from "./MoverSettings";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -31,10 +33,12 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
   const [showViolenceForm, setShowViolenceForm] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
+  const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   const [foremanName, setForemanName] = useState("");
   
@@ -80,6 +84,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setViolenceRefreshKey((prev) => prev + 1);
   };
 
+  const handleFeedbackSuccess = () => {
+    setShowFeedbackForm(false);
+    setFeedbackRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
@@ -105,6 +114,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <TabsTrigger value="violence">
             <Shield className="h-4 w-4 mr-2" />
             {vt.formTitle}
+          </TabsTrigger>
+          <TabsTrigger value="feedback">
+            <Lightbulb className="h-4 w-4 mr-2" />
+            {language === 'ru' ? 'Обратная связь' : language === 'es' ? 'Comentarios' : 'Feedback'}
           </TabsTrigger>
           <TabsTrigger value="chat">
             <MessageSquare className="h-4 w-4 mr-2" />
@@ -231,6 +244,30 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <h2 className="text-2xl font-bold mb-4">{vt.historyTitle}</h2>
             <ViolenceIncidentHistory userId={userId} refreshKey={violenceRefreshKey} language={language} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="feedback" className="space-y-6">
+          {!showFeedbackForm && (
+            <Card className="p-6">
+              <Button onClick={() => setShowFeedbackForm(true)} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+              </Button>
+            </Card>
+          )}
+
+          {showFeedbackForm && (
+            <div>
+              <div className="flex justify-end mb-4">
+                <Button variant="outline" onClick={() => setShowFeedbackForm(false)}>
+                  {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
+                </Button>
+              </div>
+              <MoverFeedbackForm userId={userId} language={language} onSuccess={handleFeedbackSuccess} />
+            </div>
+          )}
+
+          <MoverFeedbackHistory userId={userId} language={language} refreshKey={feedbackRefreshKey} />
         </TabsContent>
 
         <TabsContent value="chat">
