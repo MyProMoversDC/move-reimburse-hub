@@ -307,6 +307,89 @@ export type Database = {
         }
         Relationships: []
       }
+      mover_feedback: {
+        Row: {
+          additional_notes: string | null
+          created_at: string
+          feedback_areas: Database["public"]["Enums"]["feedback_area"][]
+          feedback_type: string
+          id: string
+          improvement_suggestion: string | null
+          is_recurring: string
+          mover_id: string
+          mover_name: string
+          other_area_explanation: string | null
+          priority: Database["public"]["Enums"]["feedback_priority"]
+          reviewed_at: string | null
+          situation_explanation: string
+          status: Database["public"]["Enums"]["feedback_status"]
+        }
+        Insert: {
+          additional_notes?: string | null
+          created_at?: string
+          feedback_areas: Database["public"]["Enums"]["feedback_area"][]
+          feedback_type: string
+          id?: string
+          improvement_suggestion?: string | null
+          is_recurring?: string
+          mover_id: string
+          mover_name: string
+          other_area_explanation?: string | null
+          priority: Database["public"]["Enums"]["feedback_priority"]
+          reviewed_at?: string | null
+          situation_explanation: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+        }
+        Update: {
+          additional_notes?: string | null
+          created_at?: string
+          feedback_areas?: Database["public"]["Enums"]["feedback_area"][]
+          feedback_type?: string
+          id?: string
+          improvement_suggestion?: string | null
+          is_recurring?: string
+          mover_id?: string
+          mover_name?: string
+          other_area_explanation?: string | null
+          priority?: Database["public"]["Enums"]["feedback_priority"]
+          reviewed_at?: string | null
+          situation_explanation?: string
+          status?: Database["public"]["Enums"]["feedback_status"]
+        }
+        Relationships: []
+      }
+      mover_feedback_responses: {
+        Row: {
+          admin_id: string
+          created_at: string
+          feedback_id: string
+          id: string
+          response_message: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          response_message: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          response_message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mover_feedback_responses_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "mover_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_misconduct_messages: {
         Row: {
           created_at: string
@@ -885,6 +968,17 @@ export type Database = {
         | "missing_tip"
         | "missing_bonus"
         | "other"
+      feedback_area:
+        | "operations"
+        | "scheduling"
+        | "equipment"
+        | "pay"
+        | "safety"
+        | "customer_experience"
+        | "communication"
+        | "other"
+      feedback_priority: "needs_attention_soon" | "general_improvement"
+      feedback_status: "pending" | "reviewed" | "responded"
       missing_payment_status: "pending" | "confirmed" | "declined" | "appeal"
       reimbursement_status:
         | "pending"
@@ -1051,6 +1145,18 @@ export const Constants = {
         "missing_bonus",
         "other",
       ],
+      feedback_area: [
+        "operations",
+        "scheduling",
+        "equipment",
+        "pay",
+        "safety",
+        "customer_experience",
+        "communication",
+        "other",
+      ],
+      feedback_priority: ["needs_attention_soon", "general_improvement"],
+      feedback_status: ["pending", "reviewed", "responded"],
       missing_payment_status: ["pending", "confirmed", "declined", "appeal"],
       reimbursement_status: [
         "pending",
