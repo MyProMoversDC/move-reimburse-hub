@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   DollarSign,
   MessageSquare,
-  Shield
+  Shield,
+  MessageCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const menuItems = [
   { id: "requests", label: "Reimbursements", icon: FileText },
   { id: "reviews", label: "Review Bonuses", icon: Star },
   { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
+  { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle },
   { id: "reimbursement-reports", label: "Reimbursement Reports", icon: FileBarChart },
   { id: "review-reports", label: "Review Reports", icon: FileBarChart },
   { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
