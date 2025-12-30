@@ -36,6 +36,7 @@ interface MoverDashboardProps {
 }
 
 const MoverDashboard = ({ userId }: MoverDashboardProps) => {
+  const [activeTab, setActiveTab] = useState("reimbursements");
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
@@ -48,6 +49,40 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   const [foremanName, setForemanName] = useState("");
+
+  // Form selection handlers for mobile dropdown
+  const handleFormSelect = (formType: string) => {
+    // Reset all forms first
+    setShowReimbursementForm(false);
+    setShowReviewForm(false);
+    setShowMissingPaymentForm(false);
+    setShowViolenceForm(false);
+    setShowFeedbackForm(false);
+
+    // Navigate to tab and show form
+    switch (formType) {
+      case 'reimbursement':
+        setActiveTab('reimbursements');
+        setTimeout(() => setShowReimbursementForm(true), 100);
+        break;
+      case 'review':
+        setActiveTab('reviews');
+        setTimeout(() => setShowReviewForm(true), 100);
+        break;
+      case 'missing-payment':
+        setActiveTab('missing-payments');
+        setTimeout(() => setShowMissingPaymentForm(true), 100);
+        break;
+      case 'violence':
+        setActiveTab('violence');
+        setTimeout(() => setShowViolenceForm(true), 100);
+        break;
+      case 'feedback':
+        setActiveTab('feedback');
+        setTimeout(() => setShowFeedbackForm(true), 100);
+        break;
+    }
+  };
   
   const t = dashboardTranslations[language];
   const rt = reviewBonusTranslations[language];
@@ -105,7 +140,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
       
-      <Tabs defaultValue="reimbursements" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
           <TabsList className="inline-flex min-w-max md:flex md:flex-wrap gap-1 h-auto p-1">
             <TabsTrigger value="reimbursements" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
@@ -160,23 +195,23 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
-                  <DropdownMenuItem onClick={() => setShowReimbursementForm(true)} className="py-3">
+                  <DropdownMenuItem onClick={() => handleFormSelect('reimbursement')} className="py-3">
                     <DollarSign className="h-4 w-4 mr-2" />
                     {t.submitReimbursement}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowReviewForm(true)} className="py-3">
+                  <DropdownMenuItem onClick={() => handleFormSelect('review')} className="py-3">
                     <Star className="h-4 w-4 mr-2" />
                     {rt.submitReview}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowMissingPaymentForm(true)} className="py-3">
+                  <DropdownMenuItem onClick={() => handleFormSelect('missing-payment')} className="py-3">
                     <DollarSign className="h-4 w-4 mr-2" />
                     {mt.submitMissingPayment}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowViolenceForm(true)} className="py-3">
+                  <DropdownMenuItem onClick={() => handleFormSelect('violence')} className="py-3">
                     <Shield className="h-4 w-4 mr-2" />
                     {vt.submitReport}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowFeedbackForm(true)} className="py-3">
+                  <DropdownMenuItem onClick={() => handleFormSelect('feedback')} className="py-3">
                     <Lightbulb className="h-4 w-4 mr-2" />
                     {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
                   </DropdownMenuItem>
