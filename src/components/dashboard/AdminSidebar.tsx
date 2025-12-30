@@ -48,7 +48,7 @@ const menuItems = [
   { id: "reimbursement-reports", label: "Reimbursement Reports", icon: FileBarChart },
   { id: "review-reports", label: "Review Reports", icon: FileBarChart },
   { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
-  { id: "performance-reports", label: "Performance Reports", icon: AlertTriangle },
+  { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },

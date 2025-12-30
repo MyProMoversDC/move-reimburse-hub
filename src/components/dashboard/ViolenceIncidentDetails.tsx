@@ -226,21 +226,10 @@ const ViolenceIncidentDetails = ({
 
               <Separator />
 
-              {/* Injuries & Damage */}
+              {/* Property Damage */}
               <div>
                 <h3 className="font-semibold mb-2">{t.injuriesDamage}</h3>
                 <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">{t.anyoneInjured}:</span>{" "}
-                    <Badge variant={incident.anyone_injured ? "destructive" : "secondary"}>
-                      {incident.anyone_injured ? t.yes : t.no}
-                    </Badge>
-                  </div>
-                  {incident.anyone_injured && incident.injury_description && (
-                    <div className="p-3 bg-destructive/10 rounded-lg">
-                      {incident.injury_description}
-                    </div>
-                  )}
                   <div>
                     <span className="text-muted-foreground">{t.anyPropertyDamage}:</span>{" "}
                     <Badge variant={incident.property_damaged ? "destructive" : "secondary"}>
