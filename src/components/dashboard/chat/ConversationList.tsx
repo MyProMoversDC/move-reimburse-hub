@@ -106,6 +106,15 @@ const ConversationList = ({
 
       if (convError) throw convError;
 
+      // Fetch all users with their names using RPC function
+      const { data: allUsers } = await supabase.rpc('list_chat_users_for_picker');
+      const usersMap = new Map(
+        (allUsers || []).map((u: { id: string; first_name: string; last_name: string }) => [
+          u.id, 
+          { first_name: u.first_name, last_name: u.last_name }
+        ])
+      );
+
       // Fetch participants and profiles for each conversation
       const conversationsWithDetails = await Promise.all(
         (conversationsData || []).map(async (conv) => {
@@ -115,16 +124,9 @@ const ConversationList = ({
             .select('user_id, last_read_at')
             .eq('conversation_id', conv.id);
 
-          // Get profiles for participants
-          const participantUserIds = (participants || []).map(p => p.user_id);
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, first_name, last_name')
-            .in('id', participantUserIds);
-
           const participantsWithProfiles = (participants || []).map(p => ({
             ...p,
-            profile: profiles?.find(pr => pr.id === p.user_id)
+            profile: usersMap.get(p.user_id) || { first_name: 'Unknown', last_name: 'User' }
           }));
 
           // Get last message
