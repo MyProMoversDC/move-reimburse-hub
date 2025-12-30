@@ -101,7 +101,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <img 
                 src={logo} 
@@ -123,10 +123,9 @@ const Dashboard = () => {
                 <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout} size="sm" className="self-end sm:self-auto">
-              <LogOut className="h-4 w-4 mr-2" />
-              <span className="hidden xs:inline">Logout</span>
-              <span className="xs:hidden">Exit</span>
+            <Button variant="outline" onClick={handleLogout} size="sm">
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Logout</span>
             </Button>
           </div>
         </div>
