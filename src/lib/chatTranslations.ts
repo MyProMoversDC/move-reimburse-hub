@@ -62,6 +62,7 @@ export const chatTranslations = {
     back: "Back",
     conversations: "Conversations",
     members: "members",
+    newMessageFrom: "New message from {name}",
   },
   es: {
     chat: "Chat",
@@ -124,6 +125,7 @@ export const chatTranslations = {
     back: "Atrás",
     conversations: "Conversaciones",
     members: "miembros",
+    newMessageFrom: "Nuevo mensaje de {name}",
   },
   ru: {
     chat: "Чат",
@@ -186,5 +188,6 @@ export const chatTranslations = {
     back: "Назад",
     conversations: "Разговоры",
     members: "участников",
+    newMessageFrom: "Новое сообщение от {name}",
   },
 };
