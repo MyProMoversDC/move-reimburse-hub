@@ -30,6 +30,7 @@ interface ReviewBonus {
   decline_reason: string | null;
   submission_date: string;
   review_month: string;
+  appeal_count?: number;
 }
 
 interface ReviewBonusHistoryProps {
@@ -68,7 +69,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, appealCount?: number) => {
     switch (status) {
       case "pending":
         return <Badge variant="secondary">{t.pending}</Badge>;
@@ -77,7 +78,10 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
       case "declined":
         return <Badge variant="destructive">{t.declined}</Badge>;
       case "appeal":
-        return <Badge variant="outline" className="border-orange-500 text-orange-600">Under Appeal</Badge>;
+        if (appealCount === 2) {
+          return <Badge variant="outline" className="border-red-500 text-red-600">Final Appeal</Badge>;
+        }
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">First Appeal</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -135,7 +139,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                   {t.invoiceNumber}: {review.invoice_number} | {t.jobDate}: {format(new Date(review.job_date), "MM/dd/yyyy")}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  {getStatusBadge(review.status)}
+                  {getStatusBadge(review.status, review.appeal_count)}
                 </div>
                 {review.status === "declined" && review.decline_reason && (
                   <p className="text-sm text-destructive mt-2">
@@ -147,14 +151,14 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 <Button variant="outline" onClick={() => handleViewDetails(review)}>
                   {t.viewDetails}
                 </Button>
-                {review.status === "declined" && (
+                {review.status === "declined" && (!review.appeal_count || review.appeal_count < 2) && (
                   <Button
                     variant="outline"
                     onClick={() => setAppealReview(review)}
                     className="text-orange-600 border-orange-600 hover:bg-orange-50"
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    Appeal
+                    {review.appeal_count === 1 ? "Final Appeal" : "Appeal"}
                   </Button>
                 )}
               </div>
@@ -164,7 +168,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
       </div>
 
       <Dialog open={!!selectedReview} onOpenChange={() => setSelectedReview(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t.viewDetails}</DialogTitle>
           </DialogHeader>
@@ -185,7 +189,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t.status}</p>
-                  {getStatusBadge(selectedReview.status)}
+                  {getStatusBadge(selectedReview.status, selectedReview.appeal_count)}
                 </div>
               </div>
 
@@ -207,10 +211,10 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 </div>
               )}
 
-              {selectedReview.status === "declined" && selectedReview.decline_reason && (
+              {selectedReview.decline_reason && (
                 <div className="bg-destructive/10 p-4 rounded-lg">
                   <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
-                  <p className="mt-1">{selectedReview.decline_reason}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm">{selectedReview.decline_reason}</p>
                 </div>
               )}
 

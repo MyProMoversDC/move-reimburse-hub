@@ -182,6 +182,13 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form Description */}
+        <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            Submit this form after a customer leaves a review for your service. Include all crew members who participated in the job. Each approved review qualifies crew members for a potential bonus. Note: Each invoice number and review URL can only be submitted once.
+          </p>
+        </div>
+
         {/* Instructions */}
         <div className="bg-muted p-4 rounded-lg">
           <p className="whitespace-pre-line text-sm">{t.instructions}</p>

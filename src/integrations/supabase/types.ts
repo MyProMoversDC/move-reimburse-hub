@@ -199,6 +199,7 @@ export type Database = {
       missing_payments: {
         Row: {
           appeal_at: string | null
+          appeal_count: number | null
           appeal_note: string | null
           created_at: string
           customer_name: string
@@ -216,6 +217,7 @@ export type Database = {
         }
         Insert: {
           appeal_at?: string | null
+          appeal_count?: number | null
           appeal_note?: string | null
           created_at?: string
           customer_name: string
@@ -233,6 +235,7 @@ export type Database = {
         }
         Update: {
           appeal_at?: string | null
+          appeal_count?: number | null
           appeal_note?: string | null
           created_at?: string
           customer_name?: string
@@ -605,6 +608,7 @@ export type Database = {
       reimbursements: {
         Row: {
           appeal_at: string | null
+          appeal_count: number | null
           appeal_note: string | null
           confirmed_at: string | null
           created_at: string | null
@@ -627,6 +631,7 @@ export type Database = {
         }
         Insert: {
           appeal_at?: string | null
+          appeal_count?: number | null
           appeal_note?: string | null
           confirmed_at?: string | null
           created_at?: string | null
@@ -649,6 +654,7 @@ export type Database = {
         }
         Update: {
           appeal_at?: string | null
+          appeal_count?: number | null
           appeal_note?: string | null
           confirmed_at?: string | null
           created_at?: string | null
@@ -706,6 +712,7 @@ export type Database = {
       review_bonuses: {
         Row: {
           appeal_at: string | null
+          appeal_count: number | null
           appeal_note: string | null
           client_full_name: string
           created_at: string
@@ -732,6 +739,7 @@ export type Database = {
         }
         Insert: {
           appeal_at?: string | null
+          appeal_count?: number | null
           appeal_note?: string | null
           client_full_name: string
           created_at?: string
@@ -758,6 +766,7 @@ export type Database = {
         }
         Update: {
           appeal_at?: string | null
+          appeal_count?: number | null
           appeal_note?: string | null
           client_full_name?: string
           created_at?: string

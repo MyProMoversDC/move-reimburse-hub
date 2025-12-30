@@ -81,12 +81,22 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
 
       // Update the item status to appeal
       if (type === "reimbursement") {
+        // First get current appeal count
+        const { data: currentReimb } = await supabase
+          .from("reimbursements")
+          .select("appeal_count")
+          .eq("id", itemId)
+          .maybeSingle();
+        
+        const newAppealCount = (currentReimb?.appeal_count || 0) + 1;
+        
         const { error } = await supabase
           .from("reimbursements")
           .update({
             status: "appeal",
             appeal_note: appealNote.trim(),
             appeal_at: new Date().toISOString(),
+            appeal_count: newAppealCount,
           })
           .eq("id", itemId);
         
@@ -114,12 +124,22 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
           });
         }
       } else if (type === "review") {
+        // First get current appeal count
+        const { data: currentReview } = await supabase
+          .from("review_bonuses")
+          .select("appeal_count")
+          .eq("id", itemId)
+          .maybeSingle();
+        
+        const newAppealCount = (currentReview?.appeal_count || 0) + 1;
+        
         const { error } = await supabase
           .from("review_bonuses")
           .update({
             status: "appeal",
             appeal_note: appealNote.trim(),
             appeal_at: new Date().toISOString(),
+            appeal_count: newAppealCount,
           })
           .eq("id", itemId);
         
