@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarWithClose } from "@/components/ui/calendar-with-close";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CalendarIcon, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -28,6 +35,13 @@ interface ReviewBonusFormProps {
   language: ReviewBonusLanguage;
 }
 
+interface MoverOption {
+  id: string;
+  name: string;
+}
+
+const OTHER_VALUE = "__OTHER__";
+
 const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBonusFormProps) => {
   const t = reviewBonusTranslations[language];
   
@@ -37,11 +51,65 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
   const [clientFullName, setClientFullName] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [crewMembers, setCrewMembers] = useState<string[]>(["", "", "", "", "", "", "", ""]);
+  const [crewMemberSelections, setCrewMemberSelections] = useState<string[]>(["", "", "", "", "", "", "", ""]);
   const [reviewUrl, setReviewUrl] = useState("");
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [duplicateAlertMessage, setDuplicateAlertMessage] = useState("");
+  const [movers, setMovers] = useState<MoverOption[]>([]);
 
-  const handleCrewMemberChange = (index: number, value: string) => {
+  useEffect(() => {
+    fetchMovers();
+  }, []);
+
+  const fetchMovers = async () => {
+    try {
+      // Get all users with mover role
+      const { data: moverRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "mover");
+
+      if (moverRoles && moverRoles.length > 0) {
+        const moverIds = moverRoles.map(r => r.user_id);
+        
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", moverIds)
+          .order("first_name");
+
+        if (profiles) {
+          setMovers(profiles.map(p => ({
+            id: p.id,
+            name: `${p.first_name} ${p.last_name}`.trim()
+          })));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching movers:", error);
+    }
+  };
+
+  const handleCrewMemberSelect = (index: number, value: string) => {
+    const newSelections = [...crewMemberSelections];
+    newSelections[index] = value;
+    setCrewMemberSelections(newSelections);
+
+    if (value !== OTHER_VALUE) {
+      // Find the mover name from the list
+      const mover = movers.find(m => m.id === value);
+      const newCrewMembers = [...crewMembers];
+      newCrewMembers[index] = mover?.name || "";
+      setCrewMembers(newCrewMembers);
+    } else {
+      // Clear the crew member name when "Other" is selected
+      const newCrewMembers = [...crewMembers];
+      newCrewMembers[index] = "";
+      setCrewMembers(newCrewMembers);
+    }
+  };
+
+  const handleCrewMemberManualInput = (index: number, value: string) => {
     const newCrewMembers = [...crewMembers];
     newCrewMembers[index] = value;
     setCrewMembers(newCrewMembers);
@@ -179,6 +247,8 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
     }
   };
 
+  const otherLabel = language === 'en' ? 'Other (Enter manually)' : language === 'es' ? 'Otro (Ingresar manualmente)' : 'Другой (Ввести вручную)';
+
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -253,16 +323,35 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
           <Label>{t.crewMember}</Label>
           <div className="grid gap-3 md:grid-cols-2">
             {crewMembers.map((member, index) => (
-              <div key={index} className="space-y-1">
+              <div key={index} className="space-y-2">
                 <Label htmlFor={`crew-${index}`} className="text-sm text-muted-foreground">
                   {t.crewMember} {index + 1} {index < 2 ? t.required : t.optional}
                 </Label>
-                <Input
-                  id={`crew-${index}`}
-                  value={member}
-                  onChange={(e) => handleCrewMemberChange(index, e.target.value)}
-                  required={index < 2}
-                />
+                <Select
+                  value={crewMemberSelections[index]}
+                  onValueChange={(value) => handleCrewMemberSelect(index, value)}
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder={language === 'en' ? "Select mover..." : language === 'es' ? "Seleccionar..." : "Выбрать..."} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50 max-h-[300px]">
+                    {movers.map((mover) => (
+                      <SelectItem key={mover.id} value={mover.id}>
+                        {mover.name}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={OTHER_VALUE}>{otherLabel}</SelectItem>
+                  </SelectContent>
+                </Select>
+                {crewMemberSelections[index] === OTHER_VALUE && (
+                  <Input
+                    id={`crew-${index}-manual`}
+                    value={member}
+                    onChange={(e) => handleCrewMemberManualInput(index, e.target.value)}
+                    placeholder={language === 'en' ? "Enter name..." : language === 'es' ? "Ingresar nombre..." : "Введите имя..."}
+                    required={index < 2}
+                  />
+                )}
               </div>
             ))}
           </div>
