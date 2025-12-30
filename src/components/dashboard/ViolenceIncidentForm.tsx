@@ -184,12 +184,14 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Form Description */}
-      <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950">
-        <Info className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-800 dark:text-blue-200">
-          Use this form to report any workplace violence or incidents that occurred during your work. This includes verbal threats, physical contact, harassment, property damage, or any other safety concerns. Your report will be reviewed by management.
-        </AlertDescription>
-      </Alert>
+      <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 dark:from-red-500/20 dark:to-orange-500/20 p-4 rounded-lg border-2 border-red-400 dark:border-red-500 shadow-md">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+          <p className="text-sm font-medium text-red-800 dark:text-red-200">
+            Use this form to report any workplace violence or incidents that occurred during your work. This includes verbal threats, physical contact, harassment, property damage, or any other safety concerns. Your report will be reviewed by management.
+          </p>
+        </div>
+      </div>
 
       {/* Section 1 - Reporter Info */}
       <Card>

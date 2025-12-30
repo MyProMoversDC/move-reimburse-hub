@@ -264,15 +264,18 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Form Description */}
-        <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            Submit this form after a customer leaves a review for your service. Include all crew members who participated in the job. Each approved review qualifies crew members for a potential bonus. Note: Each invoice number and review URL can only be submitted once.
-          </p>
+        <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500 shadow-md">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Submit this form after a customer leaves a review for your service. Include all crew members who participated in the job. Each approved review qualifies crew members for a potential bonus. Note: Each invoice number and review URL can only be submitted once.
+            </p>
+          </div>
         </div>
 
         {/* Instructions */}
-        <div className="bg-muted p-4 rounded-lg">
-          <p className="whitespace-pre-line text-sm">{t.instructions}</p>
+        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 p-4 rounded-lg border-2 border-amber-400 dark:border-amber-500 shadow-md">
+          <p className="whitespace-pre-line text-sm font-medium text-amber-800 dark:text-amber-200">{t.instructions}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

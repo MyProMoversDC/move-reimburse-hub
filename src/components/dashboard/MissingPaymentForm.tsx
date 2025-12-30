@@ -174,10 +174,12 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Form Description */}
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{formDescription[language]}</AlertDescription>
-      </Alert>
+      <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500 shadow-md">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">{formDescription[language]}</p>
+        </div>
+      </div>
 
       {/* Applicant Name - Auto-pulled */}
       <div className="space-y-2">
