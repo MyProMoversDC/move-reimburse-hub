@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Users, MessageSquare } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
-import { toast } from "sonner";
 
 interface Participant {
   user_id: string;
@@ -62,7 +61,7 @@ const ConversationList = ({
   useEffect(() => {
     fetchConversations();
 
-    // Subscribe to conversation updates with notification
+    // Subscribe to conversation updates
     const channel = supabase
       .channel('conversation-updates')
       .on(
@@ -72,37 +71,7 @@ const ConversationList = ({
           schema: 'public',
           table: 'chat_messages'
         },
-        async (payload) => {
-          const newMessage = payload.new as { sender_id: string; content: string | null; conversation_id: string };
-          
-          // Only notify if the message is from someone else
-          if (newMessage.sender_id !== userId) {
-            // Get sender name from our cached map or fetch it
-            let senderName = 'Someone';
-            const cachedUser = usersMapRef.current.get(newMessage.sender_id);
-            if (cachedUser) {
-              senderName = `${cachedUser.first_name} ${cachedUser.last_name}`;
-            } else {
-              // Fetch the sender's profile
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('first_name, last_name')
-                .eq('id', newMessage.sender_id)
-                .maybeSingle();
-              
-              if (profile) {
-                senderName = `${profile.first_name} ${profile.last_name}`;
-                usersMapRef.current.set(newMessage.sender_id, profile);
-              }
-            }
-
-            // Show notification toast
-            toast.message(t.newMessageFrom?.replace('{name}', senderName) || `New message from ${senderName}`, {
-              description: newMessage.content?.substring(0, 50) || '📎 Attachment',
-              duration: 4000,
-            });
-          }
-          
+        () => {
           // Refresh conversations to update order and counts
           fetchConversations();
         }

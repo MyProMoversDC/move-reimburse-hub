@@ -7,6 +7,7 @@ import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface OperationsManagerDashboardProps {
   userId: string;
@@ -15,6 +16,7 @@ interface OperationsManagerDashboardProps {
 const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps) => {
   const [language, setLanguage] = useState<DashboardLanguage>('en');
   const [refreshKey, setRefreshKey] = useState(0);
+  const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   return (
     <div className="space-y-6">
@@ -33,9 +35,12 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
             <Shield className="h-4 w-4 mr-2" />
             Violence Incidents
           </TabsTrigger>
-          <TabsTrigger value="chat">
+          <TabsTrigger value="chat" className="relative">
             <MessageSquare className="h-4 w-4 mr-2" />
             Chat
+            {hasUnreadMessages && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+            )}
           </TabsTrigger>
         </TabsList>
         

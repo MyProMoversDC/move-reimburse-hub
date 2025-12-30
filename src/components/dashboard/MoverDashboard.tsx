@@ -23,6 +23,7 @@ import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
 import { chatTranslations } from "@/lib/chatTranslations";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface MoverDashboardProps {
   userId: string;
@@ -47,6 +48,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const mt = missingPaymentTranslations[language];
   const vt = violenceIncidentTranslations[language];
   const ct = chatTranslations[language];
+  
+  const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   useEffect(() => {
     fetchProfile();
@@ -119,9 +122,12 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <Lightbulb className="h-4 w-4 mr-2" />
             {language === 'ru' ? 'Обратная связь' : language === 'es' ? 'Comentarios' : 'Feedback'}
           </TabsTrigger>
-          <TabsTrigger value="chat">
+          <TabsTrigger value="chat" className="relative">
             <MessageSquare className="h-4 w-4 mr-2" />
             {ct.chat}
+            {hasUnreadMessages && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+            )}
           </TabsTrigger>
         </TabsList>
 

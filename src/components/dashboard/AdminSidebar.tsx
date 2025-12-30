@@ -37,6 +37,7 @@ interface AdminSidebarProps {
     missingPayments: number;
     misconductReplies: number;
   };
+  hasUnreadMessages?: boolean;
 }
 
 const menuItems = [
@@ -57,7 +58,7 @@ const menuItems = [
   { id: "roles", label: "Role Management", icon: UserCog },
 ];
 
-const AdminSidebar = ({ activeTab, onTabChange, pendingCounts }: AdminSidebarProps) => {
+const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages = false }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
 
@@ -96,7 +97,12 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts }: AdminSidebarPro
                       onClick={() => onTabChange(item.id)}
                       tooltip={item.label}
                     >
-                      <item.icon className="h-4 w-4" />
+                      <div className="relative">
+                        <item.icon className="h-4 w-4" />
+                        {item.id === "chat" && hasUnreadMessages && (
+                          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+                        )}
+                      </div>
                       {!isCollapsed && (
                         <span className="flex-1">{item.label}</span>
                       )}
@@ -104,6 +110,9 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts }: AdminSidebarPro
                         <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
                           {count}
                         </span>
+                      )}
+                      {!isCollapsed && item.id === "chat" && hasUnreadMessages && count === 0 && (
+                        <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
                       )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>

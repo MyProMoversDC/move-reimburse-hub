@@ -26,6 +26,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface AdminDashboardProps {
   userId: string;
@@ -56,6 +57,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   // Date filters for missing payments
   const [missingPaymentStartDate, setMissingPaymentStartDate] = useState<Date | undefined>();
   const [missingPaymentEndDate, setMissingPaymentEndDate] = useState<Date | undefined>();
+  
+  const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   
   const t = dashboardTranslations[language];
 
@@ -355,6 +358,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           activeTab={activeTab} 
           onTabChange={setActiveTab}
           pendingCounts={pendingCounts}
+          hasUnreadMessages={hasUnreadMessages}
         />
         <SidebarInset>
           <header className="flex h-14 items-center gap-4 border-b bg-background px-6">
