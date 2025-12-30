@@ -56,8 +56,26 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string }>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch all users for name display
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data: allUsers } = await supabase.rpc('list_chat_users_for_picker');
+      if (allUsers) {
+        const map = new Map(
+          allUsers.map((u: { id: string; first_name: string; last_name: string }) => [
+            u.id,
+            { first_name: u.first_name, last_name: u.last_name }
+          ])
+        );
+        setUsersMap(map);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     fetchMessages();
@@ -221,9 +239,15 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
 
   const getSenderName = (senderId: string) => {
     if (senderId === userId) return t.you;
+    // First try from conversation participants
     const participant = conversation.participants.find(p => p.user_id === senderId);
     if (participant?.profile) {
       return `${participant.profile.first_name} ${participant.profile.last_name}`;
+    }
+    // Fallback to usersMap
+    const user = usersMap.get(senderId);
+    if (user) {
+      return `${user.first_name} ${user.last_name}`;
     }
     return 'Unknown';
   };
@@ -235,6 +259,13 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
     const otherParticipant = conversation.participants.find(p => p.user_id !== userId);
     if (otherParticipant?.profile) {
       return `${otherParticipant.profile.first_name} ${otherParticipant.profile.last_name}`;
+    }
+    // Fallback to usersMap
+    if (otherParticipant) {
+      const user = usersMap.get(otherParticipant.user_id);
+      if (user) {
+        return `${user.first_name} ${user.last_name}`;
+      }
     }
     return 'Chat';
   };
