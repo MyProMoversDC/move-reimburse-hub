@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "MyProMovers <notifications@mypromoversreimbursements.com>",
-      to: ["mark@mypromoversdc.com", "Daniel@mypromoversdc.com", "Tony@mypromoversdc.com"],
+      to: ["mark@mypromoversdc.com", "Daniel@mypromoversdc.com"],
       subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
