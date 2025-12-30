@@ -3,10 +3,20 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusTranslations";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 import AppealForm from "./AppealForm";
 
 interface ReviewBonus {
@@ -46,6 +56,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
   const [loading, setLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState<ReviewBonus | null>(null);
   const [appealReview, setAppealReview] = useState<ReviewBonus | null>(null);
+  const [disclaimerReview, setDisclaimerReview] = useState<ReviewBonus | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -154,7 +165,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 {review.status === "declined" && (!review.appeal_count || review.appeal_count < 2) && (
                   <Button
                     variant="outline"
-                    onClick={() => setAppealReview(review)}
+                    onClick={() => setDisclaimerReview(review)}
                     className="text-orange-600 border-orange-600 hover:bg-orange-50"
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />
@@ -255,6 +266,57 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Appeal Disclaimer Dialog */}
+      <AlertDialog open={!!disclaimerReview} onOpenChange={() => setDisclaimerReview(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
+              <AlertTriangle className="h-5 w-5" />
+              Important Appeal Information
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4 pt-2">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-3">
+                  <p className="font-medium text-orange-800">
+                    ⚠️ You have only 2 appeal attempts for this submission.
+                  </p>
+                  <p className="text-sm text-orange-700">
+                    {disclaimerReview?.appeal_count === 1 
+                      ? "This is your FINAL appeal attempt. If declined, no further appeals will be possible."
+                      : "This is your first appeal attempt. You will have one more chance if this appeal is declined."
+                    }
+                  </p>
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">To maximize your chances of approval:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>Provide accurate and detailed information</li>
+                    <li>Include any supporting evidence or documentation</li>
+                    <li>Clearly explain why the decline decision should be reconsidered</li>
+                    <li>Address the specific decline reason provided by the admin</li>
+                  </ul>
+                </div>
+                <p className="text-sm font-medium text-destructive">
+                  If both appeals are declined, the decision becomes final and cannot be changed.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setAppealReview(disclaimerReview);
+                setDisclaimerReview(null);
+              }}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              I Understand, Continue to Appeal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
