@@ -34,6 +34,13 @@ interface ReviewBonus {
   decline_reason: string | null;
   submission_date: string;
   review_month: string;
+  appeal_count?: number;
+}
+
+interface AppealAttachment {
+  id: string;
+  file_url: string;
+  file_name: string;
 }
 
 interface AdminReviewBonusListProps {
@@ -50,6 +57,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
   const [loading, setLoading] = useState(true);
   const [selectedReview, setSelectedReview] = useState<ReviewBonus | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [appealAttachments, setAppealAttachments] = useState<AppealAttachment[]>([]);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -85,7 +93,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, appealCount?: number) => {
     switch (status) {
       case "pending":
         return <Badge variant="secondary">Pending</Badge>;
@@ -94,7 +102,10 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
       case "declined":
         return <Badge variant="destructive">Declined</Badge>;
       case "appeal":
-        return <Badge variant="outline" className="border-orange-500 text-orange-600">Under Appeal</Badge>;
+        if (appealCount === 2) {
+          return <Badge variant="outline" className="border-red-500 text-red-600">Final Appeal</Badge>;
+        }
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">First Appeal</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -102,6 +113,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
 
   const handleViewDetails = async (review: ReviewBonus) => {
     setSelectedReview(review);
+    setAppealAttachments([]);
     
     const filePath = review.screenshot_url.replace("review-screenshots/", "");
     const { data } = await supabase.storage
@@ -110,6 +122,18 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
     
     if (data?.signedUrl) {
       setScreenshotUrl(data.signedUrl);
+    }
+
+    // Fetch appeal attachments if in appeal status
+    if (review.status === "appeal") {
+      const { data: attachments } = await supabase
+        .from("review_appeal_attachments")
+        .select("id, file_url, file_name")
+        .eq("review_bonus_id", review.id);
+      
+      if (attachments) {
+        setAppealAttachments(attachments);
+      }
     }
   };
 
@@ -255,7 +279,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                   Job Date: {format(new Date(review.job_date), "MM/dd/yyyy")} | Month: {review.review_month}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  {getStatusBadge(review.status)}
+                  {getStatusBadge(review.status, review.appeal_count)}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -293,7 +317,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
 
       {/* View Details Dialog */}
       <Dialog open={!!selectedReview && !showDeclineDialog} onOpenChange={() => setSelectedReview(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Review Bonus Details</DialogTitle>
           </DialogHeader>
@@ -322,7 +346,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  {getStatusBadge(selectedReview.status)}
+                  {getStatusBadge(selectedReview.status, selectedReview.appeal_count)}
                 </div>
               </div>
 
@@ -353,13 +377,36 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
 
               {selectedReview.appeal_note && (
                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-orange-700">Appeal Note</p>
-                  <p className="mt-1">{selectedReview.appeal_note}</p>
+                  <p className="text-sm font-medium text-orange-700">
+                    Appeal Note {selectedReview.appeal_count === 2 ? "(Final Appeal)" : "(First Appeal)"}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap">{selectedReview.appeal_note}</p>
                   {selectedReview.appeal_at && (
                     <p className="text-xs text-muted-foreground mt-2">
                       Appealed on: {format(new Date(selectedReview.appeal_at), "MM/dd/yyyy HH:mm")}
                     </p>
                   )}
+                </div>
+              )}
+
+              {appealAttachments.length > 0 && (
+                <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-orange-700 mb-2">Appeal Attachments</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {appealAttachments.map((attachment) => (
+                      <a
+                        key={attachment.id}
+                        href={attachment.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 bg-white rounded border hover:bg-gray-50"
+                      >
+                        <span className="text-sm truncate text-primary hover:underline">
+                          {attachment.file_name}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 

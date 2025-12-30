@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Upload, X, Image } from "lucide-react";
+import { ArrowLeft, Upload, X, Info } from "lucide-react";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 
@@ -224,9 +225,20 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
         <Button variant="ghost" size="icon" onClick={onCancel}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <CardTitle>Create New Performance / Misconduct Report</CardTitle>
+        <div>
+          <CardTitle>Create New Performance / Misconduct Report</CardTitle>
+          <CardDescription className="mt-1">
+            Use this form to report any performance issues or misconduct incidents involving workers.
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
+            Document any incidents or performance concerns for proper tracking and follow-up. Include as much detail as possible and attach any relevant images or documentation.
+          </AlertDescription>
+        </Alert>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
