@@ -36,7 +36,7 @@ interface MoverDashboardProps {
 }
 
 const MoverDashboard = ({ userId }: MoverDashboardProps) => {
-  const [activeTab, setActiveTab] = useState("reimbursements");
+  const [activeTab, setActiveTab] = useState("violence");
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
@@ -143,32 +143,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
           <TabsList className="inline-flex min-w-max md:flex md:flex-wrap gap-1 h-auto p-1">
-            <TabsTrigger value="reimbursements" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              {t.reimbursementHistory}
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <Star className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">{rt.formTitle}</span>
-              <span className="sm:hidden">{language === 'ru' ? 'Отзывы' : language === 'es' ? 'Reseñas' : 'Reviews'}</span>
-            </TabsTrigger>
-            <TabsTrigger value="missing-payments" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">{mt.formTitle}</span>
-              <span className="sm:hidden">{language === 'ru' ? 'Платежи' : language === 'es' ? 'Pagos' : 'Payments'}</span>
-            </TabsTrigger>
-            <TabsTrigger value="misconduct" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">{language === 'ru' ? 'Случаи поведения' : language === 'es' ? 'Casos de Conducta' : 'Misconduct'}</span>
-              <span className="sm:hidden">{language === 'ru' ? 'Случаи' : language === 'es' ? 'Casos' : 'Cases'}</span>
-            </TabsTrigger>
             <TabsTrigger value="violence" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
               <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               <span className="hidden sm:inline">{vt.formTitle}</span>
               <span className="sm:hidden">{language === 'ru' ? 'Инциденты' : language === 'es' ? 'Incidentes' : 'Incidents'}</span>
-            </TabsTrigger>
-            <TabsTrigger value="feedback" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <Lightbulb className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {language === 'ru' ? 'Отзыв' : language === 'es' ? 'Comentarios' : 'Feedback'}
             </TabsTrigger>
             <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
               <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
@@ -180,47 +158,46 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           </TabsList>
         </div>
 
-        <TabsContent value="reimbursements" className="space-y-6">
-          {/* Mobile dropdown for form selection */}
-          <div className="md:hidden">
-            <Card className="p-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="w-full justify-between">
-                    <span className="flex items-center">
-                      <Plus className="h-4 w-4 mr-2" />
-                      {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
-                    </span>
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
-                  <DropdownMenuItem onClick={() => handleFormSelect('reimbursement')} className="py-3">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    {t.submitReimbursement}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFormSelect('review')} className="py-3">
-                    <Star className="h-4 w-4 mr-2" />
-                    {rt.submitReview}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFormSelect('missing-payment')} className="py-3">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    {mt.submitMissingPayment}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFormSelect('violence')} className="py-3">
-                    <Shield className="h-4 w-4 mr-2" />
-                    {vt.submitReport}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFormSelect('feedback')} className="py-3">
-                    <Lightbulb className="h-4 w-4 mr-2" />
-                    {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </Card>
-          </div>
+        {/* Mobile dropdown for form selection - visible on all tabs */}
+        <div className="md:hidden mt-4">
+          <Card className="p-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="w-full justify-between">
+                  <span className="flex items-center">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
+                <DropdownMenuItem onClick={() => handleFormSelect('reimbursement')} className="py-3">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  {t.submitReimbursement}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleFormSelect('review')} className="py-3">
+                  <Star className="h-4 w-4 mr-2" />
+                  {rt.submitReview}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleFormSelect('missing-payment')} className="py-3">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  {mt.submitMissingPayment}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleFormSelect('violence')} className="py-3">
+                  <Shield className="h-4 w-4 mr-2" />
+                  {vt.submitReport}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleFormSelect('feedback')} className="py-3">
+                  <Lightbulb className="h-4 w-4 mr-2" />
+                  {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Card>
+        </div>
 
-          {/* Desktop button */}
+        <TabsContent value="reimbursements" className="space-y-6">
           {!showReimbursementForm && (
             <Card className="p-6 hidden md:block">
               <Button onClick={() => setShowReimbursementForm(true)} className="w-full sm:w-auto">
