@@ -238,7 +238,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                   {t.close}
                 </Button>
               </div>
-              <ReimbursementForm userId={userId} onSuccess={handleReimbursementSuccess} language={language} />
+              <ReimbursementForm userId={userId} onSuccess={handleReimbursementSuccess} onCancel={() => setShowReimbursementForm(false)} language={language} />
             </Card>
           )}
 
@@ -270,6 +270,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                 userId={userId} 
                 foremanName={foremanName}
                 onSuccess={handleReviewSuccess} 
+                onCancel={() => setShowReviewForm(false)}
                 language={language} 
               />
             </Card>
@@ -299,7 +300,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                   {mt.close}
                 </Button>
               </div>
-              <MissingPaymentForm userId={userId} onSuccess={handleMissingPaymentSuccess} language={language} />
+              <MissingPaymentForm userId={userId} onSuccess={handleMissingPaymentSuccess} onCancel={() => setShowMissingPaymentForm(false)} language={language} />
             </Card>
           )}
 
@@ -331,7 +332,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                   {vt.close}
                 </Button>
               </div>
-              <ViolenceIncidentForm userId={userId} onSuccess={handleViolenceSuccess} language={language} />
+              <ViolenceIncidentForm userId={userId} onSuccess={handleViolenceSuccess} onCancel={() => setShowViolenceForm(false)} language={language} />
             </Card>
           )}
 
@@ -358,7 +359,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                   {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
                 </Button>
               </div>
-              <MoverFeedbackForm userId={userId} language={language} onSuccess={handleFeedbackSuccess} />
+              <MoverFeedbackForm userId={userId} language={language} onSuccess={handleFeedbackSuccess} onCancel={() => setShowFeedbackForm(false)} />
             </div>
           )}
 

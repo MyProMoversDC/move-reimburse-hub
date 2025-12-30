@@ -18,6 +18,7 @@ import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 interface MissingPaymentFormProps {
   userId: string;
   onSuccess: () => void;
+  onCancel?: () => void;
   language: DashboardLanguage;
 }
 
@@ -26,7 +27,7 @@ type MissingType = "missing_hours" | "missing_flat_rate";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
-const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormProps) => {
+const MissingPaymentForm = ({ userId, onSuccess, onCancel, language }: MissingPaymentFormProps) => {
   const t = missingPaymentTranslations[language];
   
   const [loading, setLoading] = useState(false);
@@ -361,6 +362,17 @@ const MissingPaymentForm = ({ userId, onSuccess, language }: MissingPaymentFormP
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {loading ? t.submitting : t.submitButton}
       </Button>
+      
+      {onCancel && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full md:hidden mt-2" 
+          onClick={onCancel}
+        >
+          {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
+        </Button>
+      )}
     </form>
   );
 };

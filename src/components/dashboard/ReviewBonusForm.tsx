@@ -32,6 +32,7 @@ interface ReviewBonusFormProps {
   userId: string;
   foremanName: string;
   onSuccess: () => void;
+  onCancel?: () => void;
   language: ReviewBonusLanguage;
 }
 
@@ -42,7 +43,7 @@ interface MoverOption {
 
 const OTHER_VALUE = "__OTHER__";
 
-const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBonusFormProps) => {
+const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }: ReviewBonusFormProps) => {
   const t = reviewBonusTranslations[language];
   
   const [loading, setLoading] = useState(false);
@@ -387,6 +388,17 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? t.submitting : t.submit}
         </Button>
+        
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full md:hidden mt-2" 
+            onClick={onCancel}
+          >
+            {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
+          </Button>
+        )}
       </form>
 
       {/* Duplicate Alert Dialog */}

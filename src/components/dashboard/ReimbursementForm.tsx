@@ -30,10 +30,11 @@ const reimbursementSchema = z.object({
 interface ReimbursementFormProps {
   userId: string;
   onSuccess: () => void;
+  onCancel?: () => void;
   language: DashboardLanguage;
 }
 
-const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormProps) => {
+const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: ReimbursementFormProps) => {
   const [loading, setLoading] = useState(false);
   const t = dashboardTranslations[language];
   const [moverFullName, setMoverFullName] = useState("");
@@ -404,6 +405,17 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Submitting..." : "Submit Reimbursement"}
       </Button>
+      
+      {onCancel && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full md:hidden mt-2" 
+          onClick={onCancel}
+        >
+          {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
+        </Button>
+      )}
     </form>
   );
 };
