@@ -90,9 +90,9 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
         return <Badge variant="destructive">{t.declined}</Badge>;
       case "appeal":
         if (appealCount === 2) {
-          return <Badge variant="outline" className="border-red-500 text-red-600">Final Appeal</Badge>;
+          return <Badge variant="outline" className="border-red-500 text-red-600">{t.finalAppealStatus}</Badge>;
         }
-        return <Badge variant="outline" className="border-orange-500 text-orange-600">First Appeal</Badge>;
+        return <Badge variant="outline" className="border-orange-500 text-orange-600">{t.firstAppealStatus}</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -169,7 +169,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                     className="text-orange-600 border-orange-600 hover:bg-orange-50"
                   >
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    {review.appeal_count === 1 ? "Final Appeal" : "Appeal"}
+                    {review.appeal_count === 1 ? t.finalAppeal : t.appeal}
                   </Button>
                 )}
               </div>
@@ -273,38 +273,38 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
               <AlertTriangle className="h-5 w-5" />
-              Important Appeal Information
+              {t.appealDisclaimerTitle}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 pt-2">
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-3">
                   <p className="font-medium text-orange-800">
-                    ⚠️ You have only 2 appeal attempts for this submission.
+                    ⚠️ {t.appealWarning}
                   </p>
                   <p className="text-sm text-orange-700">
                     {disclaimerReview?.appeal_count === 1 
-                      ? "This is your FINAL appeal attempt. If declined, no further appeals will be possible."
-                      : "This is your first appeal attempt. You will have one more chance if this appeal is declined."
+                      ? t.appealFinalAttempt
+                      : t.appealFirstAttempt
                     }
                   </p>
                 </div>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <p className="font-medium text-foreground">To maximize your chances of approval:</p>
+                  <p className="font-medium text-foreground">{t.appealTipsTitle}</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Provide accurate and detailed information</li>
-                    <li>Include any supporting evidence or documentation</li>
-                    <li>Clearly explain why the decline decision should be reconsidered</li>
-                    <li>Address the specific decline reason provided by the admin</li>
+                    <li>{t.appealTip1}</li>
+                    <li>{t.appealTip2}</li>
+                    <li>{t.appealTip3}</li>
+                    <li>{t.appealTip4}</li>
                   </ul>
                 </div>
                 <p className="text-sm font-medium text-destructive">
-                  If both appeals are declined, the decision becomes final and cannot be changed.
+                  {t.appealFinalWarning}
                 </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t.appealCancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setAppealReview(disclaimerReview);
@@ -312,7 +312,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
               }}
               className="bg-orange-600 hover:bg-orange-700"
             >
-              I Understand, Continue to Appeal
+              {t.appealContinue}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
