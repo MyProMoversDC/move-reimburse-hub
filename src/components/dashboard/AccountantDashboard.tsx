@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface AccountantDashboardProps {
   userId: string;
@@ -19,6 +20,7 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [language, setLanguage] = useState<DashboardLanguage>('en');
+  const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   
   const t = dashboardTranslations[language];
 
@@ -53,9 +55,12 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
         <TabsList>
           <TabsTrigger value="requests">{t.confirmedReimbursements}</TabsTrigger>
           <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
-          <TabsTrigger value="chat">
+          <TabsTrigger value="chat" className="relative">
             <MessageSquare className="h-4 w-4 mr-2" />
             Chat
+            {hasUnreadMessages && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+            )}
           </TabsTrigger>
         </TabsList>
         

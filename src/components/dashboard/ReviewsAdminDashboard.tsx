@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface ReviewsAdminDashboardProps {
   userId: string;
@@ -30,6 +31,8 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
   
   const [missingPaymentStartDate, setMissingPaymentStartDate] = useState<Date | undefined>();
   const [missingPaymentEndDate, setMissingPaymentEndDate] = useState<Date | undefined>();
+  
+  const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   
   const t = dashboardTranslations[language];
 
@@ -90,9 +93,12 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
             <MinusCircle className="h-4 w-4 mr-2" />
             Deductibles
           </TabsTrigger>
-          <TabsTrigger value="chat">
+          <TabsTrigger value="chat" className="relative">
             <MessageSquare className="h-4 w-4 mr-2" />
             Chat
+            {hasUnreadMessages && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+            )}
           </TabsTrigger>
         </TabsList>
 
