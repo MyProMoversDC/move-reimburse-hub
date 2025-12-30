@@ -180,21 +180,29 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
       }
 
       // Send notification email
-      await supabase.functions.invoke("send-reimbursement-notification", {
-        body: {
-          reimbursementNumber: String(reimbursement.reimbursement_number).padStart(5, "0"),
-          moverFullName: validated.moverFullName,
-          jobNumber: validated.jobNumber,
-          truckNumber: validated.truckNumber,
-          customerName: validated.customerName,
-          gasExpenses: validated.gasExpenses || 0,
-          roadExpenses: validated.roadExpenses || 0,
-          hotelExpenses: validated.hotelExpenses || 0,
-          otherExpenses: validated.otherExpenses || 0,
-          totalExpenses: validated.totalReimbursement,
-          zelleInfo: validated.zelleInfo,
-        },
-      });
+      try {
+        const { error: notifError } = await supabase.functions.invoke("send-reimbursement-notification", {
+          body: {
+            reimbursementNumber: String(reimbursement.reimbursement_number).padStart(5, "0"),
+            moverFullName: validated.moverFullName,
+            jobNumber: validated.jobNumber,
+            truckNumber: validated.truckNumber,
+            customerName: validated.customerName,
+            gasExpenses: validated.gasExpenses || 0,
+            roadExpenses: validated.roadExpenses || 0,
+            hotelExpenses: validated.hotelExpenses || 0,
+            otherExpenses: validated.otherExpenses || 0,
+            totalExpenses: validated.totalReimbursement,
+            zelleInfo: validated.zelleInfo,
+            attachmentCount: attachmentFiles.length,
+          },
+        });
+        if (notifError) {
+          console.error("Notification email error:", notifError);
+        }
+      } catch (notifError) {
+        console.error("Failed to send notification email:", notifError);
+      }
 
       toast.success(t.requestSubmitted);
       onSuccess();
