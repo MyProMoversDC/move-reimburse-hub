@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -77,25 +78,18 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       return;
     }
 
-    // Generate signed URLs for each attachment
-    const attachmentsWithUrls = await Promise.all(
-      (data || []).map(async (attachment) => {
-        // Extract the file path from the public URL
-        const urlParts = attachment.file_url.split('/reimbursement-attachments/');
-        const filePath = urlParts[1] || attachment.file_url;
-        
-        const { data: signedData } = await supabase.storage
-          .from("reimbursement-attachments")
-          .createSignedUrl(filePath, 3600);
-        
-        return {
-          ...attachment,
-          file_url: signedData?.signedUrl || attachment.file_url,
-        };
-      })
-    );
-
-    setAttachments(attachmentsWithUrls);
+    if (data && data.length > 0) {
+      const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
+        data,
+        "reimbursement-attachments"
+      );
+      setAttachments(attachmentsWithSignedUrls.map(a => ({
+        ...a,
+        file_url: a.signed_url
+      })));
+    } else {
+      setAttachments([]);
+    }
   };
 
   const handleConfirm = async () => {

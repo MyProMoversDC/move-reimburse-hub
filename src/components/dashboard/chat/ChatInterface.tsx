@@ -10,6 +10,7 @@ import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
+import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
 
 interface Message {
   id: string;
@@ -131,14 +132,28 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
 
       if (error) throw error;
 
-      // Fetch attachments for all messages
+      // Fetch attachments for all messages with signed URLs
       const messagesWithAttachments = await Promise.all(
         (messagesData || []).map(async (msg) => {
           const { data: attachments } = await supabase
             .from('chat_message_attachments')
             .select('*')
             .eq('message_id', msg.id);
-          return { ...msg, attachments: attachments || [] };
+          
+          if (attachments && attachments.length > 0) {
+            const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
+              attachments,
+              "chat-attachments"
+            );
+            return { 
+              ...msg, 
+              attachments: attachmentsWithSignedUrls.map(a => ({
+                ...a,
+                file_url: a.signed_url
+              }))
+            };
+          }
+          return { ...msg, attachments: [] };
         })
       );
 
@@ -175,13 +190,10 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat-attachments')
-        .getPublicUrl(filePath);
-
+      // Store the file path, not the public URL (bucket is private)
       uploadedFiles.push({
         message_id: messageId,
-        file_url: publicUrl,
+        file_url: filePath,
         file_name: file.name,
         file_type: file.type,
         file_size: file.size,

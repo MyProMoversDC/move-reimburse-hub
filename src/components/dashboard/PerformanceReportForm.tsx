@@ -179,13 +179,10 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
             continue;
           }
 
-          const { data: urlData } = supabase.storage
-            .from("performance-report-attachments")
-            .getPublicUrl(fileName);
-
+          // Store the file path, not the public URL (bucket is private)
           await supabase.from("performance_report_attachments").insert({
             report_id: reportData.id,
-            file_url: urlData.publicUrl,
+            file_url: fileName,
             file_name: attachment.file.name,
           });
         }

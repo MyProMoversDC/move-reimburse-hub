@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { DashboardLanguage, dashboardTranslations } from "@/lib/dashboardTranslations";
 import { Check, X } from "lucide-react";
+import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
 
 interface ReviewBonus {
   id: string;
@@ -131,8 +132,15 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
         .select("id, file_url, file_name")
         .eq("review_bonus_id", review.id);
       
-      if (attachments) {
-        setAppealAttachments(attachments);
+      if (attachments && attachments.length > 0) {
+        const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
+          attachments,
+          "appeal-attachments"
+        );
+        setAppealAttachments(attachmentsWithSignedUrls.map(a => ({
+          ...a,
+          file_url: a.signed_url
+        })));
       }
     }
   };
