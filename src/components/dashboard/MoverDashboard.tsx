@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare, Lightbulb, ChevronDown } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare, Lightbulb, ChevronDown, LogOut } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
@@ -28,7 +30,6 @@ import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
 import { chatTranslations } from "@/lib/chatTranslations";
-import { supabase } from "@/integrations/supabase/client";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface MoverDashboardProps {
@@ -133,9 +134,24 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setFeedbackRefreshKey((prev) => prev + 1);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success(language === 'ru' ? 'Вы вышли из системы' : language === 'es' ? 'Sesión cerrada' : 'Logged out successfully');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
+        {/* Mobile Exit button - shown before Settings */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleLogout}
+          className="md:hidden"
+        >
+          <LogOut className="h-4 w-4 mr-1" />
+          {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
+        </Button>
         <MoverSettings userId={userId} language={language} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
