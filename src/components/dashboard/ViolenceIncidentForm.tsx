@@ -25,6 +25,7 @@ import { Upload, X, AlertTriangle, Info } from "lucide-react";
 interface ViolenceIncidentFormProps {
   userId: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
   language: ViolenceIncidentLanguage;
 }
 
@@ -43,7 +44,7 @@ interface FormData {
   resolutionRequest: string;
 }
 
-const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentFormProps) => {
+const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: ViolenceIncidentFormProps) => {
   const [loading, setLoading] = useState(false);
   const [moverName, setMoverName] = useState("");
   const [moverPhone, setMoverPhone] = useState("");
@@ -493,6 +494,17 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? t.submitting : t.submit}
       </Button>
+      
+      {onCancel && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full md:hidden mt-2" 
+          onClick={onCancel}
+        >
+          {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
+        </Button>
+      )}
     </form>
   );
 };

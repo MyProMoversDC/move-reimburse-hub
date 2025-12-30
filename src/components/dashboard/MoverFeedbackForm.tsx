@@ -43,9 +43,10 @@ interface MoverFeedbackFormProps {
   userId: string;
   language: Language;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function MoverFeedbackForm({ userId, language, onSuccess }: MoverFeedbackFormProps) {
+export function MoverFeedbackForm({ userId, language, onSuccess, onCancel }: MoverFeedbackFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [moverName, setMoverName] = useState('');
   const { toast } = useToast();
@@ -346,6 +347,17 @@ export function MoverFeedbackForm({ userId, language, onSuccess }: MoverFeedback
               <Send className="h-4 w-4 mr-2" />
               {isSubmitting ? t('submitting', language) : t('submit', language)}
             </Button>
+            
+            {onCancel && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full md:hidden mt-2" 
+                onClick={onCancel}
+              >
+                {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>

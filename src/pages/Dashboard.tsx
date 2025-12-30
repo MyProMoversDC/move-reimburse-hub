@@ -103,7 +103,15 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <img src={logo} alt="MyProMovers" className="h-10 md:h-12 flex-shrink-0" />
+              <img 
+                src={logo} 
+                alt="MyProMovers" 
+                className="h-10 md:h-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                onClick={() => navigate("/")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && navigate("/")}
+              />
               <div className="min-w-0">
                 <h1 className="text-lg md:text-xl font-bold truncate">
                   {userRole === "admin" && "Admin Portal"}
