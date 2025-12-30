@@ -17,6 +17,7 @@ import AdminTodoList from "./AdminTodoList";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import { AdminFeedbackList } from "./AdminFeedbackList";
+import { AdminAIAssistant } from "./AdminAIAssistant";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
@@ -373,6 +374,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             {renderContent()}
           </main>
         </SidebarInset>
+        <AdminAIAssistant />
       </div>
     </SidebarProvider>
   );

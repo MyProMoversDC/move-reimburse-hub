@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.send-review-submission-notification]
 verify_jwt = true
+
+[functions.admin-ai-assistant]
+verify_jwt = true
