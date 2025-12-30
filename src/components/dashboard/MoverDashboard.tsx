@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare, Lightbulb } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare, Lightbulb, ChevronDown } from "lucide-react";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
@@ -140,8 +146,48 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         </div>
 
         <TabsContent value="reimbursements" className="space-y-6">
+          {/* Mobile dropdown for form selection */}
+          <div className="md:hidden">
+            <Card className="p-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="w-full justify-between">
+                    <span className="flex items-center">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
+                    </span>
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
+                  <DropdownMenuItem onClick={() => setShowReimbursementForm(true)} className="py-3">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    {t.submitReimbursement}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowReviewForm(true)} className="py-3">
+                    <Star className="h-4 w-4 mr-2" />
+                    {rt.submitReview}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowMissingPaymentForm(true)} className="py-3">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    {mt.submitMissingPayment}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowViolenceForm(true)} className="py-3">
+                    <Shield className="h-4 w-4 mr-2" />
+                    {vt.submitReport}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowFeedbackForm(true)} className="py-3">
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </Card>
+          </div>
+
+          {/* Desktop button */}
           {!showReimbursementForm && (
-            <Card className="p-6">
+            <Card className="p-6 hidden md:block">
               <Button onClick={() => setShowReimbursementForm(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 {t.submitReimbursement}
@@ -150,10 +196,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           {showReimbursementForm && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">{t.reimbursementForm}</h2>
-                <Button variant="outline" onClick={() => setShowReimbursementForm(false)}>
+            <Card className="p-4 md:p-6">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-2xl font-bold">{t.reimbursementForm}</h2>
+                <Button variant="outline" size="sm" onClick={() => setShowReimbursementForm(false)}>
                   {t.close}
                 </Button>
               </div>
@@ -162,14 +208,14 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold mb-4">{t.reimbursementHistory}</h2>
+            <h2 className="text-lg md:text-2xl font-bold mb-4">{t.reimbursementHistory}</h2>
             <ReimbursementHistory userId={userId} refreshKey={refreshKey} userRole="mover" language={language} />
           </div>
         </TabsContent>
 
         <TabsContent value="reviews" className="space-y-6">
           {!showReviewForm && (
-            <Card className="p-6">
+            <Card className="p-6 hidden md:block">
               <Button onClick={() => setShowReviewForm(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 {rt.submitReview}
@@ -178,10 +224,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           {showReviewForm && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">{rt.formTitle}</h2>
-                <Button variant="outline" onClick={() => setShowReviewForm(false)}>
+            <Card className="p-4 md:p-6">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-2xl font-bold">{rt.formTitle}</h2>
+                <Button variant="outline" size="sm" onClick={() => setShowReviewForm(false)}>
                   {rt.close}
                 </Button>
               </div>
@@ -195,14 +241,14 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold mb-4">{rt.reviewHistory}</h2>
+            <h2 className="text-lg md:text-2xl font-bold mb-4">{rt.reviewHistory}</h2>
             <ReviewBonusHistory userId={userId} refreshKey={reviewRefreshKey} language={language} />
           </div>
         </TabsContent>
 
         <TabsContent value="missing-payments" className="space-y-6">
           {!showMissingPaymentForm && (
-            <Card className="p-6">
+            <Card className="p-6 hidden md:block">
               <Button onClick={() => setShowMissingPaymentForm(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 {mt.submitMissingPayment}
@@ -211,10 +257,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           {showMissingPaymentForm && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">{mt.formTitle}</h2>
-                <Button variant="outline" onClick={() => setShowMissingPaymentForm(false)}>
+            <Card className="p-4 md:p-6">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-2xl font-bold">{mt.formTitle}</h2>
+                <Button variant="outline" size="sm" onClick={() => setShowMissingPaymentForm(false)}>
                   {mt.close}
                 </Button>
               </div>
@@ -223,7 +269,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold mb-4">{mt.historyTitle}</h2>
+            <h2 className="text-lg md:text-2xl font-bold mb-4">{mt.historyTitle}</h2>
             <MissingPaymentHistory userId={userId} refreshKey={missingPaymentRefreshKey} language={language} />
           </div>
         </TabsContent>
@@ -234,7 +280,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
         <TabsContent value="violence" className="space-y-6">
           {!showViolenceForm && (
-            <Card className="p-6">
+            <Card className="p-6 hidden md:block">
               <Button onClick={() => setShowViolenceForm(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 {vt.submitReport}
@@ -243,10 +289,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           {showViolenceForm && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">{vt.formTitle}</h2>
-                <Button variant="outline" onClick={() => setShowViolenceForm(false)}>
+            <Card className="p-4 md:p-6">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-2xl font-bold">{vt.formTitle}</h2>
+                <Button variant="outline" size="sm" onClick={() => setShowViolenceForm(false)}>
                   {vt.close}
                 </Button>
               </div>
@@ -255,14 +301,14 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold mb-4">{vt.historyTitle}</h2>
+            <h2 className="text-lg md:text-2xl font-bold mb-4">{vt.historyTitle}</h2>
             <ViolenceIncidentHistory userId={userId} refreshKey={violenceRefreshKey} language={language} />
           </div>
         </TabsContent>
 
         <TabsContent value="feedback" className="space-y-6">
           {!showFeedbackForm && (
-            <Card className="p-6">
+            <Card className="p-6 hidden md:block">
               <Button onClick={() => setShowFeedbackForm(true)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
@@ -273,7 +319,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           {showFeedbackForm && (
             <div>
               <div className="flex justify-end mb-4">
-                <Button variant="outline" onClick={() => setShowFeedbackForm(false)}>
+                <Button variant="outline" size="sm" onClick={() => setShowFeedbackForm(false)}>
                   {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
                 </Button>
               </div>
