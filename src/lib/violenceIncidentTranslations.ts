@@ -3,8 +3,8 @@ import { Language } from "./translations";
 export const violenceIncidentTranslations = {
   en: {
     // Form Title
-    formTitle: "Violence Incident Report",
-    submitReport: "Submit Violence Report",
+    formTitle: "Workplace Violence and Incident Report",
+    submitReport: "Submit Incident Report",
     
     // Section Headers
     reporterInfo: "Reporter Information",
@@ -14,6 +14,7 @@ export const violenceIncidentTranslations = {
     authoritiesContacted: "Authorities Contacted",
     evidenceUpload: "Evidence Upload",
     severitySection: "Severity",
+    resolutionSection: "Resolution Request",
     
     // Reporter Info
     moverName: "Mover Name",
@@ -23,7 +24,7 @@ export const violenceIncidentTranslations = {
     // Incident Details
     incidentDate: "Date of Incident",
     incidentTime: "Time of Incident",
-    jobId: "Job ID / Order Number",
+    jobId: "Estimate/Quote #",
     incidentAddress: "Incident Address",
     clientName: "Client Name",
     
@@ -35,11 +36,10 @@ export const violenceIncidentTranslations = {
     harassment: "Harassment",
     weaponSeen: "Weapon Seen",
     other: "Other",
-    incidentDescription: "Brief Description of Incident",
+    incidentDescription: "Detailed Description of Incident",
+    descriptionDisclaimer: "Please provide as much detail as possible. Include dates, times, people involved, and any relevant information.",
     
     // Injuries & Damage
-    anyoneInjured: "Anyone Injured?",
-    injuryDescription: "Injury Description",
     anyPropertyDamage: "Any Property Damage?",
     damageDescription: "Damage Description",
     
@@ -58,17 +58,22 @@ export const violenceIncidentTranslations = {
     high: "High",
     critical: "Critical",
     
+    // Resolution
+    resolutionQuestion: "What type of Resolution are you looking for?",
+    resolutionDisclaimer: "Management will take this information into consideration but cannot guarantee the requested actions.",
+    resolutionPlaceholder: "Describe the resolution or outcome you are seeking...",
+    
     // Actions
     yes: "Yes",
     no: "No",
     submit: "Submit Report",
     submitting: "Submitting...",
     close: "Close",
-    reportSubmitted: "Violence incident report submitted successfully!",
+    reportSubmitted: "Workplace violence and incident report submitted successfully!",
     
     // History
-    historyTitle: "My Violence Incident Reports",
-    noReports: "No violence incident reports found",
+    historyTitle: "My Incident Reports",
+    noReports: "No incident reports found",
     viewDetails: "View Details",
     
     // Actions Taken
@@ -79,8 +84,8 @@ export const violenceIncidentTranslations = {
     actionsSaved: "Actions saved successfully",
   },
   es: {
-    formTitle: "Informe de Incidente de Violencia",
-    submitReport: "Enviar Informe de Violencia",
+    formTitle: "Informe de Violencia e Incidentes en el Trabajo",
+    submitReport: "Enviar Informe de Incidente",
     
     reporterInfo: "Información del Reportero",
     incidentDetails: "Detalles del Incidente",
@@ -89,6 +94,7 @@ export const violenceIncidentTranslations = {
     authoritiesContacted: "Autoridades Contactadas",
     evidenceUpload: "Subir Evidencia",
     severitySection: "Severidad",
+    resolutionSection: "Solicitud de Resolución",
     
     moverName: "Nombre del Mudador",
     phoneNumber: "Número de Teléfono",
@@ -96,7 +102,7 @@ export const violenceIncidentTranslations = {
     
     incidentDate: "Fecha del Incidente",
     incidentTime: "Hora del Incidente",
-    jobId: "ID del Trabajo / Número de Orden",
+    jobId: "Estimación/Cotización #",
     incidentAddress: "Dirección del Incidente",
     clientName: "Nombre del Cliente",
     
@@ -107,10 +113,9 @@ export const violenceIncidentTranslations = {
     harassment: "Acoso",
     weaponSeen: "Arma Vista",
     other: "Otro",
-    incidentDescription: "Descripción Breve del Incidente",
+    incidentDescription: "Descripción Detallada del Incidente",
+    descriptionDisclaimer: "Por favor proporcione la mayor cantidad de detalles posible. Incluya fechas, horas, personas involucradas y cualquier información relevante.",
     
-    anyoneInjured: "¿Alguien Herido?",
-    injuryDescription: "Descripción de la Lesión",
     anyPropertyDamage: "¿Daño a la Propiedad?",
     damageDescription: "Descripción del Daño",
     
@@ -126,15 +131,19 @@ export const violenceIncidentTranslations = {
     high: "Alto",
     critical: "Crítico",
     
+    resolutionQuestion: "¿Qué tipo de resolución está buscando?",
+    resolutionDisclaimer: "La gerencia tomará en cuenta esta información pero no puede garantizar las acciones solicitadas.",
+    resolutionPlaceholder: "Describa la resolución o resultado que busca...",
+    
     yes: "Sí",
     no: "No",
     submit: "Enviar Informe",
     submitting: "Enviando...",
     close: "Cerrar",
-    reportSubmitted: "¡Informe de incidente de violencia enviado exitosamente!",
+    reportSubmitted: "¡Informe de violencia e incidente en el trabajo enviado exitosamente!",
     
-    historyTitle: "Mis Informes de Incidentes de Violencia",
-    noReports: "No se encontraron informes de incidentes de violencia",
+    historyTitle: "Mis Informes de Incidentes",
+    noReports: "No se encontraron informes de incidentes",
     viewDetails: "Ver Detalles",
     
     adminActions: "Acciones del Administrador",
@@ -144,8 +153,8 @@ export const violenceIncidentTranslations = {
     actionsSaved: "Acciones guardadas exitosamente",
   },
   ru: {
-    formTitle: "Отчет об Инциденте Насилия",
-    submitReport: "Отправить Отчет о Насилии",
+    formTitle: "Отчет о Насилии и Инцидентах на Рабочем Месте",
+    submitReport: "Отправить Отчет об Инциденте",
     
     reporterInfo: "Информация о Заявителе",
     incidentDetails: "Детали Инцидента",
@@ -154,6 +163,7 @@ export const violenceIncidentTranslations = {
     authoritiesContacted: "Связь с Властями",
     evidenceUpload: "Загрузка Доказательств",
     severitySection: "Серьезность",
+    resolutionSection: "Запрос на Решение",
     
     moverName: "Имя Перевозчика",
     phoneNumber: "Номер Телефона",
@@ -161,7 +171,7 @@ export const violenceIncidentTranslations = {
     
     incidentDate: "Дата Инцидента",
     incidentTime: "Время Инцидента",
-    jobId: "ID Работы / Номер Заказа",
+    jobId: "Оценка/Котировка #",
     incidentAddress: "Адрес Инцидента",
     clientName: "Имя Клиента",
     
@@ -172,10 +182,9 @@ export const violenceIncidentTranslations = {
     harassment: "Домогательство",
     weaponSeen: "Замечено Оружие",
     other: "Другое",
-    incidentDescription: "Краткое Описание Инцидента",
+    incidentDescription: "Подробное Описание Инцидента",
+    descriptionDisclaimer: "Пожалуйста, предоставьте как можно больше деталей. Укажите даты, время, вовлеченных людей и любую соответствующую информацию.",
     
-    anyoneInjured: "Кто-то Пострадал?",
-    injuryDescription: "Описание Травмы",
     anyPropertyDamage: "Есть Повреждение Имущества?",
     damageDescription: "Описание Ущерба",
     
@@ -191,15 +200,19 @@ export const violenceIncidentTranslations = {
     high: "Высокий",
     critical: "Критический",
     
+    resolutionQuestion: "Какое решение вы ищете?",
+    resolutionDisclaimer: "Руководство примет эту информацию во внимание, но не может гарантировать запрошенные действия.",
+    resolutionPlaceholder: "Опишите решение или результат, который вы ищете...",
+    
     yes: "Да",
     no: "Нет",
     submit: "Отправить Отчет",
     submitting: "Отправка...",
     close: "Закрыть",
-    reportSubmitted: "Отчет об инциденте насилия успешно отправлен!",
+    reportSubmitted: "Отчет о насилии и инциденте на рабочем месте успешно отправлен!",
     
-    historyTitle: "Мои Отчеты об Инцидентах Насилия",
-    noReports: "Отчеты об инцидентах насилия не найдены",
+    historyTitle: "Мои Отчеты об Инцидентах",
+    noReports: "Отчеты об инцидентах не найдены",
     viewDetails: "Посмотреть Детали",
     
     adminActions: "Действия Администратора",

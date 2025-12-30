@@ -13,13 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { handleError } from "@/lib/errorHandler";
 import { violenceIncidentTranslations, ViolenceIncidentLanguage } from "@/lib/violenceIncidentTranslations";
-import { Upload, X } from "lucide-react";
+import { Upload, X, AlertTriangle, Info } from "lucide-react";
 
 interface ViolenceIncidentFormProps {
   userId: string;
@@ -38,8 +39,8 @@ interface FormData {
   incidentAddress: string;
   clientName: string;
   incidentDescription: string;
-  injuryDescription?: string;
   damageDescription?: string;
+  resolutionRequest: string;
 }
 
 const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentFormProps) => {
@@ -47,7 +48,6 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
   const [moverName, setMoverName] = useState("");
   const [moverPhone, setMoverPhone] = useState("");
   const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([]);
-  const [anyoneInjured, setAnyoneInjured] = useState<boolean>(false);
   const [propertyDamaged, setPropertyDamaged] = useState<boolean>(false);
   const [policeContacted, setPoliceContacted] = useState<boolean>(false);
   const [emergencyServicesCalled, setEmergencyServicesCalled] = useState<boolean>(false);
@@ -99,6 +99,11 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
       return;
     }
 
+    if (!data.resolutionRequest?.trim()) {
+      toast.error("Please describe the resolution you are looking for");
+      return;
+    }
+
     setLoading(true);
     try {
       // Insert the incident
@@ -110,18 +115,19 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
           phone_number: data.phoneNumber || moverPhone,
           incident_date: data.incidentDate,
           incident_time: data.incidentTime,
-          job_id: data.jobId,
+          job_id: data.jobId || "",
           incident_address: data.incidentAddress,
-          client_name: data.clientName,
+          client_name: data.clientName || "",
           incident_types: incidentTypes,
           incident_description: data.incidentDescription,
-          anyone_injured: anyoneInjured,
-          injury_description: anyoneInjured ? data.injuryDescription : null,
+          anyone_injured: false,
+          injury_description: null,
           property_damaged: propertyDamaged,
           damage_description: propertyDamaged ? data.damageDescription : null,
           police_contacted: policeContacted,
           emergency_services_called: emergencyServicesCalled,
           severity_level: severityLevel,
+          admin_actions: `Resolution Request: ${data.resolutionRequest}`,
         })
         .select()
         .single();
@@ -156,7 +162,6 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
       toast.success(t.reportSubmitted);
       reset();
       setIncidentTypes([]);
-      setAnyoneInjured(false);
       setPropertyDamaged(false);
       setPoliceContacted(false);
       setEmergencyServicesCalled(false);
@@ -181,6 +186,14 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Form Description */}
+      <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800 dark:text-blue-200">
+          Use this form to report any workplace violence or incidents that occurred during your work. This includes verbal threats, physical contact, harassment, property damage, or any other safety concerns. Your report will be reviewed by management.
+        </AlertDescription>
+      </Alert>
+
       {/* Section 1 - Reporter Info */}
       <Card>
         <CardHeader>
@@ -215,6 +228,14 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
           <CardTitle className="text-lg">{t.incidentDetails}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="incidentAddress">{t.incidentAddress} *</Label>
+            <Input
+              id="incidentAddress"
+              {...register("incidentAddress", { required: true })}
+              placeholder="Full address of incident"
+            />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="incidentDate">{t.incidentDate} *</Label>
@@ -233,29 +254,23 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="jobId">{t.jobId} *</Label>
-            <Input
-              id="jobId"
-              {...register("jobId", { required: true })}
-              placeholder="e.g., JOB-12345"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="incidentAddress">{t.incidentAddress} *</Label>
-            <Input
-              id="incidentAddress"
-              {...register("incidentAddress", { required: true })}
-              placeholder="Full address of incident"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="clientName">{t.clientName} *</Label>
-            <Input
-              id="clientName"
-              {...register("clientName", { required: true })}
-              placeholder="Client's full name"
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="jobId">{t.jobId}</Label>
+              <Input
+                id="jobId"
+                {...register("jobId")}
+                placeholder="e.g., EST-12345"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clientName">{t.clientName}</Label>
+              <Input
+                id="clientName"
+                {...register("clientName")}
+                placeholder="Client's full name (optional)"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -285,53 +300,30 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
               ))}
             </div>
           </div>
+          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              {t.descriptionDisclaimer}
+            </AlertDescription>
+          </Alert>
           <div className="space-y-2">
             <Label htmlFor="incidentDescription">{t.incidentDescription} *</Label>
             <Textarea
               id="incidentDescription"
               {...register("incidentDescription", { required: true })}
-              rows={4}
+              rows={5}
               placeholder="Describe what happened in detail..."
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Section 4 - Injuries & Damage */}
+      {/* Section 4 - Property Damage */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">{t.injuriesDamage}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t.anyoneInjured} *</Label>
-            <RadioGroup
-              value={anyoneInjured ? "yes" : "no"}
-              onValueChange={(value) => setAnyoneInjured(value === "yes")}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="injured-yes" />
-                <Label htmlFor="injured-yes">{t.yes}</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="injured-no" />
-                <Label htmlFor="injured-no">{t.no}</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          {anyoneInjured && (
-            <div className="space-y-2">
-              <Label htmlFor="injuryDescription">{t.injuryDescription} *</Label>
-              <Textarea
-                id="injuryDescription"
-                {...register("injuryDescription", { required: anyoneInjured })}
-                rows={3}
-                placeholder="Describe the injuries..."
-              />
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label>{t.anyPropertyDamage} *</Label>
             <RadioGroup
@@ -471,6 +463,30 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
                 <SelectItem value="critical">{t.critical}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section 8 - Resolution Request */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{t.resolutionSection}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              {t.resolutionDisclaimer}
+            </AlertDescription>
+          </Alert>
+          <div className="space-y-2">
+            <Label htmlFor="resolutionRequest">{t.resolutionQuestion} *</Label>
+            <Textarea
+              id="resolutionRequest"
+              {...register("resolutionRequest", { required: true })}
+              rows={4}
+              placeholder={t.resolutionPlaceholder}
+            />
           </div>
         </CardContent>
       </Card>

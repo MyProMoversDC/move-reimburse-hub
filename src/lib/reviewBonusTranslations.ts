@@ -9,7 +9,7 @@ When completing this form, the foreman must include:
 – Customer's full name (exactly as shown on the work order or BOL)
 – Invoice number
 – Full legal names of all movers who worked the job
-– Screenshot or photo of the review
+– URL of the review
 – URL for the review
 
 Each mover listed will receive 1 bonus hour if the review is valid and all required information is provided. If the form is not submitted, the review will not be counted. If the review is later removed by the customer or taken down by Google, the bonus will be voided.`,
@@ -28,7 +28,7 @@ Each mover listed will receive 1 bonus hour if the review is valid and all requi
     submitting: "Submitting...",
     successMessage: "✅ Review successfully submitted. Bonus eligibility will be reviewed by management.",
     errorMessage: "Failed to submit review. Please try again.",
-    reviewHistory: "Review Bonus History",
+    reviewHistory: "Potential Review Bonus History",
     status: "Status",
     pending: "Pending Verification",
     confirmed: "Confirmed",
@@ -47,7 +47,7 @@ Al completar este formulario, el capataz debe incluir:
 – Nombre completo del cliente (exactamente como aparece en la orden de trabajo o BOL)
 – Número de factura
 – Nombres legales completos de todos los movers que trabajaron en el trabajo
-– Captura de pantalla o foto de la reseña
+– URL de la reseña
 – URL de la reseña
 
 Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la información requerida es proporcionada. Si el formulario no se envía, la reseña no será contada. Si la reseña es eliminada posteriormente por el cliente o removida por Google, el bono será anulado.`,
@@ -66,7 +66,7 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
     submitting: "Enviando...",
     successMessage: "✅ Reseña enviada exitosamente. La elegibilidad del bono será revisada por la gerencia.",
     errorMessage: "Error al enviar la reseña. Por favor intente de nuevo.",
-    reviewHistory: "Historial de Bonos por Reseñas",
+    reviewHistory: "Historial de Bonos Potenciales por Reseñas",
     status: "Estado",
     pending: "Pendiente de Verificación",
     confirmed: "Confirmado",
@@ -85,7 +85,7 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
 – Полное имя клиента (точно как в рабочем заказе или BOL)
 – Номер счета
 – Полные юридические имена всех грузчиков, работавших на заказе
-– Скриншот или фото отзыва
+– URL отзыва
 – URL отзыва
 
 Каждый указанный грузчик получит 1 бонусный час, если отзыв действителен и предоставлена вся необходимая информация. Если форма не отправлена, отзыв не будет учтен. Если отзыв будет позже удален клиентом или снят Google, бонус будет аннулирован.`,
@@ -104,7 +104,7 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
     submitting: "Отправка...",
     successMessage: "✅ Отзыв успешно отправлен. Право на бонус будет рассмотрено руководством.",
     errorMessage: "Не удалось отправить отзыв. Пожалуйста, попробуйте снова.",
-    reviewHistory: "История Бонусов за Отзывы",
+    reviewHistory: "История Потенциальных Бонусов за Отзывы",
     status: "Статус",
     pending: "Ожидает Проверки",
     confirmed: "Подтверждено",

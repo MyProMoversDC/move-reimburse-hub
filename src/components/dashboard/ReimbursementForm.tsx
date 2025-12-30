@@ -280,7 +280,7 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="totalReimbursement">Total Requested Reimbursement ($) *</Label>
+          <Label htmlFor="totalReimbursement">Total Requested Reimbursement ($) Amount *</Label>
           <Input
             id="totalReimbursement"
             type="number"
