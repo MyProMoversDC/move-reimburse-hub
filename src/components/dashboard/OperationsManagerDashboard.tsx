@@ -26,23 +26,27 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
       </div>
       
       <Tabs defaultValue="reports" className="w-full">
-        <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="reports">
-            <FileText className="h-4 w-4 mr-2" />
-            Performance Reports
-          </TabsTrigger>
-          <TabsTrigger value="violence">
-            <Shield className="h-4 w-4 mr-2" />
-            Violence Incidents
-          </TabsTrigger>
-          <TabsTrigger value="chat" className="relative">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Chat
-            {hasUnreadMessages && (
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+          <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
+            <TabsTrigger value="reports" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Performance Reports</span>
+              <span className="sm:hidden">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="violence" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Violence Incidents</span>
+              <span className="sm:hidden">Incidents</span>
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Chat
+              {hasUnreadMessages && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="reports" className="space-y-6">
           <PerformanceReportsList 

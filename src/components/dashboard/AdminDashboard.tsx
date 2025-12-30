@@ -189,11 +189,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">{t.allReimbursementRequests}</h2>
-                <Button onClick={handleExportReimbursements} disabled={exporting}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {exporting ? t.exporting : t.exportToExcel}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-xl md:text-2xl font-bold">{t.allReimbursementRequests}</h2>
+                <Button onClick={handleExportReimbursements} disabled={exporting} size="sm" className="self-start sm:self-auto">
+                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">{exporting ? t.exporting : t.exportToExcel}</span>
+                  <span className="sm:hidden">Export</span>
                 </Button>
               </div>
               <DateRangeFilter
@@ -221,11 +222,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Review Bonus Submissions</h2>
-                <Button onClick={handleExportReviews} disabled={exportingReviews}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {exportingReviews ? t.exporting : t.exportToExcel}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-xl md:text-2xl font-bold">Review Bonus Submissions</h2>
+                <Button onClick={handleExportReviews} disabled={exportingReviews} size="sm" className="self-start sm:self-auto">
+                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">{exportingReviews ? t.exporting : t.exportToExcel}</span>
+                  <span className="sm:hidden">Export</span>
                 </Button>
               </div>
               <DateRangeFilter
@@ -361,8 +363,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           hasUnreadMessages={hasUnreadMessages}
         />
         <SidebarInset>
-          <header className="flex h-14 items-center gap-4 border-b bg-background px-6">
-            <SidebarTrigger className="md:hidden" />
+          <header className="flex h-12 md:h-14 items-center gap-2 md:gap-4 border-b bg-background px-3 md:px-6">
+            <SidebarTrigger />
             <div className="flex-1" />
             <UserSettings userId={userId} language={language} />
             <LanguageSelector language={language} onLanguageChange={setLanguage} />

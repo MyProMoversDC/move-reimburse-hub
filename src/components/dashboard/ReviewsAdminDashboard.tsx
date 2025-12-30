@@ -76,41 +76,47 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
       </div>
       
       <Tabs defaultValue="reviews" className="w-full">
-        <TabsList>
-          <TabsTrigger value="reviews">
-            <Star className="h-4 w-4 mr-2" />
-            Review Submissions
-          </TabsTrigger>
-          <TabsTrigger value="missing-payments">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Missing Payments
-          </TabsTrigger>
-          <TabsTrigger value="reports">
-            <FileBarChart className="h-4 w-4 mr-2" />
-            Review Reports
-          </TabsTrigger>
-          <TabsTrigger value="deductibles">
-            <MinusCircle className="h-4 w-4 mr-2" />
-            Deductibles
-          </TabsTrigger>
-          <TabsTrigger value="chat" className="relative">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Chat
-            {hasUnreadMessages && (
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+          <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
+            <TabsTrigger value="reviews" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <Star className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Review Submissions</span>
+              <span className="sm:hidden">Reviews</span>
+            </TabsTrigger>
+            <TabsTrigger value="missing-payments" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Missing Payments</span>
+              <span className="sm:hidden">Payments</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <FileBarChart className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Review Reports</span>
+              <span className="sm:hidden">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="deductibles" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <MinusCircle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Deductibles
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Chat
+              {hasUnreadMessages && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="reviews" className="space-y-6">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <h2 className="text-2xl font-bold">Customer Review Bonus Submissions</h2>
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-xl md:text-2xl font-bold">Customer Review Bonus Submissions</h2>
+              <div className="flex items-center gap-2 flex-wrap">
                 <AddBonusDialog userId={userId} language={language} />
-                <Button onClick={handleExportReviews} disabled={exportingReviews}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {exportingReviews ? t.exporting : t.exportToExcel}
+                <Button onClick={handleExportReviews} disabled={exportingReviews} size="sm" className="text-xs md:text-sm">
+                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">{exportingReviews ? t.exporting : t.exportToExcel}</span>
+                  <span className="sm:hidden">Export</span>
                 </Button>
               </div>
             </div>

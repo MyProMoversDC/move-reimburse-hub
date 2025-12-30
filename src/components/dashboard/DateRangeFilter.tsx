@@ -23,7 +23,7 @@ const DateRangeFilter = ({
 }: DateRangeFilterProps) => {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm text-muted-foreground">Filter by date:</span>
+      <span className="text-xs md:text-sm text-muted-foreground">Filter:</span>
       
       <Popover>
         <PopoverTrigger asChild>
@@ -31,12 +31,12 @@ const DateRangeFilter = ({
             variant="outline"
             size="sm"
             className={cn(
-              "justify-start text-left font-normal",
+              "justify-start text-left font-normal text-xs md:text-sm h-8 md:h-9 px-2 md:px-3",
               !startDate && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {startDate ? format(startDate, "MM/dd/yyyy") : "Start date"}
+            <CalendarIcon className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+            {startDate ? format(startDate, "MM/dd/yy") : "Start"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -50,7 +50,7 @@ const DateRangeFilter = ({
         </PopoverContent>
       </Popover>
 
-      <span className="text-sm text-muted-foreground">to</span>
+      <span className="text-xs md:text-sm text-muted-foreground">to</span>
 
       <Popover>
         <PopoverTrigger asChild>
@@ -58,12 +58,12 @@ const DateRangeFilter = ({
             variant="outline"
             size="sm"
             className={cn(
-              "justify-start text-left font-normal",
+              "justify-start text-left font-normal text-xs md:text-sm h-8 md:h-9 px-2 md:px-3",
               !endDate && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {endDate ? format(endDate, "MM/dd/yyyy") : "End date"}
+            <CalendarIcon className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+            {endDate ? format(endDate, "MM/dd/yy") : "End"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -78,9 +78,9 @@ const DateRangeFilter = ({
       </Popover>
 
       {(startDate || endDate) && (
-        <Button variant="ghost" size="sm" onClick={onClear}>
-          <X className="h-4 w-4" />
-          Clear
+        <Button variant="ghost" size="sm" onClick={onClear} className="h-8 md:h-9 px-2">
+          <X className="h-3 w-3 md:h-4 md:w-4" />
+          <span className="hidden sm:inline ml-1">Clear</span>
         </Button>
       )}
     </div>
