@@ -15,6 +15,7 @@ import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import ChatContainer from "./chat/ChatContainer";
+import UserSettings from "./UserSettings";
 import { AdminFeedbackList } from "./AdminFeedbackList";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -359,6 +360,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <header className="flex h-14 items-center gap-4 border-b bg-background px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1" />
+            <UserSettings userId={userId} language={language} />
             <LanguageSelector language={language} onLanguageChange={setLanguage} />
           </header>
           <main className="flex-1 p-6">
