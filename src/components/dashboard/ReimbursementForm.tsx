@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { z } from "zod";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError, handleUploadError } from "@/lib/errorHandler";
+import { X, AlertCircle } from "lucide-react";
 
 // File validation constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -46,6 +48,22 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const [otherExpenses, setOtherExpenses] = useState("");
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
 
+  // Auto-pull mover name from profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", userId)
+        .single();
+      
+      if (data) {
+        setMoverFullName(`${data.first_name} ${data.last_name}`);
+      }
+    };
+    fetchProfile();
+  }, [userId]);
+
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
       return `File "${file.name}" is too large (max 5MB)`;
@@ -59,16 +77,24 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
+      const validFiles: File[] = [];
+      
       for (const file of files) {
         const error = validateFile(file);
         if (error) {
           toast.error(error);
-          e.target.value = '';
-          return;
+        } else {
+          validFiles.push(file);
         }
       }
-      setAttachmentFiles(files);
+      
+      setAttachmentFiles((prev) => [...prev, ...validFiles]);
+      e.target.value = "";
     }
+  };
+
+  const removeFile = (index: number) => {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const sanitizeFilename = (filename: string): string => {
@@ -76,6 +102,12 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
       .replace(/[^a-zA-Z0-9.-]/g, '_')
       .replace(/\.{2,}/g, '.')
       .substring(0, 100);
+  };
+
+  const formDescription = {
+    en: "Use this form to request reimbursement for work-related expenses. Please attach all relevant receipts and provide accurate information.",
+    es: "Utilice este formulario para solicitar reembolso de gastos relacionados con el trabajo. Por favor adjunte todos los recibos relevantes y proporcione información precisa.",
+    ru: "Используйте эту форму для запроса возмещения расходов, связанных с работой. Пожалуйста, прикрепите все соответствующие квитанции и предоставьте точную информацию."
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -186,14 +218,20 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Form Description */}
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{formDescription[language]}</AlertDescription>
+      </Alert>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="moverFullName">Mover Full Name *</Label>
+          <Label htmlFor="moverFullName">Mover 1 Full Name *</Label>
           <Input
             id="moverFullName"
             value={moverFullName}
-            onChange={(e) => setMoverFullName(e.target.value)}
-            required
+            disabled
+            className="bg-muted"
           />
         </div>
 
@@ -314,11 +352,41 @@ const ReimbursementForm = ({ userId, onSuccess, language }: ReimbursementFormPro
           accept="image/jpeg,image/png,image/gif,image/webp"
           multiple
           onChange={handleFileChange}
-          required
+          className="hidden"
         />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => document.getElementById("attachments")?.click()}
+          className="w-full"
+        >
+          {language === 'en' ? "Select Receipt Images" : language === 'es' ? "Seleccionar imágenes de recibos" : "Выбрать изображения квитанций"}
+        </Button>
+        
         {attachmentFiles.length > 0 && (
+          <div className="space-y-2 mt-2">
+            {attachmentFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 bg-muted rounded"
+              >
+                <span className="text-sm truncate">{file.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeFile(index)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {attachmentFiles.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            {attachmentFiles.length} file(s) selected: {attachmentFiles.map(f => f.name).join(", ")}
+            {language === 'en' ? "No files selected" : language === 'es' ? "No hay archivos seleccionados" : "Файлы не выбраны"}
           </p>
         )}
       </div>
