@@ -183,14 +183,21 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
       const moverName = profileData ? `${profileData.first_name} ${profileData.last_name}` : "Unknown";
 
       // Send appeal notification to admins
-      await supabase.functions.invoke("send-appeal-notification", {
-        body: {
-          type,
-          moverName,
-          referenceNumber: itemNumber,
-          appealNote: appealNote.trim(),
-        },
-      });
+      try {
+        const { error: notifError } = await supabase.functions.invoke("send-appeal-notification", {
+          body: {
+            type,
+            moverName,
+            referenceNumber: itemNumber,
+            appealNote: appealNote.trim(),
+          },
+        });
+        if (notifError) {
+          console.error("Appeal notification error:", notifError);
+        }
+      } catch (notifError) {
+        console.error("Failed to send appeal notification:", notifError);
+      }
 
       toast.success("Appeal submitted successfully!");
       onSuccess();
