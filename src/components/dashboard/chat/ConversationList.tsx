@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Users, MessageSquare } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
@@ -14,6 +14,7 @@ interface Participant {
   profile?: {
     first_name: string;
     last_name: string;
+    avatar_url?: string | null;
   };
 }
 
@@ -108,10 +109,24 @@ const ConversationList = ({
 
       // Fetch all users with their names using RPC function
       const { data: allUsers } = await supabase.rpc('list_chat_users_for_picker');
+      
+      // Fetch avatar URLs from profiles
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, avatar_url');
+      
+      const avatarMap = new Map(
+        (profilesData || []).map((p: { id: string; avatar_url: string | null }) => [p.id, p.avatar_url])
+      );
+      
       const usersMap = new Map(
         (allUsers || []).map((u: { id: string; first_name: string; last_name: string }) => [
           u.id, 
-          { first_name: u.first_name, last_name: u.last_name }
+          { 
+            first_name: u.first_name, 
+            last_name: u.last_name,
+            avatar_url: avatarMap.get(u.id) || null
+          }
         ])
       );
 
@@ -196,6 +211,12 @@ const ConversationList = ({
     return '??';
   };
 
+  const getAvatarUrl = (conv: Conversation) => {
+    if (conv.is_group) return null;
+    const otherParticipant = conv.participants.find(p => p.user_id !== userId);
+    return otherParticipant?.profile?.avatar_url || null;
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     if (isToday(date)) return format(date, 'HH:mm');
@@ -260,6 +281,9 @@ const ConversationList = ({
                 onClick={() => onSelectConversation(conv)}
               >
                 <Avatar className="h-10 w-10">
+                  {getAvatarUrl(conv) && (
+                    <AvatarImage src={getAvatarUrl(conv)!} alt={getConversationTitle(conv)} />
+                  )}
                   <AvatarFallback>
                     {conv.is_group ? <Users className="h-5 w-5" /> : getInitials(conv)}
                   </AvatarFallback>
