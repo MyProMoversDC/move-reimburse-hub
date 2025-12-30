@@ -100,28 +100,31 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src={logo} alt="MyProMovers" className="h-12" />
-            <div>
-              <h1 className="text-xl font-bold">
-                {userRole === "admin" && "Admin Portal"}
-                {userRole === "reviews_admin" && "Reviews Admin Portal"}
-                {userRole === "accountant" && "Accountant Portal"}
-                {userRole === "operations_manager" && "Operations Manager Portal"}
-                {userRole === "mover" && "Mover Portal"}
-              </h1>
-              <p className="text-sm text-muted-foreground">{userName}</p>
+        <div className="container mx-auto px-4 py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src={logo} alt="MyProMovers" className="h-10 md:h-12 flex-shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-lg md:text-xl font-bold truncate">
+                  {userRole === "admin" && "Admin Portal"}
+                  {userRole === "reviews_admin" && "Reviews Admin Portal"}
+                  {userRole === "accountant" && "Accountant Portal"}
+                  {userRole === "operations_manager" && "Ops Manager Portal"}
+                  {userRole === "mover" && "Mover Portal"}
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
+              </div>
             </div>
+            <Button variant="outline" onClick={handleLogout} size="sm" className="self-end sm:self-auto">
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="hidden xs:inline">Logout</span>
+              <span className="xs:hidden">Exit</span>
+            </Button>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {userRole === "mover" && <MoverDashboard userId={userId} />}
         {userRole === "admin" && <AdminDashboard userId={userId} />}
         {userRole === "reviews_admin" && <ReviewsAdminDashboard userId={userId} />}

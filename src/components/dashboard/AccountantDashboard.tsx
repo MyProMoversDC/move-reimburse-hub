@@ -52,17 +52,19 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
       </div>
       
       <Tabs defaultValue="requests" className="w-full">
-        <TabsList>
-          <TabsTrigger value="requests">{t.confirmedReimbursements}</TabsTrigger>
-          <TabsTrigger value="movers">{t.moversDirectory}</TabsTrigger>
-          <TabsTrigger value="chat" className="relative">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Chat
-            {hasUnreadMessages && (
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
+          <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
+            <TabsTrigger value="requests" className="text-xs md:text-sm px-2 md:px-3 py-1.5">{t.confirmedReimbursements}</TabsTrigger>
+            <TabsTrigger value="movers" className="text-xs md:text-sm px-2 md:px-3 py-1.5">{t.moversDirectory}</TabsTrigger>
+            <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Chat
+              {hasUnreadMessages && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="requests" className="space-y-6">
           <div className="flex items-center justify-between">

@@ -260,19 +260,20 @@ const ConversationList = ({
   }
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[600px]">
       {/* Header */}
-      <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="font-semibold text-lg">{t.conversations}</h2>
+      <div className="p-3 md:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <h2 className="font-semibold text-base md:text-lg">{t.conversations}</h2>
         <div className="flex gap-2">
-          <Button size="sm" onClick={onNewChat}>
-            <Plus className="h-4 w-4 mr-1" />
+          <Button size="sm" onClick={onNewChat} className="text-xs md:text-sm h-8 md:h-9">
+            <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1" />
             {t.newChat}
           </Button>
           {isAdmin && onNewGroupChat && (
-            <Button size="sm" variant="outline" onClick={onNewGroupChat}>
-              <Users className="h-4 w-4 mr-1" />
-              {t.newGroupChat}
+            <Button size="sm" variant="outline" onClick={onNewGroupChat} className="text-xs md:text-sm h-8 md:h-9">
+              <Users className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              <span className="hidden sm:inline">{t.newGroupChat}</span>
+              <span className="sm:hidden">Group</span>
             </Button>
           )}
         </div>
@@ -291,11 +292,11 @@ const ConversationList = ({
             {conversations.map((conv) => (
               <button
                 key={conv.id}
-                className="w-full p-4 hover:bg-muted/50 flex items-start gap-3 text-left transition-colors"
+                className="w-full p-3 md:p-4 hover:bg-muted/50 flex items-start gap-2 md:gap-3 text-left transition-colors"
                 onClick={() => onSelectConversation(conv)}
               >
-                <div className="relative">
-                  <Avatar className="h-10 w-10">
+                <div className="relative flex-shrink-0">
+                  <Avatar className="h-9 w-9 md:h-10 md:w-10">
                     {getAvatarUrl(conv) && (
                       <AvatarImage src={getAvatarUrl(conv)!} alt={getConversationTitle(conv)} />
                     )}

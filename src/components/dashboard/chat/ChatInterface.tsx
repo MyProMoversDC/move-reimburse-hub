@@ -378,18 +378,18 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[600px]">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-5 w-5" />
+      <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 border-b">
+        <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 md:h-10 md:w-10">
+          <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{getConversationTitle()}</h3>
+            <h3 className="font-semibold text-sm md:text-base truncate">{getConversationTitle()}</h3>
             {getOtherParticipantOnlineStatus() !== null && (
               <span 
-                className={`w-2.5 h-2.5 rounded-full ${
+                className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full flex-shrink-0 ${
                   getOtherParticipantOnlineStatus() ? 'bg-green-500' : 'bg-muted-foreground/50'
                 }`}
                 title={getOtherParticipantOnlineStatus() ? 'Online' : 'Offline'}
@@ -397,7 +397,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
             )}
           </div>
           {conversation.topic_reference_label && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground truncate">
               {conversation.topic_reference_label}
             </p>
           )}
@@ -438,7 +438,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[85%] md:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {/* Always show sender name for messages from others */}
                     {!isOwnMessage && (
                       <p className="text-xs text-muted-foreground mb-1 font-medium">
@@ -489,7 +489,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       )}
 
       {/* Input */}
-      <div className="p-4 border-t flex gap-2">
+      <div className="p-3 md:p-4 border-t flex gap-2">
         <input
           type="file"
           ref={fileInputRef}
@@ -503,6 +503,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
           size="icon"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
+          className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
         >
           <Paperclip className="h-4 w-4" />
         </Button>
@@ -512,8 +513,14 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
           placeholder={t.typeMessage}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
           disabled={sending || uploading}
+          className="text-sm md:text-base"
         />
-        <Button onClick={handleSend} disabled={sending || uploading || (!newMessage.trim() && selectedFiles.length === 0)}>
+        <Button 
+          onClick={handleSend} 
+          disabled={sending || uploading || (!newMessage.trim() && selectedFiles.length === 0)}
+          className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
+          size="icon"
+        >
           {sending || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </div>

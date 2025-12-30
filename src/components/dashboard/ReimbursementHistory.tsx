@@ -131,17 +131,17 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t.reimbursementNumber}</TableHead>
-              <TableHead>{t.date}</TableHead>
-              {userRole !== "mover" && <TableHead>{t.name}</TableHead>}
-              <TableHead>{t.job}</TableHead>
-              <TableHead>{t.total}</TableHead>
-              <TableHead>{t.status}</TableHead>
-              <TableHead>{t.actions}</TableHead>
+              <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.reimbursementNumber}</TableHead>
+              <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.date}</TableHead>
+              {userRole !== "mover" && <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.name}</TableHead>}
+              <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.job}</TableHead>
+              <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.total}</TableHead>
+              <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.status}</TableHead>
+              <TableHead className="whitespace-nowrap text-xs md:text-sm">{t.actions}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -154,35 +154,38 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
             ) : (
               reimbursements.map((reimbursement) => (
                 <TableRow key={reimbursement.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
                     #{String(reimbursement.reimbursement_number).padStart(5, "0")}
                   </TableCell>
-                  <TableCell>{formatDate(reimbursement.created_at)}</TableCell>
+                  <TableCell className="text-xs md:text-sm whitespace-nowrap">{formatDate(reimbursement.created_at)}</TableCell>
                   {userRole !== "mover" && (
-                    <TableCell>{reimbursement.mover_full_name}</TableCell>
+                    <TableCell className="text-xs md:text-sm">{reimbursement.mover_full_name}</TableCell>
                   )}
-                  <TableCell>{reimbursement.job_number}</TableCell>
-                  <TableCell>${reimbursement.total_expenses.toFixed(2)}</TableCell>
+                  <TableCell className="text-xs md:text-sm">{reimbursement.job_number}</TableCell>
+                  <TableCell className="text-xs md:text-sm whitespace-nowrap">${reimbursement.total_expenses.toFixed(2)}</TableCell>
                   <TableCell>{getStatusBadge(reimbursement.status)}</TableCell>
-                  <TableCell className="space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedReimbursement(reimbursement)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {userRole === "mover" && reimbursement.status === "declined" && (
+                  <TableCell>
+                    <div className="flex items-center gap-1">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => setAppealReimbursement(reimbursement)}
-                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                        onClick={() => setSelectedReimbursement(reimbursement)}
+                        className="h-8 w-8 p-0"
                       >
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        Appeal
+                        <Eye className="h-4 w-4" />
                       </Button>
-                    )}
+                      {userRole === "mover" && reimbursement.status === "declined" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAppealReimbursement(reimbursement)}
+                          className="text-orange-600 border-orange-600 hover:bg-orange-50 text-xs px-2"
+                        >
+                          <AlertCircle className="h-3 w-3 md:mr-1" />
+                          <span className="hidden md:inline">Appeal</span>
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
