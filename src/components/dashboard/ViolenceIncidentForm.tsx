@@ -147,13 +147,10 @@ const ViolenceIncidentForm = ({ userId, onSuccess, language }: ViolenceIncidentF
             continue;
           }
 
-          const { data: urlData } = supabase.storage
-            .from("violence-incident-attachments")
-            .getPublicUrl(fileName);
-
+          // Store the file path, not the public URL (bucket is private)
           await supabase.from("violence_incident_attachments").insert({
             incident_id: incident.id,
-            file_url: urlData.publicUrl,
+            file_url: fileName,
             file_name: file.name,
           });
         }

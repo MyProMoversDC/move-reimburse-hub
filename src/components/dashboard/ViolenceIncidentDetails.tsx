@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { handleError } from "@/lib/errorHandler";
 import { violenceIncidentTranslations, ViolenceIncidentLanguage } from "@/lib/violenceIncidentTranslations";
+import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
 import ApplyDeductibleDialog from "./ApplyDeductibleDialog";
 
 interface ViolenceIncident {
@@ -86,7 +87,19 @@ const ViolenceIncidentDetails = ({
       .from("violence_incident_attachments")
       .select("*")
       .eq("incident_id", incident.id);
-    setAttachments(data || []);
+    
+    if (data && data.length > 0) {
+      const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
+        data,
+        "violence-incident-attachments"
+      );
+      setAttachments(attachmentsWithSignedUrls.map(a => ({
+        ...a,
+        file_url: a.signed_url
+      })));
+    } else {
+      setAttachments([]);
+    }
   };
 
   const handleSaveActions = async () => {

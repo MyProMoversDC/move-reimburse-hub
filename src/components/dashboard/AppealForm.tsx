@@ -113,13 +113,10 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
 
           if (uploadError) throw uploadError;
 
-          const { data: { publicUrl } } = supabase.storage
-            .from("appeal-attachments")
-            .getPublicUrl(fileName);
-
+          // Store the file path, not the public URL (bucket is private)
           await supabase.from("reimbursement_appeal_attachments").insert({
             reimbursement_id: itemId,
-            file_url: publicUrl,
+            file_url: fileName,
             file_name: file.name,
           });
         }
@@ -156,13 +153,10 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
 
           if (uploadError) throw uploadError;
 
-          const { data: { publicUrl } } = supabase.storage
-            .from("appeal-attachments")
-            .getPublicUrl(fileName);
-
+          // Store the file path, not the public URL (bucket is private)
           await supabase.from("review_appeal_attachments").insert({
             review_bonus_id: itemId,
-            file_url: publicUrl,
+            file_url: fileName,
             file_name: file.name,
           });
         }
