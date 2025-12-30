@@ -229,6 +229,25 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
         throw insertError;
       }
 
+      // Send notification email to Sam
+      try {
+        const { error: notifError } = await supabase.functions.invoke('send-review-submission-notification', {
+          body: {
+            foremanName,
+            jobDate: format(jobDate, "MM/dd/yyyy"),
+            clientFullName: clientFullName.trim(),
+            invoiceNumber: invoiceNumber.trim(),
+            reviewUrl: reviewUrl.trim(),
+            crewMembers: crewMembers.filter(m => m.trim()),
+          }
+        });
+        if (notifError) {
+          console.error("Error sending notification:", notifError);
+        }
+      } catch (notifError) {
+        console.error("Error sending notification:", notifError);
+      }
+
       toast.success(t.successMessage);
       onSuccess();
     } catch (error: unknown) {

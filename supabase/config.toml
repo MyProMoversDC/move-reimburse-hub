@@ -23,3 +23,15 @@ verify_jwt = true
 
 [functions.send-admin-reminder]
 verify_jwt = false
+
+[functions.send-feedback-response]
+verify_jwt = true
+
+[functions.send-misconduct-reply]
+verify_jwt = true
+
+[functions.send-mover-email]
+verify_jwt = true
+
+[functions.send-review-submission-notification]
+verify_jwt = true
