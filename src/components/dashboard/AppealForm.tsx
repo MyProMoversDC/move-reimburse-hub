@@ -219,18 +219,20 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
         </Alert>
       )}
 
-      <Alert className="border-blue-200 bg-blue-50">
-        <Info className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-800">
-          <strong>How Appeals Work:</strong>
-          <ul className="list-disc ml-4 mt-2 space-y-1">
-            <li>Explain why you believe the decline decision should be reconsidered</li>
-            <li>Attach any supporting documents or images that support your case</li>
-            <li>The admin team will review your appeal and make a final decision</li>
-            <li>You will receive a notification once your appeal has been reviewed</li>
-          </ul>
-        </AlertDescription>
-      </Alert>
+      <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500 shadow-md">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
+            <strong>How Appeals Work:</strong>
+            <ul className="list-disc ml-4 mt-2 space-y-1">
+              <li>Explain why you believe the decline decision should be reconsidered</li>
+              <li>Attach any supporting documents or images that support your case</li>
+              <li>The admin team will review your appeal and make a final decision</li>
+              <li>You will receive a notification once your appeal has been reviewed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">

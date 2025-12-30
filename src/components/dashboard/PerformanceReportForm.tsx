@@ -230,12 +230,14 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
         </div>
       </CardHeader>
       <CardContent>
-        <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800 dark:text-blue-200">
-            Document any incidents or performance concerns for proper tracking and follow-up. Include as much detail as possible and attach any relevant images or documentation.
-          </AlertDescription>
-        </Alert>
+        <div className="mb-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500 shadow-md">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Document any incidents or performance concerns for proper tracking and follow-up. Include as much detail as possible and attach any relevant images or documentation.
+            </p>
+          </div>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">

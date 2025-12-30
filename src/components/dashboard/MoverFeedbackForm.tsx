@@ -131,10 +131,10 @@ export function MoverFeedbackForm({ userId, language, onSuccess }: MoverFeedback
         <CardDescription className="text-sm">
           {t('formDescription', language)}
         </CardDescription>
-        <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
-          <div className="flex gap-2">
+        <div className="mt-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 p-4 rounded-lg border-2 border-amber-400 dark:border-amber-500 shadow-md">
+          <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
               {t('importantNotice', language)}
             </p>
           </div>
