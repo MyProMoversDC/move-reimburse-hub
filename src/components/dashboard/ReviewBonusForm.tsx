@@ -2,15 +2,24 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarWithClose } from "@/components/ui/calendar-with-close";
+import { CalendarIcon, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusTranslations";
 import { handleError } from "@/lib/errorHandler";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ReviewBonusFormProps {
   userId: string;
@@ -24,10 +33,13 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
   
   const [loading, setLoading] = useState(false);
   const [jobDate, setJobDate] = useState<Date>();
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [clientFullName, setClientFullName] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [crewMembers, setCrewMembers] = useState<string[]>(["", "", "", "", "", "", "", ""]);
   const [reviewUrl, setReviewUrl] = useState("");
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+  const [duplicateAlertMessage, setDuplicateAlertMessage] = useState("");
 
   const handleCrewMemberChange = (index: number, value: string) => {
     const newCrewMembers = [...crewMembers];
@@ -53,32 +65,64 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       return;
     }
 
+    if (!reviewUrl.trim()) {
+      toast.error("Review URL is required");
+      return;
+    }
+
     // Check for duplicate invoice number
-    const { data: existingInvoice, error: checkError } = await supabase
+    const { data: existingInvoice, error: invoiceCheckError } = await supabase
       .from("review_bonuses")
       .select("id")
       .eq("invoice_number", invoiceNumber.trim())
       .maybeSingle();
 
-    if (checkError) {
-      console.error("Error checking invoice number:", checkError);
+    if (invoiceCheckError) {
+      console.error("Error checking invoice number:", invoiceCheckError);
       toast.error("Failed to validate invoice number. Please try again.");
       return;
     }
 
     if (existingInvoice) {
-      toast.error("This invoice number has already been submitted. Each invoice number can only be used once.");
+      setDuplicateAlertMessage(
+        language === 'en' 
+          ? "This Invoice Number has already been submitted. Each invoice number can only be used once. Please check the invoice number and try again."
+          : language === 'es'
+          ? "Este número de factura ya ha sido enviado. Cada número de factura solo se puede usar una vez. Por favor verifique el número de factura e intente nuevamente."
+          : "Этот номер счета уже был отправлен. Каждый номер счета можно использовать только один раз. Пожалуйста, проверьте номер счета и попробуйте снова."
+      );
+      setShowDuplicateAlert(true);
+      return;
+    }
+
+    // Check for duplicate URL
+    const { data: existingUrl, error: urlCheckError } = await supabase
+      .from("review_bonuses")
+      .select("id")
+      .eq("review_url", reviewUrl.trim())
+      .maybeSingle();
+
+    if (urlCheckError) {
+      console.error("Error checking review URL:", urlCheckError);
+      toast.error("Failed to validate review URL. Please try again.");
+      return;
+    }
+
+    if (existingUrl) {
+      setDuplicateAlertMessage(
+        language === 'en' 
+          ? "This Review URL has already been submitted. Each review URL can only be used once. Please check the URL and try again."
+          : language === 'es'
+          ? "Esta URL de reseña ya ha sido enviada. Cada URL de reseña solo se puede usar una vez. Por favor verifique la URL e intente nuevamente."
+          : "Эта ссылка на отзыв уже была отправлена. Каждую ссылку можно использовать только один раз. Пожалуйста, проверьте ссылку и попробуйте снова."
+      );
+      setShowDuplicateAlert(true);
       return;
     }
 
     // Only first 2 crew members are required
     if (!crewMembers[0].trim() || !crewMembers[1].trim()) {
       toast.error("First 2 crew members are required");
-      return;
-    }
-
-    if (!reviewUrl.trim()) {
-      toast.error("Review URL is required");
       return;
     }
 
@@ -112,7 +156,15 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       if (insertError) {
         // Check if it's a unique constraint violation
         if (insertError.code === '23505' || insertError.message?.includes('unique') || insertError.message?.includes('duplicate')) {
-          throw new Error('DUPLICATE_INVOICE');
+          setDuplicateAlertMessage(
+            language === 'en' 
+              ? "This submission contains a duplicate Invoice Number or Review URL that has already been submitted."
+              : language === 'es'
+              ? "Esta presentación contiene un número de factura o URL de reseña duplicado que ya ha sido enviado."
+              : "Эта заявка содержит дублирующийся номер счета или ссылку на отзыв, которые уже были отправлены."
+          );
+          setShowDuplicateAlert(true);
+          return;
         }
         throw insertError;
       }
@@ -121,13 +173,6 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
       onSuccess();
     } catch (error: unknown) {
       console.error("Error submitting review:", error);
-      
-      // Check for duplicate invoice error
-      if (error instanceof Error && error.message === 'DUPLICATE_INVOICE') {
-        toast.error("This invoice number has already been submitted. Each invoice number can only be used once.");
-        return;
-      }
-      
       toast.error(handleError(error));
     } finally {
       setLoading(false);
@@ -135,102 +180,125 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Instructions */}
-      <div className="bg-muted p-4 rounded-lg">
-        <p className="whitespace-pre-line text-sm">{t.instructions}</p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Job Date */}
-        <div className="space-y-2">
-          <Label>{t.jobDate} *</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !jobDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {jobDate ? format(jobDate, "MM/dd/yyyy") : "Select date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={jobDate}
-                onSelect={setJobDate}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Instructions */}
+        <div className="bg-muted p-4 rounded-lg">
+          <p className="whitespace-pre-line text-sm">{t.instructions}</p>
         </div>
 
-        {/* Invoice Number */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Job Date */}
+          <div className="space-y-2">
+            <Label>{t.jobDate} *</Label>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !jobDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {jobDate ? format(jobDate, "MM/dd/yyyy") : "Select date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarWithClose
+                  mode="single"
+                  selected={jobDate}
+                  onDateSelect={setJobDate}
+                  onClose={() => setDatePickerOpen(false)}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Invoice Number */}
+          <div className="space-y-2">
+            <Label htmlFor="invoiceNumber">{t.invoiceNumber} *</Label>
+            <Input
+              id="invoiceNumber"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Client Full Name */}
         <div className="space-y-2">
-          <Label htmlFor="invoiceNumber">{t.invoiceNumber} *</Label>
+          <Label htmlFor="clientFullName">{t.clientFullName} *</Label>
           <Input
-            id="invoiceNumber"
-            value={invoiceNumber}
-            onChange={(e) => setInvoiceNumber(e.target.value)}
+            id="clientFullName"
+            value={clientFullName}
+            onChange={(e) => setClientFullName(e.target.value)}
+            placeholder={t.clientFullNamePlaceholder}
             required
           />
         </div>
-      </div>
 
-      {/* Client Full Name */}
-      <div className="space-y-2">
-        <Label htmlFor="clientFullName">{t.clientFullName} *</Label>
-        <Input
-          id="clientFullName"
-          value={clientFullName}
-          onChange={(e) => setClientFullName(e.target.value)}
-          placeholder={t.clientFullNamePlaceholder}
-          required
-        />
-      </div>
-
-      {/* Crew Members */}
-      <div className="space-y-4">
-        <Label>{t.crewMember}</Label>
-        <div className="grid gap-3 md:grid-cols-2">
-          {crewMembers.map((member, index) => (
-            <div key={index} className="space-y-1">
-              <Label htmlFor={`crew-${index}`} className="text-sm text-muted-foreground">
-                {t.crewMember} {index + 1} {index < 2 ? t.required : t.optional}
-              </Label>
-              <Input
-                id={`crew-${index}`}
-                value={member}
-                onChange={(e) => handleCrewMemberChange(index, e.target.value)}
-                required={index < 2}
-              />
-            </div>
-          ))}
+        {/* Crew Members */}
+        <div className="space-y-4">
+          <Label>{t.crewMember}</Label>
+          <div className="grid gap-3 md:grid-cols-2">
+            {crewMembers.map((member, index) => (
+              <div key={index} className="space-y-1">
+                <Label htmlFor={`crew-${index}`} className="text-sm text-muted-foreground">
+                  {t.crewMember} {index + 1} {index < 2 ? t.required : t.optional}
+                </Label>
+                <Input
+                  id={`crew-${index}`}
+                  value={member}
+                  onChange={(e) => handleCrewMemberChange(index, e.target.value)}
+                  required={index < 2}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Review URL */}
-      <div className="space-y-2">
-        <Label htmlFor="reviewUrl">{t.reviewUrl} *</Label>
-        <Input
-          id="reviewUrl"
-          type="url"
-          value={reviewUrl}
-          onChange={(e) => setReviewUrl(e.target.value)}
-          placeholder={t.reviewUrlPlaceholder}
-          required
-        />
-      </div>
+        {/* Review URL */}
+        <div className="space-y-2">
+          <Label htmlFor="reviewUrl">{t.reviewUrl} *</Label>
+          <Input
+            id="reviewUrl"
+            type="url"
+            value={reviewUrl}
+            onChange={(e) => setReviewUrl(e.target.value)}
+            placeholder={t.reviewUrlPlaceholder}
+            required
+          />
+        </div>
 
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? t.submitting : t.submit}
-      </Button>
-    </form>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? t.submitting : t.submit}
+        </Button>
+      </form>
+
+      {/* Duplicate Alert Dialog */}
+      <AlertDialog open={showDuplicateAlert} onOpenChange={setShowDuplicateAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {language === 'en' ? "Duplicate Submission Detected" : language === 'es' ? "Envío duplicado detectado" : "Обнаружена дублирующаяся заявка"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {duplicateAlertMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowDuplicateAlert(false)}>
+              {language === 'en' ? "Understood" : language === 'es' ? "Entendido" : "Понятно"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

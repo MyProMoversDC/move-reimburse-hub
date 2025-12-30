@@ -37,6 +37,8 @@ export const missingPaymentTranslations = {
     errorDiscrepancyType: "Please select at least one discrepancy type",
     errorDiscrepancyDetails: "Please explain the discrepancy in detail",
     errorMissingAmount: "Please enter the missing amount",
+    errorMissingType: "Please select either Missing Hours or Missing Flat Rate",
+    applicantName: "Applicant Name",
     
     // History
     historyTitle: "Missing Payment History",
@@ -99,6 +101,8 @@ export const missingPaymentTranslations = {
     errorDiscrepancyType: "Por favor seleccione al menos un tipo de discrepancia",
     errorDiscrepancyDetails: "Por favor explique la discrepancia en detalle",
     errorMissingAmount: "Por favor ingrese el monto faltante",
+    errorMissingType: "Por favor seleccione Horas Faltantes o Tarifa Fija Faltante",
+    applicantName: "Nombre del Solicitante",
     
     // History
     historyTitle: "Historial de Pagos Faltantes",
@@ -161,6 +165,8 @@ export const missingPaymentTranslations = {
     errorDiscrepancyType: "Пожалуйста, выберите хотя бы один тип расхождения",
     errorDiscrepancyDetails: "Пожалуйста, объясните расхождение подробно",
     errorMissingAmount: "Пожалуйста, введите недостающую сумму",
+    errorMissingType: "Пожалуйста, выберите Недостающие часы или Недостающую фиксированную ставку",
+    applicantName: "Имя заявителя",
     
     // History
     historyTitle: "История Недостающих Оплат",
