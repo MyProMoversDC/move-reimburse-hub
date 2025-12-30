@@ -63,27 +63,19 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, language }: ReviewBon
 
   const fetchMovers = async () => {
     try {
-      // Get all users with mover role
-      const { data: moverRoles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "mover");
+      // Use RPC function to get all users for the picker
+      const { data: users, error } = await supabase.rpc("list_chat_users_for_picker");
 
-      if (moverRoles && moverRoles.length > 0) {
-        const moverIds = moverRoles.map(r => r.user_id);
-        
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, first_name, last_name")
-          .in("id", moverIds)
-          .order("first_name");
+      if (error) {
+        console.error("Error fetching users:", error);
+        return;
+      }
 
-        if (profiles) {
-          setMovers(profiles.map(p => ({
-            id: p.id,
-            name: `${p.first_name} ${p.last_name}`.trim()
-          })));
-        }
+      if (users) {
+        setMovers(users.map((u: { id: string; first_name: string; last_name: string }) => ({
+          id: u.id,
+          name: `${u.first_name} ${u.last_name}`.trim()
+        })));
       }
     } catch (error) {
       console.error("Error fetching movers:", error);
