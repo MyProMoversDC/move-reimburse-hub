@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Users, MessageSquare } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
+import { toast } from "sonner";
 
 interface Participant {
   user_id: string;
@@ -56,21 +57,53 @@ const ConversationList = ({
   const t = chatTranslations[language];
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const usersMapRef = useRef<Map<string, { first_name: string; last_name: string }>>(new Map());
 
   useEffect(() => {
     fetchConversations();
 
-    // Subscribe to conversation updates
+    // Subscribe to conversation updates with notification
     const channel = supabase
       .channel('conversation-updates')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'chat_messages'
         },
-        () => {
+        async (payload) => {
+          const newMessage = payload.new as { sender_id: string; content: string | null; conversation_id: string };
+          
+          // Only notify if the message is from someone else
+          if (newMessage.sender_id !== userId) {
+            // Get sender name from our cached map or fetch it
+            let senderName = 'Someone';
+            const cachedUser = usersMapRef.current.get(newMessage.sender_id);
+            if (cachedUser) {
+              senderName = `${cachedUser.first_name} ${cachedUser.last_name}`;
+            } else {
+              // Fetch the sender's profile
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('first_name, last_name')
+                .eq('id', newMessage.sender_id)
+                .maybeSingle();
+              
+              if (profile) {
+                senderName = `${profile.first_name} ${profile.last_name}`;
+                usersMapRef.current.set(newMessage.sender_id, profile);
+              }
+            }
+
+            // Show notification toast
+            toast.message(t.newMessageFrom?.replace('{name}', senderName) || `New message from ${senderName}`, {
+              description: newMessage.content?.substring(0, 50) || '📎 Attachment',
+              duration: 4000,
+            });
+          }
+          
+          // Refresh conversations to update order and counts
           fetchConversations();
         }
       )
@@ -182,6 +215,16 @@ const ConversationList = ({
           };
         })
       );
+
+      // Sort conversations by last message time (most recent first)
+      conversationsWithDetails.sort((a, b) => {
+        const aTime = a.lastMessage?.created_at || a.updated_at;
+        const bTime = b.lastMessage?.created_at || b.updated_at;
+        return new Date(bTime).getTime() - new Date(aTime).getTime();
+      });
+
+      // Update users map ref for notifications
+      usersMapRef.current = usersMap;
 
       setConversations(conversationsWithDetails);
     } catch (error) {
