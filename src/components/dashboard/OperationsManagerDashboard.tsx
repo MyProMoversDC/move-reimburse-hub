@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Shield, MessageSquare } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -6,7 +6,7 @@ import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import ChatContainer from "./chat/ChatContainer";
-import { supabase } from "@/integrations/supabase/client";
+import UserSettings from "./UserSettings";
 
 interface OperationsManagerDashboardProps {
   userId: string;
@@ -18,7 +18,8 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <UserSettings userId={userId} language={language} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
       

@@ -6,6 +6,7 @@ import DeductiblesReport from "./DeductiblesReport";
 import DateRangeFilter from "./DateRangeFilter";
 import ChatContainer from "./chat/ChatContainer";
 import AddBonusDialog from "./AddBonusDialog";
+import UserSettings from "./UserSettings";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare } from "lucide-react";
@@ -66,7 +67,8 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <UserSettings userId={userId} language={language} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
       

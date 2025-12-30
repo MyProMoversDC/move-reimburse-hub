@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download } from "lucide-react";
@@ -57,15 +57,31 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string }>>(new Map());
+  const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string }>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch all users for name display
+  // Fetch all users for name and avatar display
   useEffect(() => {
     const fetchUsers = async () => {
+      // Get users from the RPC function
       const { data: allUsers } = await supabase.rpc('list_chat_users_for_picker');
-      if (allUsers) {
+      
+      // Also fetch avatar URLs from profiles
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url');
+      
+      if (profiles) {
+        const map = new Map(
+          profiles.map((p: { id: string; first_name: string; last_name: string; avatar_url?: string }) => [
+            p.id,
+            { first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url || undefined }
+          ])
+        );
+        setUsersMap(map);
+      } else if (allUsers) {
+        // Fallback to RPC data without avatars
         const map = new Map(
           allUsers.map((u: { id: string; first_name: string; last_name: string }) => [
             u.id,
@@ -264,6 +280,21 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
     return 'Unknown';
   };
 
+  const getSenderAvatar = (senderId: string) => {
+    const user = usersMap.get(senderId);
+    return user?.avatar_url || null;
+  };
+
+  const getSenderInitials = (senderId: string) => {
+    const user = usersMap.get(senderId);
+    if (user) {
+      const first = user.first_name?.[0] || '';
+      const last = user.last_name?.[0] || '';
+      return (first + last).toUpperCase() || '?';
+    }
+    return '?';
+  };
+
   const getConversationTitle = () => {
     if (conversation.is_group) {
       return conversation.name || 'Group Chat';
@@ -376,8 +407,17 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
               return (
                 <div
                   key={message.id}
-                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  className={`flex gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
+                  {/* Avatar for other users */}
+                  {!isOwnMessage && (
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarImage src={getSenderAvatar(message.sender_id) || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {getSenderInitials(message.sender_id)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {/* Always show sender name for messages from others */}
                     {!isOwnMessage && (
