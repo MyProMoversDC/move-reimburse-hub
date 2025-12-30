@@ -41,6 +41,7 @@ interface ConversationListProps {
   onNewChat: () => void;
   onNewGroupChat?: () => void;
   isAdmin?: boolean;
+  isUserOnline?: (userId: string) => boolean;
 }
 
 const ConversationList = ({ 
@@ -49,7 +50,8 @@ const ConversationList = ({
   onSelectConversation, 
   onNewChat,
   onNewGroupChat,
-  isAdmin = false 
+  isAdmin = false,
+  isUserOnline
 }: ConversationListProps) => {
   const t = chatTranslations[language];
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -280,14 +282,31 @@ const ConversationList = ({
                 className="w-full p-4 hover:bg-muted/50 flex items-start gap-3 text-left transition-colors"
                 onClick={() => onSelectConversation(conv)}
               >
-                <Avatar className="h-10 w-10">
-                  {getAvatarUrl(conv) && (
-                    <AvatarImage src={getAvatarUrl(conv)!} alt={getConversationTitle(conv)} />
-                  )}
-                  <AvatarFallback>
-                    {conv.is_group ? <Users className="h-5 w-5" /> : getInitials(conv)}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-10 w-10">
+                    {getAvatarUrl(conv) && (
+                      <AvatarImage src={getAvatarUrl(conv)!} alt={getConversationTitle(conv)} />
+                    )}
+                    <AvatarFallback>
+                      {conv.is_group ? <Users className="h-5 w-5" /> : getInitials(conv)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!conv.is_group && isUserOnline && (() => {
+                    const otherParticipant = conv.participants.find(p => p.user_id !== userId);
+                    if (otherParticipant) {
+                      const online = isUserOnline(otherParticipant.user_id);
+                      return (
+                        <span 
+                          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${
+                            online ? 'bg-green-500' : 'bg-muted-foreground/50'
+                          }`}
+                          title={online ? 'Online' : 'Offline'}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
                     <p className="font-medium truncate">{getConversationTitle(conv)}</p>

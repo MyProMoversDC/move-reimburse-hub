@@ -5,6 +5,7 @@ import ConversationList from "./ConversationList";
 import ChatInterface from "./ChatInterface";
 import NewChatDialog from "./NewChatDialog";
 import { ChatLanguage } from "@/lib/chatTranslations";
+import { usePresence } from "@/hooks/usePresence";
 
 interface Participant {
   user_id: string;
@@ -35,6 +36,7 @@ const ChatContainer = ({ userId, userRole, language }: ChatContainerProps) => {
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { isUserOnline } = usePresence(userId);
 
   const isAdmin = userRole === 'admin';
 
@@ -86,6 +88,7 @@ const ChatContainer = ({ userId, userRole, language }: ChatContainerProps) => {
           userId={userId}
           language={language}
           onBack={handleBack}
+          isUserOnline={isUserOnline}
         />
       ) : (
         <ConversationList
@@ -96,6 +99,7 @@ const ChatContainer = ({ userId, userRole, language }: ChatContainerProps) => {
           onNewChat={() => setShowNewChatDialog(true)}
           onNewGroupChat={isAdmin ? () => setShowNewGroupDialog(true) : undefined}
           isAdmin={isAdmin}
+          isUserOnline={isUserOnline}
         />
       )}
 

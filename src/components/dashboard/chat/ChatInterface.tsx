@@ -47,9 +47,10 @@ interface ChatInterfaceProps {
   userId: string;
   language: ChatLanguage;
   onBack: () => void;
+  isUserOnline?: (userId: string) => boolean;
 }
 
-const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterfaceProps) => {
+const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }: ChatInterfaceProps) => {
   const t = chatTranslations[language];
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -313,6 +314,15 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
     return 'Chat';
   };
 
+  const getOtherParticipantOnlineStatus = () => {
+    if (conversation.is_group || !isUserOnline) return null;
+    const otherParticipant = conversation.participants.find(p => p.user_id !== userId);
+    if (otherParticipant) {
+      return isUserOnline(otherParticipant.user_id);
+    }
+    return null;
+  };
+
   const formatMessageDate = (dateStr: string) => {
     const date = new Date(dateStr);
     if (isToday(date)) {
@@ -375,7 +385,17 @@ const ChatInterface = ({ conversation, userId, language, onBack }: ChatInterface
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h3 className="font-semibold">{getConversationTitle()}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold">{getConversationTitle()}</h3>
+            {getOtherParticipantOnlineStatus() !== null && (
+              <span 
+                className={`w-2.5 h-2.5 rounded-full ${
+                  getOtherParticipantOnlineStatus() ? 'bg-green-500' : 'bg-muted-foreground/50'
+                }`}
+                title={getOtherParticipantOnlineStatus() ? 'Online' : 'Offline'}
+              />
+            )}
+          </div>
           {conversation.topic_reference_label && (
             <p className="text-sm text-muted-foreground">
               {conversation.topic_reference_label}
