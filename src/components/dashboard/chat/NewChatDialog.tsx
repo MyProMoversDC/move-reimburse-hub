@@ -103,7 +103,53 @@ const NewChatDialog = ({
 
     setCreating(true);
     try {
-      // Generate UUID client-side to avoid RLS issues
+      // For 1-on-1 chats, check if a conversation already exists with this user
+      if (!isGroupChat && selectedUsers.length === 1) {
+        const targetUserId = selectedUsers[0].id;
+        
+        // Find all conversations where current user is a participant
+        const { data: userConversations } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', userId);
+        
+        if (userConversations && userConversations.length > 0) {
+          const conversationIds = userConversations.map(c => c.conversation_id);
+          
+          // Find non-group conversations from these
+          const { data: existingConversations } = await supabase
+            .from('conversations')
+            .select('id')
+            .in('id', conversationIds)
+            .eq('is_group', false);
+          
+          if (existingConversations && existingConversations.length > 0) {
+            const existingConvIds = existingConversations.map(c => c.id);
+            
+            // Check if target user is in any of these conversations
+            const { data: targetParticipation } = await supabase
+              .from('conversation_participants')
+              .select('conversation_id')
+              .eq('user_id', targetUserId)
+              .in('conversation_id', existingConvIds);
+            
+            if (targetParticipation && targetParticipation.length > 0) {
+              // Existing conversation found - navigate to it
+              const existingConversationId = targetParticipation[0].conversation_id;
+              toast.info(language === 'en' 
+                ? 'Opening existing conversation' 
+                : language === 'es' 
+                ? 'Abriendo conversación existente' 
+                : 'Открываем существующий чат');
+              onChatCreated(existingConversationId);
+              handleClose();
+              return;
+            }
+          }
+        }
+      }
+
+      // No existing conversation found, create a new one
       const conversationId = crypto.randomUUID();
 
       const { error: convError } = await supabase
