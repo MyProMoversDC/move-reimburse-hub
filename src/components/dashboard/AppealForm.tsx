@@ -16,15 +16,23 @@ interface AppealFormProps {
   declineReason: string;
   onSuccess: () => void;
   onClose: () => void;
+  isFinalAppeal?: boolean;
+  language?: 'en' | 'es' | 'ru';
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
-const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClose }: AppealFormProps) => {
+const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClose, isFinalAppeal = false, language = 'en' }: AppealFormProps) => {
   const [appealNote, setAppealNote] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const finalAppealWarning = {
+    en: "⚠️ This is your FINAL appeal. Be very careful and detailed in your explanation. If declined, there will be no further opportunities to appeal.",
+    es: "⚠️ Esta es su apelación FINAL. Sea muy cuidadoso y detallado en su explicación. Si es rechazada, no habrá más oportunidades de apelar.",
+    ru: "⚠️ Это ваша ФИНАЛЬНАЯ апелляция. Будьте очень внимательны и детальны в своём объяснении. В случае отклонения, дальнейшие апелляции будут невозможны."
+  };
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
@@ -142,7 +150,23 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
         
         if (error) throw error;
 
-        // Upload appeal attachments
+        // Create appeal history record
+        const { data: historyRecord, error: historyError } = await supabase
+          .from("review_bonus_appeal_history")
+          .insert({
+            review_bonus_id: itemId,
+            appeal_number: newAppealCount,
+            appeal_note: appealNote.trim(),
+            appeal_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (historyError) {
+          console.error("Error creating appeal history:", historyError);
+        }
+
+        // Upload appeal attachments with link to history
         for (const file of files) {
           const safeFilename = sanitizeFilename(file.name);
           const fileName = `${user.id}/${itemId}/${Date.now()}_${safeFilename}`;
@@ -153,11 +177,12 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
 
           if (uploadError) throw uploadError;
 
-          // Store the file path, not the public URL (bucket is private)
+          // Store the file path with link to appeal history
           await supabase.from("review_appeal_attachments").insert({
             review_bonus_id: itemId,
             file_url: fileName,
             file_name: file.name,
+            appeal_history_id: historyRecord?.id || null,
           });
         }
       } else if (type === "missing_payment") {
@@ -211,6 +236,14 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
 
   return (
     <div className="space-y-6">
+      {isFinalAppeal && (
+        <Alert className="border-red-500/50 bg-red-500/10">
+          <AlertDescription className="text-red-600 font-semibold">
+            {finalAppealWarning[language]}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {declineReason && (
         <Alert className="border-destructive/50 bg-destructive/10">
           <AlertDescription className="text-destructive">

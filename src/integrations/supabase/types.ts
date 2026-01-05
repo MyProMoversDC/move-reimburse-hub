@@ -682,6 +682,7 @@ export type Database = {
       }
       review_appeal_attachments: {
         Row: {
+          appeal_history_id: string | null
           created_at: string | null
           file_name: string
           file_url: string
@@ -689,6 +690,7 @@ export type Database = {
           review_bonus_id: string
         }
         Insert: {
+          appeal_history_id?: string | null
           created_at?: string | null
           file_name: string
           file_url: string
@@ -696,6 +698,7 @@ export type Database = {
           review_bonus_id: string
         }
         Update: {
+          appeal_history_id?: string | null
           created_at?: string | null
           file_name?: string
           file_url?: string
@@ -704,7 +707,55 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "review_appeal_attachments_appeal_history_id_fkey"
+            columns: ["appeal_history_id"]
+            isOneToOne: false
+            referencedRelation: "review_bonus_appeal_history"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "review_appeal_attachments_review_bonus_id_fkey"
+            columns: ["review_bonus_id"]
+            isOneToOne: false
+            referencedRelation: "review_bonuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_bonus_appeal_history: {
+        Row: {
+          appeal_at: string
+          appeal_note: string
+          appeal_number: number
+          created_at: string
+          decline_reason: string | null
+          declined_at: string | null
+          id: string
+          review_bonus_id: string
+        }
+        Insert: {
+          appeal_at?: string
+          appeal_note: string
+          appeal_number: number
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          id?: string
+          review_bonus_id: string
+        }
+        Update: {
+          appeal_at?: string
+          appeal_note?: string
+          appeal_number?: number
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          id?: string
+          review_bonus_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_bonus_appeal_history_review_bonus_id_fkey"
             columns: ["review_bonus_id"]
             isOneToOne: false
             referencedRelation: "review_bonuses"
