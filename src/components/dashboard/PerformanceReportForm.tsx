@@ -6,13 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ArrowLeft, Upload, X, Info } from "lucide-react";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
@@ -279,40 +273,32 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
 
             <div className="space-y-2">
               <Label htmlFor="incident_category">Incident Category *</Label>
-              <Select
+              <SearchableSelect
                 value={formData.incident_category}
                 onValueChange={(value) => setFormData({ ...formData, incident_category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select incident category" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover max-h-[300px]">
-                  {incidentCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={incidentCategories.map((category) => ({
+                  value: category,
+                  label: category,
+                }))}
+                placeholder="Select incident category"
+                searchPlaceholder="Search categories..."
+                emptyMessage="No categories found"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="severity_level">Severity Level *</Label>
-              <Select
+              <SearchableSelect
                 value={formData.severity_level}
                 onValueChange={(value) => setFormData({ ...formData, severity_level: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select severity level" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover">
-                  {severityLevels.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      {level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={severityLevels.map((level) => ({
+                  value: level,
+                  label: level,
+                }))}
+                placeholder="Select severity level"
+                searchPlaceholder="Search..."
+                emptyMessage="No options"
+              />
             </div>
           </div>
 

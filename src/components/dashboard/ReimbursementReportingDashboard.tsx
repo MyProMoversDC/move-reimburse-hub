@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -261,19 +261,20 @@ const ReimbursementReportingDashboard = ({ language }: ReimbursementReportingDas
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
         <div className="w-full md:w-64">
           <label className="text-sm font-medium mb-2 block">Select Mover</label>
-          <Select value={selectedMover} onValueChange={setSelectedMover}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Movers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Movers</SelectItem>
-              {movers.map((mover) => (
-                <SelectItem key={mover.id} value={mover.id}>
-                  {mover.first_name} {mover.last_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            value={selectedMover}
+            onValueChange={setSelectedMover}
+            options={[
+              { value: "all", label: "All Movers" },
+              ...movers.map((mover) => ({
+                value: mover.id,
+                label: `${mover.first_name} ${mover.last_name}`,
+              })),
+            ]}
+            placeholder="All Movers"
+            searchPlaceholder="Search movers..."
+            emptyMessage="No movers found"
+          />
         </div>
         <DateRangeFilter
           startDate={startDate}
