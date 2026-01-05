@@ -4,13 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarWithClose } from "@/components/ui/calendar-with-close";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CalendarIcon, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -352,22 +346,20 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
                 />
               ) : (
                 <>
-                  <Select
+                  <SearchableSelect
                     value={crewMemberSelections[index]}
                     onValueChange={(value) => handleCrewMemberSelect(index, value)}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder={language === 'en' ? "Select mover..." : language === 'es' ? "Seleccionar..." : "Выбрать..."} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50 max-h-[300px]">
-                      {movers.map((mover) => (
-                        <SelectItem key={mover.id} value={mover.id}>
-                          {mover.name}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value={OTHER_VALUE}>{otherLabel}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    options={[
+                      ...movers.map((mover) => ({
+                        value: mover.id,
+                        label: mover.name,
+                      })),
+                      { value: OTHER_VALUE, label: otherLabel },
+                    ]}
+                    placeholder={language === 'en' ? "Select mover..." : language === 'es' ? "Seleccionar..." : "Выбрать..."}
+                    searchPlaceholder={language === 'en' ? "Search movers..." : language === 'es' ? "Buscar..." : "Поиск..."}
+                    emptyMessage={language === 'en' ? "No movers found" : language === 'es' ? "No se encontraron" : "Не найдено"}
+                  />
                   {crewMemberSelections[index] === OTHER_VALUE && (
                     <Input
                       id={`crew-${index}-manual`}

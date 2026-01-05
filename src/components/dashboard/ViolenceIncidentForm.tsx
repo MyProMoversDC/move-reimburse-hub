@@ -6,13 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
@@ -452,17 +446,19 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
         <CardContent>
           <div className="space-y-2">
             <Label>{t.severityLevel} *</Label>
-            <Select value={severityLevel} onValueChange={(value: SeverityLevel) => setSeverityLevel(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">{t.low}</SelectItem>
-                <SelectItem value="medium">{t.medium}</SelectItem>
-                <SelectItem value="high">{t.high}</SelectItem>
-                <SelectItem value="critical">{t.critical}</SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={severityLevel}
+              onValueChange={(value) => setSeverityLevel(value as SeverityLevel)}
+              options={[
+                { value: "low", label: t.low },
+                { value: "medium", label: t.medium },
+                { value: "high", label: t.high },
+                { value: "critical", label: t.critical },
+              ]}
+              placeholder={t.severityLevel}
+              searchPlaceholder="Search..."
+              emptyMessage="No options"
+            />
           </div>
         </CardContent>
       </Card>

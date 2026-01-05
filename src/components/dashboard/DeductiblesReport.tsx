@@ -11,13 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -170,19 +164,20 @@ const DeductiblesReport = ({ isAdmin = false }: DeductiblesReportProps) => {
           </div>
           <div className="w-full md:w-64 space-y-2">
             <Label>Filter by Mover</Label>
-            <Select value={selectedMoverId} onValueChange={setSelectedMoverId}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Movers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Movers</SelectItem>
-                {movers.map((mover) => (
-                  <SelectItem key={mover.id} value={mover.id}>
-                    {mover.first_name} {mover.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={selectedMoverId}
+              onValueChange={setSelectedMoverId}
+              options={[
+                { value: "all", label: "All Movers" },
+                ...movers.map((mover) => ({
+                  value: mover.id,
+                  label: `${mover.first_name} ${mover.last_name}`,
+                })),
+              ]}
+              placeholder="All Movers"
+              searchPlaceholder="Search movers..."
+              emptyMessage="No movers found"
+            />
           </div>
         </div>
 

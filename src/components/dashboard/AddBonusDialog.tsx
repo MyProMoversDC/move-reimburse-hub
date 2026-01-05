@@ -11,13 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 import { Gift, DollarSign } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
@@ -208,18 +202,17 @@ const AddBonusDialog = ({ userId, language, onBonusAdded }: AddBonusDialogProps)
         <div className="space-y-6">
           <div className="space-y-2">
             <Label>{t.selectMover}</Label>
-            <Select value={selectedMoverId} onValueChange={setSelectedMoverId}>
-              <SelectTrigger>
-                <SelectValue placeholder={t.selectMoverPlaceholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {movers.map((mover) => (
-                  <SelectItem key={mover.id} value={mover.id}>
-                    {mover.first_name} {mover.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={selectedMoverId}
+              onValueChange={setSelectedMoverId}
+              options={movers.map((mover) => ({
+                value: mover.id,
+                label: `${mover.first_name} ${mover.last_name}`,
+              }))}
+              placeholder={t.selectMoverPlaceholder}
+              searchPlaceholder={language === 'en' ? "Search movers..." : language === 'es' ? "Buscar..." : "Поиск..."}
+              emptyMessage={language === 'en' ? "No movers found" : language === 'es' ? "No se encontraron" : "Не найдено"}
+            />
           </div>
 
           {selectedMover && (

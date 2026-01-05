@@ -11,13 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 import { UserPlus, Trash2 } from "lucide-react";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
@@ -211,25 +205,22 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Select
+                      <SearchableSelect
                         value={selectedRole[user.id] || ""}
                         onValueChange={(value) =>
                           setSelectedRole({ ...selectedRole, [user.id]: value })
                         }
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover">
-                          {availableRoles
-                            .filter((role) => !user.roles.includes(role))
-                            .map((role) => (
-                              <SelectItem key={role} value={role}>
-                                {roleDisplayNames[role] || role.replace("_", " ")}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                        options={availableRoles
+                          .filter((role) => !user.roles.includes(role))
+                          .map((role) => ({
+                            value: role,
+                            label: roleDisplayNames[role] || role.replace("_", " "),
+                          }))}
+                        placeholder="Select role"
+                        searchPlaceholder="Search roles..."
+                        emptyMessage="No roles available"
+                        triggerClassName="w-[180px]"
+                      />
                       <Button
                         size="sm"
                         onClick={() => handleAddRole(user.id)}
