@@ -51,8 +51,8 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [clientFullName, setClientFullName] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [crewMembers, setCrewMembers] = useState<string[]>(["", "", "", "", "", "", "", ""]);
-  const [crewMemberSelections, setCrewMemberSelections] = useState<string[]>(["", "", "", "", "", "", "", ""]);
+  const [crewMembers, setCrewMembers] = useState<string[]>([foremanName, "", "", "", "", "", "", ""]);
+  const [crewMemberSelections, setCrewMemberSelections] = useState<string[]>(["__SELF__", "", "", "", "", "", "", ""]);
   const [reviewUrl, setReviewUrl] = useState("");
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [duplicateAlertMessage, setDuplicateAlertMessage] = useState("");
@@ -337,38 +337,50 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
         <div className="space-y-4">
           <Label>{t.crewMember}</Label>
           <div className="grid gap-3 md:grid-cols-2">
-            {crewMembers.map((member, index) => (
-              <div key={index} className="space-y-2">
-                <Label htmlFor={`crew-${index}`} className="text-sm text-muted-foreground">
-                  {t.crewMember} {index + 1} {index < 2 ? t.required : t.optional}
-                </Label>
-                <Select
-                  value={crewMemberSelections[index]}
-                  onValueChange={(value) => handleCrewMemberSelect(index, value)}
-                >
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder={language === 'en' ? "Select mover..." : language === 'es' ? "Seleccionar..." : "Выбрать..."} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50 max-h-[300px]">
-                    {movers.map((mover) => (
-                      <SelectItem key={mover.id} value={mover.id}>
-                        {mover.name}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value={OTHER_VALUE}>{otherLabel}</SelectItem>
-                  </SelectContent>
-                </Select>
-                {crewMemberSelections[index] === OTHER_VALUE && (
-                  <Input
-                    id={`crew-${index}-manual`}
-                    value={member}
-                    onChange={(e) => handleCrewMemberManualInput(index, e.target.value)}
-                    placeholder={language === 'en' ? "Enter name..." : language === 'es' ? "Ingresar nombre..." : "Введите имя..."}
-                    required={index < 2}
-                  />
-                )}
-              </div>
-            ))}
+          {crewMembers.map((member, index) => (
+            <div key={index} className="space-y-2">
+              <Label htmlFor={`crew-${index}`} className="text-sm text-muted-foreground">
+                {t.crewMember} {index + 1} {index < 2 ? t.required : t.optional}
+              </Label>
+              {index === 0 ? (
+                // First crew member is auto-filled with the mover's name
+                <Input
+                  id={`crew-0`}
+                  value={foremanName}
+                  disabled
+                  className="bg-muted"
+                />
+              ) : (
+                <>
+                  <Select
+                    value={crewMemberSelections[index]}
+                    onValueChange={(value) => handleCrewMemberSelect(index, value)}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder={language === 'en' ? "Select mover..." : language === 'es' ? "Seleccionar..." : "Выбрать..."} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50 max-h-[300px]">
+                      {movers.map((mover) => (
+                        <SelectItem key={mover.id} value={mover.id}>
+                          {mover.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value={OTHER_VALUE}>{otherLabel}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {crewMemberSelections[index] === OTHER_VALUE && (
+                    <Input
+                      id={`crew-${index}-manual`}
+                      value={member}
+                      onChange={(e) => handleCrewMemberManualInput(index, e.target.value)}
+                      placeholder={language === 'en' ? "Enter name..." : language === 'es' ? "Ingresar nombre..." : "Введите имя..."}
+                      required={index < 2}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          ))}
           </div>
         </div>
 
