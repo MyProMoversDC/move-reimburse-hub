@@ -68,14 +68,21 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
     const newAttachments: AttachmentFile[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file.type.startsWith("image/")) {
-        toast.error(`${file.name} is not an image file`);
+      const isImage = file.type.startsWith("image/");
+      const isVideo = file.type.startsWith("video/");
+      
+      if (!isImage && !isVideo) {
+        toast.error(`${file.name} is not an image or video file`);
         continue;
       }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} is too large (max 10MB)`);
+      
+      // 10MB for images, 100MB for videos
+      const maxSize = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error(`${file.name} is too large (max ${isVideo ? "100MB" : "10MB"})`);
         continue;
       }
+      
       newAttachments.push({
         file,
         preview: URL.createObjectURL(file),
@@ -335,13 +342,13 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
           <div className="space-y-2">
             <Label>Attachments (Optional)</Label>
             <p className="text-sm text-muted-foreground">
-              Upload images related to the incident (max 10MB per image)
+              Upload images (max 10MB) or videos (max 100MB) related to the incident
             </p>
             
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               multiple
               onChange={handleFileSelect}
               className="hidden"
@@ -354,34 +361,45 @@ const PerformanceReportForm = ({ onSuccess, onCancel }: PerformanceReportFormPro
               className="w-full border-dashed"
             >
               <Upload className="h-4 w-4 mr-2" />
-              Upload Images
+              Upload Images or Videos
             </Button>
 
             {attachments.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                {attachments.map((attachment, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border bg-muted">
-                      <img
-                        src={attachment.preview}
-                        alt={attachment.file.name}
-                        className="w-full h-full object-cover"
-                      />
+                {attachments.map((attachment, index) => {
+                  const isVideo = attachment.file.type.startsWith("video/");
+                  return (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden border bg-muted">
+                        {isVideo ? (
+                          <video
+                            src={attachment.preview}
+                            className="w-full h-full object-cover"
+                            muted
+                          />
+                        ) : (
+                          <img
+                            src={attachment.preview}
+                            alt={attachment.file.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeAttachment(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        {attachment.file.name}
+                      </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => removeAttachment(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">
-                      {attachment.file.name}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
