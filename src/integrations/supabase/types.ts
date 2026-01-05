@@ -721,7 +721,7 @@ export type Database = {
           created_at: string
           crew_member_1: string
           crew_member_2: string
-          crew_member_3: string
+          crew_member_3: string | null
           crew_member_4: string | null
           crew_member_5: string | null
           crew_member_6: string | null
@@ -748,7 +748,7 @@ export type Database = {
           created_at?: string
           crew_member_1: string
           crew_member_2: string
-          crew_member_3: string
+          crew_member_3?: string | null
           crew_member_4?: string | null
           crew_member_5?: string | null
           crew_member_6?: string | null
@@ -775,7 +775,7 @@ export type Database = {
           created_at?: string
           crew_member_1?: string
           crew_member_2?: string
-          crew_member_3?: string
+          crew_member_3?: string | null
           crew_member_4?: string | null
           crew_member_5?: string | null
           crew_member_6?: string | null
