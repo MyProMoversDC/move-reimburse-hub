@@ -49,7 +49,7 @@ serve(async (req) => {
     // Fetch relevant data for context if requested
     let contextData = '';
     if (includeContext) {
-      // Fetch summary statistics
+      // Fetch ALL data with complete details for comprehensive answers
       const [
         { data: reimbursements },
         { data: reviewBonuses },
@@ -57,59 +57,238 @@ serve(async (req) => {
         { data: violenceIncidents },
         { data: feedback },
         { data: profiles },
-        { data: deductibles }
+        { data: deductibles },
+        { data: performanceReports },
+        { data: balances },
+        { data: transactions }
       ] = await Promise.all([
-        supabaseClient.from('reimbursements').select('id, status, total_expenses, mover_full_name, created_at'),
-        supabaseClient.from('review_bonuses').select('id, status, mover_id, foreman_name, job_date, created_at'),
-        supabaseClient.from('missing_payments').select('id, status, mover_full_name, missing_amount, created_at'),
-        supabaseClient.from('violence_incidents').select('id, severity_level, mover_name, incident_date, created_at'),
-        supabaseClient.from('mover_feedback').select('id, status, priority, feedback_areas, mover_name, created_at'),
-        supabaseClient.from('profiles').select('id, first_name, last_name, email, created_at'),
-        supabaseClient.from('deductibles').select('id, amount, mover_name, reason, created_at')
+        supabaseClient.from('reimbursements').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('review_bonuses').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('missing_payments').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('violence_incidents').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('mover_feedback').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('profiles').select('*'),
+        supabaseClient.from('deductibles').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('performance_reports').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('mover_balances').select('*'),
+        supabaseClient.from('mover_bonus_transactions').select('*').order('created_at', { ascending: false })
       ]);
 
-      // Build context summary
+      // Build context summary with FULL data
       const pendingReimbursements = reimbursements?.filter(r => r.status === 'pending') || [];
+      const confirmedReimbursements = reimbursements?.filter(r => r.status === 'confirmed') || [];
+      const paidReimbursements = reimbursements?.filter(r => r.status === 'paid') || [];
+      const declinedReimbursements = reimbursements?.filter(r => r.status === 'declined') || [];
+      const appealReimbursements = reimbursements?.filter(r => r.status === 'appeal') || [];
+
       const pendingReviews = reviewBonuses?.filter(r => r.status === 'pending') || [];
+      const confirmedReviews = reviewBonuses?.filter(r => r.status === 'confirmed') || [];
+      const declinedReviews = reviewBonuses?.filter(r => r.status === 'declined') || [];
+      const appealReviews = reviewBonuses?.filter(r => r.status === 'appeal') || [];
+
       const pendingMissingPayments = missingPayments?.filter(r => r.status === 'pending') || [];
-      const criticalIncidents = violenceIncidents?.filter(i => i.severity_level === 'critical' || i.severity_level === 'high') || [];
+      const confirmedMissingPayments = missingPayments?.filter(r => r.status === 'confirmed') || [];
+      const declinedMissingPayments = missingPayments?.filter(r => r.status === 'declined') || [];
+
+      const criticalIncidents = violenceIncidents?.filter(i => i.severity_level === 'critical') || [];
+      const highIncidents = violenceIncidents?.filter(i => i.severity_level === 'high') || [];
+
       const pendingFeedback = feedback?.filter(f => f.status === 'pending') || [];
 
-      contextData = `
-## Current Portal Data Summary (as of ${new Date().toISOString()}):
+      // Group data by mover for detailed per-mover statistics
+      const moverStats: Record<string, any> = {};
+      
+      // Process profiles first
+      profiles?.forEach(p => {
+        const fullName = `${p.first_name} ${p.last_name}`.trim();
+        moverStats[p.id] = {
+          name: fullName,
+          email: p.email,
+          phone: p.phone,
+          reimbursements: { total: 0, pending: 0, confirmed: 0, paid: 0, declined: 0, appeal: 0, totalAmount: 0 },
+          reviewBonuses: { total: 0, pending: 0, confirmed: 0, declined: 0, appeal: 0 },
+          missingPayments: { total: 0, pending: 0, confirmed: 0, declined: 0 },
+          violenceIncidents: { total: 0, critical: 0, high: 0 },
+          feedback: { total: 0, pending: 0 },
+          deductibles: { total: 0, totalAmount: 0 },
+          performanceReports: { total: 0 },
+          balance: 0
+        };
+      });
 
-### Users
+      // Process reimbursements per mover
+      reimbursements?.forEach(r => {
+        if (moverStats[r.mover_id]) {
+          moverStats[r.mover_id].reimbursements.total++;
+          moverStats[r.mover_id].reimbursements[r.status]++;
+          moverStats[r.mover_id].reimbursements.totalAmount += Number(r.total_expenses);
+        }
+      });
+
+      // Process review bonuses per mover
+      reviewBonuses?.forEach(r => {
+        if (moverStats[r.mover_id]) {
+          moverStats[r.mover_id].reviewBonuses.total++;
+          moverStats[r.mover_id].reviewBonuses[r.status]++;
+        }
+      });
+
+      // Process missing payments per mover
+      missingPayments?.forEach(r => {
+        if (moverStats[r.mover_id]) {
+          moverStats[r.mover_id].missingPayments.total++;
+          moverStats[r.mover_id].missingPayments[r.status]++;
+        }
+      });
+
+      // Process violence incidents per mover
+      violenceIncidents?.forEach(i => {
+        if (moverStats[i.mover_id]) {
+          moverStats[i.mover_id].violenceIncidents.total++;
+          if (i.severity_level === 'critical') moverStats[i.mover_id].violenceIncidents.critical++;
+          if (i.severity_level === 'high') moverStats[i.mover_id].violenceIncidents.high++;
+        }
+      });
+
+      // Process feedback per mover
+      feedback?.forEach(f => {
+        if (moverStats[f.mover_id]) {
+          moverStats[f.mover_id].feedback.total++;
+          if (f.status === 'pending') moverStats[f.mover_id].feedback.pending++;
+        }
+      });
+
+      // Process deductibles per mover
+      deductibles?.forEach(d => {
+        if (moverStats[d.mover_id]) {
+          moverStats[d.mover_id].deductibles.total++;
+          moverStats[d.mover_id].deductibles.totalAmount += Number(d.amount);
+        }
+      });
+
+      // Process balances per mover
+      balances?.forEach(b => {
+        if (moverStats[b.mover_id]) {
+          moverStats[b.mover_id].balance = Number(b.balance);
+        }
+      });
+
+      // Create detailed mover list
+      const moverDetailsList = Object.entries(moverStats)
+        .filter(([_, stats]: [string, any]) => stats.name)
+        .map(([id, stats]: [string, any]) => 
+          `- ${stats.name} (${stats.email}): Reimbursements: ${stats.reimbursements.total} (pending: ${stats.reimbursements.pending}, total $${stats.reimbursements.totalAmount.toFixed(2)}), Review Bonuses: ${stats.reviewBonuses.total} (pending: ${stats.reviewBonuses.pending}), Missing Payments: ${stats.missingPayments.total}, Violence Incidents: ${stats.violenceIncidents.total}, Deductibles: ${stats.deductibles.total} ($${stats.deductibles.totalAmount.toFixed(2)}), Balance: $${stats.balance.toFixed(2)}`
+        ).join('\n');
+
+      // Create recent submissions list
+      const recentReimbursementsList = reimbursements?.slice(0, 20).map(r => 
+        `- ${r.mover_full_name}: $${r.total_expenses} (${r.status}) - Job #${r.job_number}, ${r.customer_name} - ${new Date(r.created_at).toLocaleDateString()}`
+      ).join('\n') || 'None';
+
+      const recentReviewsList = reviewBonuses?.slice(0, 20).map(r => 
+        `- Foreman: ${r.foreman_name}, Client: ${r.client_full_name}, Invoice: ${r.invoice_number} (${r.status}) - ${new Date(r.created_at).toLocaleDateString()}`
+      ).join('\n') || 'None';
+
+      const recentMissingPaymentsList = missingPayments?.slice(0, 20).map(r => 
+        `- ${r.mover_full_name}: $${r.missing_amount} (${r.status}) - Job #${r.job_number}, ${r.customer_name} - ${new Date(r.created_at).toLocaleDateString()}`
+      ).join('\n') || 'None';
+
+      const recentIncidentsList = violenceIncidents?.slice(0, 10).map(i => 
+        `- ${i.mover_name}: ${i.severity_level} severity, ${i.incident_types.join(', ')} - ${i.incident_date} at ${i.incident_address}`
+      ).join('\n') || 'None';
+
+      const recentPerformanceReportsList = performanceReports?.slice(0, 10).map(r => 
+        `- ${r.title}: Worker: ${r.worker_name}, Category: ${r.incident_category}, Severity: ${r.severity_level} - ${new Date(r.incident_datetime).toLocaleDateString()}`
+      ).join('\n') || 'None';
+
+      const recentDeductiblesList = deductibles?.slice(0, 10).map(d => 
+        `- ${d.mover_name}: $${d.amount} - Reason: ${d.reason || 'No reason provided'} - ${new Date(d.created_at).toLocaleDateString()}`
+      ).join('\n') || 'None';
+
+      contextData = `
+## Complete Portal Data (as of ${new Date().toISOString()}):
+
+### OVERVIEW STATISTICS
+
+#### Users/Movers
 - Total registered users: ${profiles?.length || 0}
 
-### Reimbursements
-- Total: ${reimbursements?.length || 0}
-- Pending: ${pendingReimbursements.length}
-- Total pending amount: $${pendingReimbursements.reduce((sum, r) => sum + Number(r.total_expenses), 0).toFixed(2)}
-${pendingReimbursements.length > 0 ? `- Recent pending: ${pendingReimbursements.slice(0, 3).map(r => `${r.mover_full_name} - $${r.total_expenses}`).join(', ')}` : ''}
+#### Reimbursements (Total: ${reimbursements?.length || 0})
+- Pending: ${pendingReimbursements.length} (Total: $${pendingReimbursements.reduce((sum, r) => sum + Number(r.total_expenses), 0).toFixed(2)})
+- Confirmed: ${confirmedReimbursements.length}
+- Paid: ${paidReimbursements.length}
+- Declined: ${declinedReimbursements.length}
+- On Appeal: ${appealReimbursements.length}
+- Grand Total Amount: $${reimbursements?.reduce((sum, r) => sum + Number(r.total_expenses), 0).toFixed(2) || '0.00'}
 
-### Customer Review Bonuses
-- Total submissions: ${reviewBonuses?.length || 0}
-- Pending review: ${pendingReviews.length}
-${pendingReviews.length > 0 ? `- Recent pending: ${pendingReviews.slice(0, 3).map(r => `${r.foreman_name} - ${r.job_date}`).join(', ')}` : ''}
+#### Customer Review Bonuses (Total: ${reviewBonuses?.length || 0})
+- Pending: ${pendingReviews.length}
+- Confirmed: ${confirmedReviews.length}
+- Declined: ${declinedReviews.length}
+- On Appeal: ${appealReviews.length}
 
-### Missing Payment Claims
-- Total: ${missingPayments?.length || 0}
+#### Missing Payment Claims (Total: ${missingPayments?.length || 0})
 - Pending: ${pendingMissingPayments.length}
-${pendingMissingPayments.length > 0 ? `- Recent pending: ${pendingMissingPayments.slice(0, 3).map(r => `${r.mover_full_name} - ${r.missing_amount}`).join(', ')}` : ''}
+- Confirmed: ${confirmedMissingPayments.length}
+- Declined: ${declinedMissingPayments.length}
 
-### Violence/Safety Incidents
-- Total reported: ${violenceIncidents?.length || 0}
-- Critical/High severity: ${criticalIncidents.length}
-${criticalIncidents.length > 0 ? `- Recent critical: ${criticalIncidents.slice(0, 3).map(i => `${i.mover_name} - ${i.incident_date} (${i.severity_level})`).join(', ')}` : ''}
+#### Violence/Safety Incidents (Total: ${violenceIncidents?.length || 0})
+- Critical: ${criticalIncidents.length}
+- High: ${highIncidents.length}
+- Medium: ${violenceIncidents?.filter(i => i.severity_level === 'medium').length || 0}
+- Low: ${violenceIncidents?.filter(i => i.severity_level === 'low').length || 0}
 
-### Mover Feedback
-- Total submissions: ${feedback?.length || 0}
-- Pending review: ${pendingFeedback.length}
-${pendingFeedback.length > 0 ? `- Areas mentioned: ${[...new Set(pendingFeedback.flatMap(f => f.feedback_areas))].join(', ')}` : ''}
+#### Performance/Misconduct Reports (Total: ${performanceReports?.length || 0})
+- Critical: ${performanceReports?.filter(r => r.severity_level === 'Critical').length || 0}
+- High: ${performanceReports?.filter(r => r.severity_level === 'High').length || 0}
+- Medium: ${performanceReports?.filter(r => r.severity_level === 'Medium').length || 0}
+- Low: ${performanceReports?.filter(r => r.severity_level === 'Low').length || 0}
 
-### Deductibles
-- Total deductibles applied: ${deductibles?.length || 0}
-- Total deducted amount: $${deductibles?.reduce((sum, d) => sum + Number(d.amount), 0).toFixed(2) || '0.00'}
+#### Mover Feedback (Total: ${feedback?.length || 0})
+- Pending: ${pendingFeedback.length}
+- Common areas: ${[...new Set(feedback?.flatMap(f => f.feedback_areas) || [])].join(', ')}
+
+#### Deductibles (Total: ${deductibles?.length || 0})
+- Total Amount Deducted: $${deductibles?.reduce((sum, d) => sum + Number(d.amount), 0).toFixed(2) || '0.00'}
+
+#### Transactions (Total: ${transactions?.length || 0})
+- Total Bonuses: $${transactions?.filter(t => t.transaction_type === 'bonus').reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2) || '0.00'}
+- Total Deductions: $${transactions?.filter(t => t.transaction_type === 'deductible').reduce((sum, t) => sum + Number(t.amount), 0).toFixed(2) || '0.00'}
+
+---
+
+### PER-MOVER STATISTICS
+${moverDetailsList}
+
+---
+
+### RECENT REIMBURSEMENT SUBMISSIONS (Last 20)
+${recentReimbursementsList}
+
+---
+
+### RECENT REVIEW BONUS SUBMISSIONS (Last 20)
+${recentReviewsList}
+
+---
+
+### RECENT MISSING PAYMENT CLAIMS (Last 20)
+${recentMissingPaymentsList}
+
+---
+
+### RECENT VIOLENCE/SAFETY INCIDENTS (Last 10)
+${recentIncidentsList}
+
+---
+
+### RECENT PERFORMANCE/MISCONDUCT REPORTS (Last 10)
+${recentPerformanceReportsList}
+
+---
+
+### RECENT DEDUCTIBLES (Last 10)
+${recentDeductiblesList}
 `;
     }
 
