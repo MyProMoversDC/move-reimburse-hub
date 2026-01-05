@@ -395,6 +395,14 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
             placeholder={t.reviewUrlPlaceholder}
             required
           />
+          <p className="text-sm text-destructive font-medium flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+            {language === 'en' 
+              ? "Make sure the URL is correct. Incorrect URLs will likely result in your form being declined."
+              : language === 'es'
+              ? "Asegúrese de que la URL sea correcta. Las URLs incorrectas probablemente resultarán en el rechazo de su formulario."
+              : "Убедитесь, что URL правильный. Неправильные URL, скорее всего, приведут к отклонению вашей формы."}
+          </p>
         </div>
 
         <Button type="submit" disabled={loading} className="w-full">
