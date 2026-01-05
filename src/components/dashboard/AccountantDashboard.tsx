@@ -9,8 +9,10 @@ import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import UserSettings from "./UserSettings";
 
 interface AccountantDashboardProps {
   userId: string;
@@ -19,7 +21,7 @@ interface AccountantDashboardProps {
 const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
-  const [language, setLanguage] = useState<DashboardLanguage>('en');
+  const { language, setLanguage } = useLanguage();
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   
   const t = dashboardTranslations[language];
@@ -47,7 +49,8 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <UserSettings userId={userId} language={language} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
       

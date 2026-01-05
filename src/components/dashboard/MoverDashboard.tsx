@@ -24,8 +24,10 @@ import { MoverFeedbackForm } from "./MoverFeedbackForm";
 import { MoverFeedbackHistory } from "./MoverFeedbackHistory";
 import ChatContainer from "./chat/ChatContainer";
 import MoverSettings from "./MoverSettings";
+import { MoverNotificationBell } from "./MoverNotificationBell";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
@@ -48,7 +50,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
-  const [language, setLanguage] = useState<DashboardLanguage>('en');
+  const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
 
   // Form selection handlers for mobile dropdown
@@ -152,6 +154,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <LogOut className="h-4 w-4 mr-1" />
           {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
         </Button>
+        <MoverNotificationBell userId={userId} language={language} />
         <MoverSettings userId={userId} language={language} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Shield, MessageSquare } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { DashboardLanguage } from "@/lib/dashboardTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import ChatContainer from "./chat/ChatContainer";
@@ -14,7 +14,7 @@ interface OperationsManagerDashboardProps {
 }
 
 const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps) => {
-  const [language, setLanguage] = useState<DashboardLanguage>('en');
+  const { language, setLanguage } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 

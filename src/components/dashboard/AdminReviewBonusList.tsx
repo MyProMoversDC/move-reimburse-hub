@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DashboardLanguage, dashboardTranslations } from "@/lib/dashboardTranslations";
 import { Check, X } from "lucide-react";
 import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { createMoverNotification, getNotificationMessages } from "@/lib/notificationHelpers";
 
 interface ReviewBonus {
   id: string;
@@ -222,6 +223,17 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
         });
       }
 
+      // Create in-app notification for mover
+      const msg = getNotificationMessages.review_bonus.confirmed[language];
+      await createMoverNotification({
+        userId: moverId,
+        notificationType: 'approval',
+        referenceType: 'review_bonus',
+        referenceId: reviewId,
+        title: msg.title,
+        message: `${msg.message} Invoice: ${invoiceNumber}`,
+      });
+
       toast.success("Review confirmed successfully");
       fetchReviews();
       setSelectedReview(null);
@@ -240,6 +252,8 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
     }
 
     setProcessingId(selectedReview.id);
+    const isAppeal = selectedReview.status === "appeal";
+    
     try {
       // First update the status
       const { error } = await supabase
@@ -254,7 +268,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
       if (error) throw error;
 
       // If this was an appeal, update the appeal history record with decline info
-      if (selectedReview.status === "appeal" && selectedReview.appeal_count) {
+      if (isAppeal && selectedReview.appeal_count) {
         const { error: historyError } = await supabase
           .from("review_bonus_appeal_history")
           .update({
@@ -294,6 +308,21 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
           // Don't fail the whole operation if email fails
         }
       }
+
+      // Create in-app notification for mover
+      const notificationType = isAppeal ? 'appeal_decline' : 'decline';
+      const msg = isAppeal 
+        ? getNotificationMessages.review_bonus.appeal_declined[language]
+        : getNotificationMessages.review_bonus.declined[language];
+      
+      await createMoverNotification({
+        userId: selectedReview.mover_id,
+        notificationType,
+        referenceType: 'review_bonus',
+        referenceId: selectedReview.id,
+        title: msg.title,
+        message: `${msg.message} Reason: ${declineReason.trim()}`,
+      });
 
       toast.success("Review declined");
       setShowDeclineDialog(false);

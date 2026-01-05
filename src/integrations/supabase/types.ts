@@ -393,6 +393,42 @@ export type Database = {
           },
         ]
       }
+      mover_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          notification_type: string
+          reference_id: string
+          reference_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          notification_type: string
+          reference_id: string
+          reference_type: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          notification_type?: string
+          reference_id?: string
+          reference_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       performance_misconduct_messages: {
         Row: {
           created_at: string

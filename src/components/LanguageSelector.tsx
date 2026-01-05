@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Languages } from "lucide-react";
-import { Language } from "@/lib/translations";
+
+type Language = 'en' | 'es' | 'ru';
 
 interface LanguageSelectorProps {
   language: Language;

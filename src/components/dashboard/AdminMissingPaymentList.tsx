@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { Check, X } from "lucide-react";
+import { createMoverNotification, getNotificationMessages } from "@/lib/notificationHelpers";
 
 interface MissingPayment {
   id: string;
@@ -109,6 +110,17 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
 
       if (error) throw error;
 
+      // Create in-app notification for mover
+      const msg = getNotificationMessages.missing_payment.confirmed.en;
+      await createMoverNotification({
+        userId: moverId,
+        notificationType: 'approval',
+        referenceType: 'missing_payment',
+        referenceId: paymentId,
+        title: msg.title,
+        message: `${msg.message} Job: ${jobNumber}`,
+      });
+
       toast.success("Missing payment confirmed successfully");
       fetchPayments();
       setSelectedPayment(null);
@@ -126,6 +138,7 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
       return;
     }
 
+    const isAppeal = selectedPayment.status === "appeal";
     setProcessingId(selectedPayment.id);
     try {
       const { error } = await supabase
@@ -138,6 +151,21 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
         .eq("id", selectedPayment.id);
 
       if (error) throw error;
+
+      // Create in-app notification for mover
+      const notificationType = isAppeal ? 'appeal_decline' : 'decline';
+      const msg = isAppeal 
+        ? getNotificationMessages.missing_payment.appeal_declined.en
+        : getNotificationMessages.missing_payment.declined.en;
+      
+      await createMoverNotification({
+        userId: selectedPayment.mover_id,
+        notificationType,
+        referenceType: 'missing_payment',
+        referenceId: selectedPayment.id,
+        title: msg.title,
+        message: `${msg.message} Reason: ${declineReason.trim()}`,
+      });
 
       toast.success("Missing payment declined");
       setShowDeclineDialog(false);

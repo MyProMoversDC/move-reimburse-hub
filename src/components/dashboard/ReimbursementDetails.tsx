@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { CheckCircle, DollarSign, XCircle, Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError } from "@/lib/errorHandler";
+import { createMoverNotification, getNotificationMessages } from "@/lib/notificationHelpers";
 
 interface Reimbursement {
   id: string;
@@ -133,6 +134,17 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
         });
       }
 
+      // Create in-app notification for mover
+      const msg = getNotificationMessages.reimbursement.confirmed[language];
+      await createMoverNotification({
+        userId: reimbursement.mover_id,
+        notificationType: 'approval',
+        referenceType: 'reimbursement',
+        referenceId: reimbursement.id,
+        title: msg.title,
+        message: `${msg.message} Amount: $${reimbursement.total_expenses.toFixed(2)}`,
+      });
+
       toast.success(t.reimbursementConfirmed);
       onUpdate();
       onClose();
@@ -175,6 +187,17 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
           },
         });
       }
+
+      // Create in-app notification for mover
+      const msg = getNotificationMessages.reimbursement.paid[language];
+      await createMoverNotification({
+        userId: reimbursement.mover_id,
+        notificationType: 'paid',
+        referenceType: 'reimbursement',
+        referenceId: reimbursement.id,
+        title: msg.title,
+        message: `${msg.message} Amount: $${reimbursement.total_expenses.toFixed(2)}`,
+      });
 
       toast.success(t.markedPaid);
       onUpdate();
@@ -222,6 +245,17 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
           },
         });
       }
+
+      // Create in-app notification for mover
+      const msg = getNotificationMessages.reimbursement.declined[language];
+      await createMoverNotification({
+        userId: reimbursement.mover_id,
+        notificationType: 'decline',
+        referenceType: 'reimbursement',
+        referenceId: reimbursement.id,
+        title: msg.title,
+        message: `${msg.message} Reason: ${declineReason.trim()}`,
+      });
 
       toast.success(t.reimbursementDeclined);
       onUpdate();
