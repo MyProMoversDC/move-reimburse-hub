@@ -58,6 +58,8 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
   const [appealReview, setAppealReview] = useState<ReviewBonus | null>(null);
   const [disclaimerReview, setDisclaimerReview] = useState<ReviewBonus | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [appealHistory, setAppealHistory] = useState<any[]>([]);
+  const [appealAttachmentsByHistory, setAppealAttachmentsByHistory] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     fetchReviews();
@@ -87,6 +89,12 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
       case "confirmed":
         return <Badge className="bg-green-500">{t.confirmed}</Badge>;
       case "declined":
+        // Check appeal count to determine which declined status to show
+        if (appealCount === 1) {
+          return <Badge variant="destructive">{t.declinedFirstAppeal}</Badge>;
+        } else if (appealCount && appealCount >= 2) {
+          return <Badge variant="destructive">{t.declinedFinalAppeal}</Badge>;
+        }
         return <Badge variant="destructive">{t.declined}</Badge>;
       case "appeal":
         if (appealCount === 2) {
@@ -100,6 +108,8 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
 
   const handleViewDetails = async (review: ReviewBonus) => {
     setSelectedReview(review);
+    setAppealHistory([]);
+    setAppealAttachmentsByHistory({});
     
     // Get signed URL for screenshot
     const filePath = review.screenshot_url.replace("review-screenshots/", "");
@@ -109,6 +119,45 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
     
     if (data?.signedUrl) {
       setScreenshotUrl(data.signedUrl);
+    }
+
+    // Fetch appeal history
+    const { data: historyData } = await supabase
+      .from("review_bonus_appeal_history")
+      .select("*")
+      .eq("review_bonus_id", review.id)
+      .order("appeal_number", { ascending: true });
+
+    if (historyData && historyData.length > 0) {
+      setAppealHistory(historyData);
+
+      // Fetch attachments for each appeal history record
+      const attachmentsByHistory: Record<string, any[]> = {};
+      for (const hist of historyData) {
+        const { data: attachments } = await supabase
+          .from("review_appeal_attachments")
+          .select("id, file_url, file_name")
+          .eq("appeal_history_id", hist.id);
+
+        if (attachments && attachments.length > 0) {
+          // Get signed URLs for attachments
+          const attachmentsWithUrls = await Promise.all(
+            attachments.map(async (att) => {
+              const { data: signedData } = await supabase.storage
+                .from("appeal-attachments")
+                .createSignedUrl(att.file_url, 3600);
+              return {
+                ...att,
+                signed_url: signedData?.signedUrl || att.file_url,
+              };
+            })
+          );
+          attachmentsByHistory[hist.id] = attachmentsWithUrls;
+        } else {
+          attachmentsByHistory[hist.id] = [];
+        }
+      }
+      setAppealAttachmentsByHistory(attachmentsByHistory);
     }
   };
 
@@ -229,6 +278,68 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 </div>
               )}
 
+              {/* Appeal History Section */}
+              {appealHistory.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">{t.appealHistory}</h4>
+                  {appealHistory.map((hist) => (
+                    <div key={hist.id} className="bg-orange-50 border border-orange-200 p-4 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-orange-700">
+                          {t.appealNumber}{hist.appeal_number} {hist.appeal_number === 2 ? `(${t.finalAppeal})` : `(${t.firstAppealStatus})`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.appealed}: {format(new Date(hist.appeal_at), "MM/dd/yyyy HH:mm")}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Appeal Note:</p>
+                        <p className="whitespace-pre-wrap text-sm">{hist.appeal_note}</p>
+                      </div>
+
+                      {hist.decline_reason && (
+                        <div className="bg-red-50 border border-red-200 p-3 rounded">
+                          <p className="text-sm font-medium text-red-700">{t.declineReason}:</p>
+                          <p className="text-sm text-red-600">{hist.decline_reason}</p>
+                          {hist.declined_at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {t.declinedOn}: {format(new Date(hist.declined_at), "MM/dd/yyyy HH:mm")}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Attachments for this appeal */}
+                      <div>
+                        <p className="text-sm font-medium text-orange-700 mb-2">
+                          {t.attachmentsForAppeal}{hist.appeal_number}:
+                        </p>
+                        {appealAttachmentsByHistory[hist.id]?.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {appealAttachmentsByHistory[hist.id].map((att: any) => (
+                              <a
+                                key={att.id}
+                                href={att.signed_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 p-2 bg-white rounded border hover:bg-gray-50"
+                              >
+                                <span className="text-sm truncate text-primary hover:underline">
+                                  {att.file_name}
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">{t.noAttachments}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {screenshotUrl && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">{t.screenshotUpload}</p>
@@ -262,6 +373,8 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 setAppealReview(null);
               }}
               onClose={() => setAppealReview(null)}
+              isFinalAppeal={appealReview.appeal_count === 1}
+              language={language}
             />
           )}
         </DialogContent>

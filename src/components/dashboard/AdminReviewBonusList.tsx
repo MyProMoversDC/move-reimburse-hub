@@ -59,6 +59,8 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
   const [selectedReview, setSelectedReview] = useState<ReviewBonus | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [appealAttachments, setAppealAttachments] = useState<AppealAttachment[]>([]);
+  const [appealHistory, setAppealHistory] = useState<any[]>([]);
+  const [appealAttachmentsByHistory, setAppealAttachmentsByHistory] = useState<Record<string, AppealAttachment[]>>({});
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -101,6 +103,12 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
       case "confirmed":
         return <Badge className="bg-green-500">Confirmed</Badge>;
       case "declined":
+        // Check appeal count to determine which declined status to show
+        if (appealCount === 1) {
+          return <Badge variant="destructive">Declined - First Appeal</Badge>;
+        } else if (appealCount && appealCount >= 2) {
+          return <Badge variant="destructive">Declined</Badge>;
+        }
         return <Badge variant="destructive">Declined</Badge>;
       case "appeal":
         if (appealCount === 2) {
@@ -115,6 +123,8 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
   const handleViewDetails = async (review: ReviewBonus) => {
     setSelectedReview(review);
     setAppealAttachments([]);
+    setAppealHistory([]);
+    setAppealAttachmentsByHistory({});
     
     const filePath = review.screenshot_url.replace("review-screenshots/", "");
     const { data } = await supabase.storage
@@ -125,22 +135,57 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
       setScreenshotUrl(data.signedUrl);
     }
 
-    // Fetch appeal attachments if in appeal status
-    if (review.status === "appeal") {
-      const { data: attachments } = await supabase
-        .from("review_appeal_attachments")
-        .select("id, file_url, file_name")
-        .eq("review_bonus_id", review.id);
-      
-      if (attachments && attachments.length > 0) {
-        const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
-          attachments,
-          "appeal-attachments"
-        );
-        setAppealAttachments(attachmentsWithSignedUrls.map(a => ({
-          ...a,
-          file_url: a.signed_url
-        })));
+    // Fetch appeal history
+    const { data: historyData } = await supabase
+      .from("review_bonus_appeal_history")
+      .select("*")
+      .eq("review_bonus_id", review.id)
+      .order("appeal_number", { ascending: true });
+
+    if (historyData && historyData.length > 0) {
+      setAppealHistory(historyData);
+
+      // Fetch attachments for each appeal history record
+      const attachmentsByHistory: Record<string, AppealAttachment[]> = {};
+      for (const hist of historyData) {
+        const { data: attachments } = await supabase
+          .from("review_appeal_attachments")
+          .select("id, file_url, file_name")
+          .eq("appeal_history_id", hist.id);
+
+        if (attachments && attachments.length > 0) {
+          const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
+            attachments,
+            "appeal-attachments"
+          );
+          attachmentsByHistory[hist.id] = attachmentsWithSignedUrls.map(a => ({
+            ...a,
+            file_url: a.signed_url
+          }));
+        } else {
+          attachmentsByHistory[hist.id] = [];
+        }
+      }
+      setAppealAttachmentsByHistory(attachmentsByHistory);
+    } else {
+      // Fallback: Fetch appeal attachments without history (for older records)
+      if (review.status === "appeal" || review.appeal_count) {
+        const { data: attachments } = await supabase
+          .from("review_appeal_attachments")
+          .select("id, file_url, file_name")
+          .eq("review_bonus_id", review.id)
+          .is("appeal_history_id", null);
+        
+        if (attachments && attachments.length > 0) {
+          const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
+            attachments,
+            "appeal-attachments"
+          );
+          setAppealAttachments(attachmentsWithSignedUrls.map(a => ({
+            ...a,
+            file_url: a.signed_url
+          })));
+        }
       }
     }
   };
@@ -207,6 +252,22 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
         .eq("id", selectedReview.id);
 
       if (error) throw error;
+
+      // If this was an appeal, update the appeal history record with decline info
+      if (selectedReview.status === "appeal" && selectedReview.appeal_count) {
+        const { error: historyError } = await supabase
+          .from("review_bonus_appeal_history")
+          .update({
+            decline_reason: declineReason.trim(),
+            declined_at: new Date().toISOString(),
+          })
+          .eq("review_bonus_id", selectedReview.id)
+          .eq("appeal_number", selectedReview.appeal_count);
+
+        if (historyError) {
+          console.error("Error updating appeal history:", historyError);
+        }
+      }
 
       // Get mover's email from profiles
       const { data: profileData, error: profileError } = await supabase
@@ -376,14 +437,77 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                 </div>
               )}
 
-              {selectedReview.decline_reason && (
+              {selectedReview.decline_reason && appealHistory.length === 0 && (
                 <div className="bg-destructive/10 p-4 rounded-lg">
                   <p className="text-sm font-medium text-destructive">Decline Reason</p>
                   <p className="mt-1">{selectedReview.decline_reason}</p>
                 </div>
               )}
 
-              {selectedReview.appeal_note && (
+              {/* Appeal History Section */}
+              {appealHistory.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg">Appeal History</h4>
+                  {appealHistory.map((hist) => (
+                    <div key={hist.id} className="bg-orange-50 border border-orange-200 p-4 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-orange-700">
+                          Appeal #{hist.appeal_number} {hist.appeal_number === 2 ? "(Final Appeal)" : "(First Appeal)"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Appealed: {format(new Date(hist.appeal_at), "MM/dd/yyyy HH:mm")}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Appeal Note:</p>
+                        <p className="whitespace-pre-wrap text-sm">{hist.appeal_note}</p>
+                      </div>
+
+                      {hist.decline_reason && (
+                        <div className="bg-red-50 border border-red-200 p-3 rounded">
+                          <p className="text-sm font-medium text-red-700">Decline Reason:</p>
+                          <p className="text-sm text-red-600">{hist.decline_reason}</p>
+                          {hist.declined_at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Declined on: {format(new Date(hist.declined_at), "MM/dd/yyyy HH:mm")}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Attachments for this appeal */}
+                      <div>
+                        <p className="text-sm font-medium text-orange-700 mb-2">
+                          Attachments for Appeal #{hist.appeal_number}:
+                        </p>
+                        {appealAttachmentsByHistory[hist.id]?.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {appealAttachmentsByHistory[hist.id].map((attachment) => (
+                              <a
+                                key={attachment.id}
+                                href={attachment.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 p-2 bg-white rounded border hover:bg-gray-50"
+                              >
+                                <span className="text-sm truncate text-primary hover:underline">
+                                  {attachment.file_name}
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">No attachments</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Legacy appeal note display (for records without history) */}
+              {selectedReview.appeal_note && appealHistory.length === 0 && (
                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
                   <p className="text-sm font-medium text-orange-700">
                     Appeal Note {selectedReview.appeal_count === 2 ? "(Final Appeal)" : "(First Appeal)"}
@@ -397,7 +521,8 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                 </div>
               )}
 
-              {appealAttachments.length > 0 && (
+              {/* Legacy attachments (for records without history) */}
+              {appealAttachments.length > 0 && appealHistory.length === 0 && (
                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
                   <p className="text-sm font-medium text-orange-700 mb-2">Appeal Attachments</p>
                   <div className="grid grid-cols-2 gap-2">
