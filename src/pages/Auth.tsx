@@ -10,16 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
-import { translations, Language } from "@/lib/translations";
+import { translations } from "@/lib/translations";
 import { handleError } from "@/lib/errorHandler";
 import { Languages } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [language, setLanguage] = useState<Language>('en');
+  const { language, setLanguage } = useLanguage();
   
   const t = translations[language];
 
@@ -179,7 +180,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
       <div className="absolute top-4 right-4">
-        <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
+        <Select value={language} onValueChange={setLanguage}>
           <SelectTrigger className="w-[160px] bg-background">
             <Languages className="h-4 w-4 mr-2" />
             <SelectValue />

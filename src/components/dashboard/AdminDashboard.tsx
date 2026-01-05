@@ -24,7 +24,8 @@ import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -38,7 +39,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportingReviews, setExportingReviews] = useState(false);
-  const [language, setLanguage] = useState<DashboardLanguage>('en');
+  const { language, setLanguage } = useLanguage();
   const [pendingCounts, setPendingCounts] = useState({
     reimbursements: 0,
     reviews: 0,

@@ -14,7 +14,8 @@ import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
@@ -24,7 +25,7 @@ interface ReviewsAdminDashboardProps {
 
 const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
   const [exportingReviews, setExportingReviews] = useState(false);
-  const [language, setLanguage] = useState<DashboardLanguage>('en');
+  const { language, setLanguage } = useLanguage();
   
   const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
   const [reviewEndDate, setReviewEndDate] = useState<Date | undefined>();
