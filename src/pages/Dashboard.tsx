@@ -6,12 +6,13 @@ import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import AccountantDashboard from "@/components/dashboard/AccountantDashboard";
 import OperationsManagerDashboard from "@/components/dashboard/OperationsManagerDashboard";
 import ReviewsAdminDashboard from "@/components/dashboard/ReviewsAdminDashboard";
+import HRDashboard from "@/components/dashboard/HRDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin";
+type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ const Dashboard = () => {
         .eq("user_id", session.user.id);
 
       if (roles && roles.length > 0) {
-        // Priority: admin > reviews_admin > accountant > operations_manager > mover
+        // Priority: admin > reviews_admin > accountant > operations_manager > hr_manager > mover
         if (roles.some((r) => r.role === "admin")) {
           setUserRole("admin");
         } else if (roles.some((r) => r.role === "reviews_admin")) {
@@ -57,6 +58,8 @@ const Dashboard = () => {
           setUserRole("accountant");
         } else if (roles.some((r) => r.role === "operations_manager")) {
           setUserRole("operations_manager");
+        } else if (roles.some((r) => r.role === "hr_manager")) {
+          setUserRole("hr_manager");
         } else {
           setUserRole("mover");
         }
@@ -118,6 +121,7 @@ const Dashboard = () => {
                   {userRole === "reviews_admin" && "Reviews Admin Portal"}
                   {userRole === "accountant" && "Accountant Portal"}
                   {userRole === "operations_manager" && "Ops Manager Portal"}
+                  {userRole === "hr_manager" && "HR Portal"}
                   {userRole === "mover" && "Mover Portal"}
                 </h1>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
@@ -137,6 +141,7 @@ const Dashboard = () => {
         {userRole === "reviews_admin" && <ReviewsAdminDashboard userId={userId} />}
         {userRole === "accountant" && <AccountantDashboard userId={userId} />}
         {userRole === "operations_manager" && <OperationsManagerDashboard userId={userId} />}
+        {userRole === "hr_manager" && <HRDashboard userId={userId} />}
       </main>
     </div>
   );
