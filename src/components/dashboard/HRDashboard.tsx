@@ -274,21 +274,24 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
 
   const fetchUserIncidents = async (targetUserId: string) => {
     try {
-      // Fetch performance reports where mover_id matches
+      // Fetch performance reports where worker_name matches the selected user's name
+      const selectedUserProfile = users.find(u => u.id === targetUserId);
+      const workerName = selectedUserProfile ? `${selectedUserProfile.first_name} ${selectedUserProfile.last_name}` : "";
+      
       const { data: reports, error: reportsError } = await supabase
         .from("performance_reports")
-        .select("id, job_id, incident_date, incident_description, report_type, created_at")
-        .eq("mover_id", targetUserId)
+        .select("id, title, incident_datetime, incident_description, incident_category, severity_level, created_at, worker_name")
+        .eq("worker_name", workerName)
         .order("created_at", { ascending: false });
 
       if (reportsError) throw reportsError;
       const mappedReports = (reports || []).map(r => ({
         id: r.id,
-        mover_name: "",
-        job_id: r.job_id,
-        incident_date: r.incident_date,
+        mover_name: r.worker_name,
+        job_id: r.title,
+        incident_date: r.incident_datetime,
         incident_description: r.incident_description,
-        report_type: r.report_type,
+        report_type: r.incident_category,
         created_at: r.created_at
       }));
       setPerformanceReports(mappedReports);
