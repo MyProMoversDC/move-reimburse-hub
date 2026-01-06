@@ -30,7 +30,7 @@ interface UserRoleManagerProps {
   language: DashboardLanguage;
 }
 
-const availableRoles = ["mover", "admin", "accountant", "operations_manager", "reviews_admin"] as const;
+const availableRoles = ["mover", "admin", "accountant", "operations_manager", "reviews_admin", "hr_manager"] as const;
 
 const roleColors: Record<string, string> = {
   mover: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
@@ -38,6 +38,7 @@ const roleColors: Record<string, string> = {
   accountant: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
   operations_manager: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
   reviews_admin: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
+  hr_manager: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
 };
 
 const roleDisplayNames: Record<string, string> = {
@@ -46,6 +47,7 @@ const roleDisplayNames: Record<string, string> = {
   accountant: "Accountant",
   operations_manager: "Operations Manager",
   reviews_admin: "Customer Review Manager",
+  hr_manager: "HR Manager",
 };
 
 const UserRoleManager = ({ language }: UserRoleManagerProps) => {
