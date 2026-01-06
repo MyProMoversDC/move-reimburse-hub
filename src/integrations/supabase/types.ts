@@ -196,6 +196,45 @@ export type Database = {
           },
         ]
       }
+      hr_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          notes: string | null
+          updated_at: string
+          uploaded_by: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          uploaded_by: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          uploaded_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       missing_payments: {
         Row: {
           appeal_at: string | null
@@ -1053,6 +1092,7 @@ export type Database = {
         | "mover"
         | "operations_manager"
         | "reviews_admin"
+        | "hr_manager"
       chat_topic_type:
         | "general"
         | "reimbursement"
@@ -1227,6 +1267,7 @@ export const Constants = {
         "mover",
         "operations_manager",
         "reviews_admin",
+        "hr_manager",
       ],
       chat_topic_type: [
         "general",
