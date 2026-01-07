@@ -19,6 +19,8 @@ import { CheckCircle, DollarSign, XCircle, Trash2 } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError } from "@/lib/errorHandler";
 import { createMoverNotification, getNotificationMessages } from "@/lib/notificationHelpers";
+import { useTranslation } from "@/hooks/useTranslation";
+import { TranslateButton } from "./TranslateButton";
 
 interface Reimbursement {
   id: string;
@@ -61,7 +63,13 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [translatedData, setTranslatedData] = useState<{
+    customer_name: string;
+    zelle_info: string;
+  } | null>(null);
   
+  const { translateTexts, isTranslating } = useTranslation();
   const t = dashboardTranslations[language];
 
   useEffect(() => {
@@ -290,8 +298,39 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
     }
   };
 
+  const handleTranslate = async () => {
+    if (isTranslated) {
+      setIsTranslated(false);
+      return;
+    }
+    
+    const translations = await translateTexts([
+      reimbursement.customer_name,
+      reimbursement.zelle_info,
+    ]);
+    
+    setTranslatedData({
+      customer_name: translations[0],
+      zelle_info: translations[1],
+    });
+    setIsTranslated(true);
+  };
+
+  const displayCustomerName = isTranslated && translatedData ? translatedData.customer_name : reimbursement.customer_name;
+  const displayZelleInfo = isTranslated && translatedData ? translatedData.zelle_info : reimbursement.zelle_info;
+
   return (
     <div className="space-y-6">
+      {userRole !== "mover" && (
+        <div className="flex justify-end">
+          <TranslateButton
+            onClick={handleTranslate}
+            isTranslating={isTranslating}
+            isTranslated={isTranslated}
+          />
+        </div>
+      )}
+      
       <div className="grid grid-cols-2 gap-4">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Mover Name</p>
@@ -307,7 +346,7 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Customer</p>
-          <p className="text-base">{reimbursement.customer_name}</p>
+          <p className="text-base">{displayCustomerName}</p>
         </div>
       </div>
 
@@ -339,7 +378,7 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
 
       <div>
         <p className="text-sm font-medium text-muted-foreground">Zelle Payment Info</p>
-        <p className="text-base">{reimbursement.zelle_info}</p>
+        <p className="text-base">{displayZelleInfo}</p>
       </div>
 
       {reimbursement.status === "declined" && reimbursement.decline_reason && (
