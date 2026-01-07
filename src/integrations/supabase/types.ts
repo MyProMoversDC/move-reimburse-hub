@@ -196,6 +196,85 @@ export type Database = {
           },
         ]
       }
+      handbook_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          handbook_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          handbook_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          handbook_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handbook_acknowledgments_handbook_id_fkey"
+            columns: ["handbook_id"]
+            isOneToOne: false
+            referencedRelation: "handbooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handbooks: {
+        Row: {
+          ai_change_summary: string | null
+          created_at: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          is_shared: boolean
+          previous_version_id: string | null
+          shared_at: string | null
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          ai_change_summary?: string | null
+          created_at?: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          is_shared?: boolean
+          previous_version_id?: string | null
+          shared_at?: string | null
+          uploaded_by: string
+          version?: number
+        }
+        Update: {
+          ai_change_summary?: string | null
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_shared?: boolean
+          previous_version_id?: string | null
+          shared_at?: string | null
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handbooks_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "handbooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_documents: {
         Row: {
           created_at: string
@@ -585,6 +664,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
           created_at: string | null
           email: string
@@ -596,6 +676,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string | null
           email: string
@@ -607,6 +688,7 @@ export type Database = {
           username: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string
@@ -919,6 +1001,39 @@ export type Database = {
           screenshot_url?: string
           status?: Database["public"]["Enums"]["review_bonus_status"]
           submission_date?: string
+        }
+        Relationships: []
+      }
+      user_driver_status: {
+        Row: {
+          created_at: string
+          driver_prompt_answered: boolean
+          id: string
+          is_driver: boolean | null
+          license_uploaded_at: string | null
+          license_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_prompt_answered?: boolean
+          id?: string
+          is_driver?: boolean | null
+          license_uploaded_at?: string | null
+          license_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_prompt_answered?: boolean
+          id?: string
+          is_driver?: boolean | null
+          license_uploaded_at?: string | null
+          license_url?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

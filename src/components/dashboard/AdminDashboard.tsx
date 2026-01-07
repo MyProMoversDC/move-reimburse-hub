@@ -16,6 +16,7 @@ import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
+import HandbookManager from "./HandbookManager";
 import { AdminFeedbackList } from "./AdminFeedbackList";
 import { AdminAIAssistant } from "./AdminAIAssistant";
 import { Button } from "@/components/ui/button";
@@ -355,6 +356,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Mover Feedback & Suggestions</h2>
             <AdminFeedbackList />
+          </div>
+        );
+      case "handbook":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Handbook Management</h2>
+            <HandbookManager language={language} />
           </div>
         );
       case "chat":
