@@ -8,7 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Clock, CheckCircle, MessageCircle, AlertCircle, Send, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, CheckCircle, MessageCircle, AlertCircle, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { TranslateButton } from './TranslateButton';
 
 interface FeedbackResponse {
   id: string;
@@ -61,7 +63,16 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
   const [responseMessage, setResponseMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [translatedCards, setTranslatedCards] = useState<Map<string, {
+    situation_explanation: string;
+    improvement_suggestion: string;
+    additional_notes: string;
+    other_area_explanation: string;
+  }>>(new Map());
+  const [translatingCardId, setTranslatingCardId] = useState<string | null>(null);
+  
   const { toast } = useToast();
+  const { translateTexts, isTranslating } = useTranslation();
 
   useEffect(() => {
     fetchFeedback();
@@ -115,6 +126,32 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTranslateFeedback = async (feedback: Feedback) => {
+    if (translatedCards.has(feedback.id)) {
+      // Toggle off translation
+      const newMap = new Map(translatedCards);
+      newMap.delete(feedback.id);
+      setTranslatedCards(newMap);
+      return;
+    }
+    
+    setTranslatingCardId(feedback.id);
+    const translations = await translateTexts([
+      feedback.situation_explanation,
+      feedback.improvement_suggestion || "",
+      feedback.additional_notes || "",
+      feedback.other_area_explanation || "",
+    ]);
+    
+    setTranslatedCards(new Map(translatedCards).set(feedback.id, {
+      situation_explanation: translations[0],
+      improvement_suggestion: translations[1],
+      additional_notes: translations[2],
+      other_area_explanation: translations[3],
+    }));
+    setTranslatingCardId(null);
   };
 
   const toggleExpanded = (id: string) => {
@@ -281,13 +318,21 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
                   <>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Situation/Idea:</p>
-                      <p className="text-sm">{feedback.situation_explanation}</p>
+                      <p className="text-sm">
+                        {translatedCards.has(feedback.id) 
+                          ? translatedCards.get(feedback.id)?.situation_explanation 
+                          : feedback.situation_explanation}
+                      </p>
                     </div>
 
                     {feedback.improvement_suggestion && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Improvement Suggestion:</p>
-                        <p className="text-sm">{feedback.improvement_suggestion}</p>
+                        <p className="text-sm">
+                          {translatedCards.has(feedback.id) 
+                            ? translatedCards.get(feedback.id)?.improvement_suggestion 
+                            : feedback.improvement_suggestion}
+                        </p>
                       </div>
                     )}
 
@@ -299,7 +344,11 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
                     {feedback.additional_notes && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Additional Notes:</p>
-                        <p className="text-sm">{feedback.additional_notes}</p>
+                        <p className="text-sm">
+                          {translatedCards.has(feedback.id) 
+                            ? translatedCards.get(feedback.id)?.additional_notes 
+                            : feedback.additional_notes}
+                        </p>
                       </div>
                     )}
 
@@ -320,6 +369,12 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
                 )}
 
                 <div className="flex flex-wrap gap-2 pt-2">
+                  <TranslateButton
+                    onClick={() => handleTranslateFeedback(feedback)}
+                    isTranslating={isTranslating && translatingCardId === feedback.id}
+                    isTranslated={translatedCards.has(feedback.id)}
+                  />
+                  
                   <Button
                     variant="ghost"
                     size="sm"

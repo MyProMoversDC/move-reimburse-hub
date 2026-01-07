@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { Check, X } from "lucide-react";
 import { createMoverNotification, getNotificationMessages } from "@/lib/notificationHelpers";
+import { useTranslation } from "@/hooks/useTranslation";
+import { TranslateButton } from "./TranslateButton";
 
 interface MissingPayment {
   id: string;
@@ -50,6 +52,14 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [translatedData, setTranslatedData] = useState<{
+    customer_name: string;
+    discrepancy_details: string;
+    appeal_note: string;
+  } | null>(null);
+  
+  const { translateTexts, isTranslating } = useTranslation();
 
   useEffect(() => {
     fetchPayments();
@@ -110,7 +120,6 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
 
       if (error) throw error;
 
-      // Create in-app notification for mover
       const msg = getNotificationMessages.missing_payment.confirmed.en;
       await createMoverNotification({
         userId: moverId,
@@ -124,6 +133,8 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
       toast.success("Missing payment confirmed successfully");
       fetchPayments();
       setSelectedPayment(null);
+      setIsTranslated(false);
+      setTranslatedData(null);
     } catch (error) {
       console.error("Error confirming payment:", error);
       toast.error("Failed to confirm missing payment");
@@ -152,7 +163,6 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
 
       if (error) throw error;
 
-      // Create in-app notification for mover
       const notificationType = isAppeal ? 'appeal_decline' : 'decline';
       const msg = isAppeal 
         ? getNotificationMessages.missing_payment.appeal_declined.en
@@ -172,12 +182,42 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
       setDeclineReason("");
       fetchPayments();
       setSelectedPayment(null);
+      setIsTranslated(false);
+      setTranslatedData(null);
     } catch (error) {
       console.error("Error declining payment:", error);
       toast.error("Failed to decline missing payment");
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handleTranslate = async () => {
+    if (!selectedPayment) return;
+    
+    if (isTranslated) {
+      setIsTranslated(false);
+      return;
+    }
+    
+    const translations = await translateTexts([
+      selectedPayment.customer_name,
+      selectedPayment.discrepancy_details,
+      selectedPayment.appeal_note || "",
+    ]);
+    
+    setTranslatedData({
+      customer_name: translations[0],
+      discrepancy_details: translations[1],
+      appeal_note: translations[2],
+    });
+    setIsTranslated(true);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedPayment(null);
+    setIsTranslated(false);
+    setTranslatedData(null);
   };
 
   if (loading) {
@@ -191,6 +231,10 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
       </Card>
     );
   }
+
+  const displayCustomerName = isTranslated && translatedData ? translatedData.customer_name : selectedPayment?.customer_name;
+  const displayDetails = isTranslated && translatedData ? translatedData.discrepancy_details : selectedPayment?.discrepancy_details;
+  const displayAppealNote = isTranslated && translatedData ? translatedData.appeal_note : selectedPayment?.appeal_note;
 
   return (
     <>
@@ -244,13 +288,21 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
       </div>
 
       {/* View Details Dialog */}
-      <Dialog open={!!selectedPayment && !showDeclineDialog} onOpenChange={() => setSelectedPayment(null)}>
+      <Dialog open={!!selectedPayment && !showDeclineDialog} onOpenChange={handleCloseDetails}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Missing Payment Details</DialogTitle>
           </DialogHeader>
           {selectedPayment && (
             <div className="space-y-4">
+              <div className="flex justify-end">
+                <TranslateButton
+                  onClick={handleTranslate}
+                  isTranslating={isTranslating}
+                  isTranslated={isTranslated}
+                />
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Mover Name</p>
@@ -258,7 +310,7 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Customer Name</p>
-                  <p className="font-medium">{selectedPayment.customer_name}</p>
+                  <p className="font-medium">{displayCustomerName}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Job/Invoice Number</p>
@@ -289,7 +341,7 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
 
               <div>
                 <p className="text-sm text-muted-foreground">Discrepancy Details</p>
-                <p className="mt-1 whitespace-pre-wrap bg-muted p-3 rounded-lg">{selectedPayment.discrepancy_details}</p>
+                <p className="mt-1 whitespace-pre-wrap bg-muted p-3 rounded-lg">{displayDetails}</p>
               </div>
 
               {selectedPayment.decline_reason && (
@@ -302,7 +354,7 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
               {selectedPayment.appeal_note && (
                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
                   <p className="text-sm font-medium text-orange-700">Appeal Note</p>
-                  <p className="mt-1">{selectedPayment.appeal_note}</p>
+                  <p className="mt-1">{displayAppealNote}</p>
                   {selectedPayment.appeal_at && (
                     <p className="text-xs text-muted-foreground mt-2">
                       Appealed on: {format(new Date(selectedPayment.appeal_at), "MM/dd/yyyy HH:mm")}
@@ -333,7 +385,7 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
                 )}
                 <Button 
                   variant="outline" 
-                  onClick={() => setSelectedPayment(null)} 
+                  onClick={handleCloseDetails} 
                   className={(selectedPayment.status === "pending" || selectedPayment.status === "appeal") ? "" : "w-full"}
                 >
                   Close
