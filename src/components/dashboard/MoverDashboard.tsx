@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,9 @@ import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
 import { chatTranslations } from "@/lib/chatTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import HandbookPopup from "./HandbookPopup";
+import DriverPrompt from "./DriverPrompt";
+import AddressDisclaimer from "./AddressDisclaimer";
 
 interface MoverDashboardProps {
   userId: string;
@@ -52,6 +55,12 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
   const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleNavigateToSettings = () => {
+    // Open settings dialog by programmatically clicking the settings button
+    settingsButtonRef.current?.click();
+  };
 
   // Form selection handlers for mobile dropdown
   const handleFormSelect = (formType: string) => {
@@ -143,6 +152,15 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Handbook Popup for unacknowledged handbooks */}
+      <HandbookPopup userId={userId} language={language} />
+      
+      {/* Driver Prompt for first-time users */}
+      <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+      
+      {/* Address Disclaimer if address is missing */}
+      <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+      
       <div className="flex justify-end gap-2">
         {/* Mobile Exit button - shown before Settings */}
         <Button 
@@ -155,7 +173,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
         </Button>
         <MoverNotificationBell userId={userId} language={language} />
-        <MoverSettings userId={userId} language={language} />
+        <MoverSettings userId={userId} language={language} ref={settingsButtonRef} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
       
