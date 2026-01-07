@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Bot, ChevronDown, ChevronUp, Send, Loader2, Sparkles, X } from "lucide-react";
+import { Bot, ChevronDown, Send, Loader2, Sparkles, X, Maximize2, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ interface Message {
 
 export const AdminAIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -73,6 +74,9 @@ export const AdminAIAssistant = () => {
     setMessages([]);
   };
 
+  const chatWidth = isExpanded ? 'w-[90vw] md:w-[700px] lg:w-[800px]' : 'w-[380px] md:w-[420px]';
+  const chatHeight = isExpanded ? 'h-[70vh]' : 'h-[350px]';
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -90,7 +94,7 @@ export const AdminAIAssistant = () => {
         </CollapsibleTrigger>
 
         <CollapsibleContent className="absolute bottom-16 right-0">
-          <Card className="w-[380px] md:w-[420px] shadow-2xl border-0 overflow-hidden">
+          <Card className={`${chatWidth} shadow-2xl border-0 overflow-hidden transition-all duration-300`}>
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
               <div className="flex items-center justify-between">
@@ -98,7 +102,7 @@ export const AdminAIAssistant = () => {
                   <Sparkles className="h-5 w-5" />
                   <h3 className="font-semibold">AI Assistant</h3>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   {messages.length > 0 && (
                     <Button 
                       variant="ghost" 
@@ -109,6 +113,19 @@ export const AdminAIAssistant = () => {
                       Clear
                     </Button>
                   )}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-white/80 hover:text-white hover:bg-white/10 h-8 w-8"
+                    title={isExpanded ? "Minimize" : "Expand"}
+                  >
+                    {isExpanded ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -125,7 +142,7 @@ export const AdminAIAssistant = () => {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="h-[350px] p-4" ref={scrollRef}>
+            <ScrollArea className={`${chatHeight} p-4 transition-all duration-300`} ref={scrollRef}>
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                   <Bot className="h-12 w-12 mb-4 opacity-50" />
@@ -147,13 +164,15 @@ export const AdminAIAssistant = () => {
                       className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div 
-                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                        className={`rounded-2xl px-4 py-2.5 ${
+                          isExpanded ? 'max-w-[90%]' : 'max-w-[85%]'
+                        } ${
                           msg.role === 'user' 
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white' 
                             : 'bg-muted'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                         {msg.citations && msg.citations.length > 0 && (
                           <div className="mt-2 pt-2 border-t border-border/50 text-xs opacity-70">
                             <p className="font-medium mb-1">Sources:</p>
