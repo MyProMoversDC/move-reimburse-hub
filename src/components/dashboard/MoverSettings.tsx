@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import UserSettings from "./UserSettings";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 
@@ -6,15 +7,20 @@ interface MoverSettingsProps {
   language: DashboardLanguage;
 }
 
-const MoverSettings = ({ userId, language }: MoverSettingsProps) => {
-  return (
-    <UserSettings
-      userId={userId}
-      language={language}
-      showBalance={true}
-      showHourlyRate={true}
-    />
-  );
-};
+const MoverSettings = forwardRef<HTMLButtonElement, MoverSettingsProps>(
+  ({ userId, language }, ref) => {
+    return (
+      <UserSettings
+        userId={userId}
+        language={language}
+        showBalance={true}
+        showHourlyRate={true}
+        ref={ref}
+      />
+    );
+  }
+);
+
+MoverSettings.displayName = "MoverSettings";
 
 export default MoverSettings;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,7 +87,8 @@ const translations = {
   },
 };
 
-const UserSettings = ({ userId, language, showBalance = false, showHourlyRate = false }: UserSettingsProps) => {
+const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
+  ({ userId, language, showBalance = false, showHourlyRate = false }, ref) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -282,7 +283,7 @@ const UserSettings = ({ userId, language, showBalance = false, showHourlyRate = 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" ref={ref}>
           <Settings className="h-4 w-4 mr-2" />
           {t.settings}
         </Button>
@@ -413,6 +414,8 @@ const UserSettings = ({ userId, language, showBalance = false, showHourlyRate = 
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+UserSettings.displayName = "UserSettings";
 
 export default UserSettings;

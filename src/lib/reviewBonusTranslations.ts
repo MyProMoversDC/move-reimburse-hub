@@ -63,6 +63,7 @@ Each mover listed will receive 1 bonus hour if the review is valid and all requi
     declinedOn: "Declined on",
     attachmentsForAppeal: "Attachments for Appeal #",
     noAttachments: "No attachments",
+    initialDeclineReason: "Initial Decline Reason",
   },
   es: {
     formTitle: "Formulario de Recolección de Reseñas de Clientes",
@@ -126,6 +127,7 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
     declinedOn: "Rechazado el",
     attachmentsForAppeal: "Adjuntos para Apelación #",
     noAttachments: "Sin adjuntos",
+    initialDeclineReason: "Razón de Rechazo Inicial",
   },
   ru: {
     formTitle: "Форма Сбора Отзывов Клиентов",
@@ -189,5 +191,6 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
     declinedOn: "Отклонено",
     attachmentsForAppeal: "Вложения для Апелляции #",
     noAttachments: "Нет вложений",
+    initialDeclineReason: "Первоначальная Причина Отклонения",
   },
 };

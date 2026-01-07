@@ -14,8 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusTranslations";
+import { formatDateEST, formatDateTimeEST } from "@/lib/dateUtils";
 import { AlertCircle, AlertTriangle } from "lucide-react";
 import AppealForm from "./AppealForm";
 
@@ -41,6 +41,7 @@ interface ReviewBonus {
   submission_date: string;
   review_month: string;
   appeal_count?: number;
+  reviewed_at?: string | null;
 }
 
 interface ReviewBonusHistoryProps {
@@ -60,6 +61,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [appealHistory, setAppealHistory] = useState<any[]>([]);
   const [appealAttachmentsByHistory, setAppealAttachmentsByHistory] = useState<Record<string, any[]>>({});
+  const [initialDeclineReason, setInitialDeclineReason] = useState<{reason: string; date: string} | null>(null);
 
   useEffect(() => {
     fetchReviews();
@@ -110,6 +112,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
     setSelectedReview(review);
     setAppealHistory([]);
     setAppealAttachmentsByHistory({});
+    setInitialDeclineReason(null);
     
     // Get signed URL for screenshot
     const filePath = review.screenshot_url.replace("review-screenshots/", "");
@@ -130,6 +133,25 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
 
     if (historyData && historyData.length > 0) {
       setAppealHistory(historyData);
+      
+      // The first appeal's existence means there was an initial decline
+      // We need to find the initial decline reason - it's stored in the review_bonuses.decline_reason
+      // when the review was first declined before any appeals
+      // Since the appeal_history stores decline reasons for each appeal attempt,
+      // we look at the first appeal - the initial decline happened before it
+      if (review.decline_reason) {
+        // The current decline_reason on the review is actually the latest one
+        // For initial decline, we need to check if appeal_count > 0 and there's history
+        // The initial decline would be captured when first appeal was made
+        // Let's use the reviewed_at date if available, otherwise use the first appeal's date minus a bit
+        const firstAppealDate = historyData[0]?.appeal_at;
+        if (firstAppealDate) {
+          setInitialDeclineReason({
+            reason: review.decline_reason,
+            date: review.reviewed_at || firstAppealDate
+          });
+        }
+      }
 
       // Fetch attachments for each appeal history record
       const attachmentsByHistory: Record<string, any[]> = {};
@@ -196,7 +218,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
               <div className="space-y-1">
                 <p className="font-medium">{review.client_full_name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t.invoiceNumber}: {review.invoice_number} | {t.jobDate}: {format(new Date(review.job_date), "MM/dd/yyyy")}
+                  {t.invoiceNumber}: {review.invoice_number} | {t.jobDate}: {formatDateEST(review.job_date)}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   {getStatusBadge(review.status, review.appeal_count)}
@@ -245,7 +267,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t.jobDate}</p>
-                  <p className="font-medium">{format(new Date(selectedReview.job_date), "MM/dd/yyyy")}</p>
+                  <p className="font-medium">{formatDateEST(selectedReview.job_date)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t.status}</p>
@@ -271,7 +293,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                 </div>
               )}
 
-              {selectedReview.decline_reason && (
+              {selectedReview.decline_reason && appealHistory.length === 0 && (
                 <div className="bg-destructive/10 p-4 rounded-lg">
                   <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
                   <p className="mt-2 whitespace-pre-wrap text-sm">{selectedReview.decline_reason}</p>
@@ -282,6 +304,13 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
               {appealHistory.length > 0 && (
                 <div className="space-y-4">
                   <h4 className="font-semibold text-lg">{t.appealHistory}</h4>
+                  
+                  {/* Initial Decline Reason - shown at the top of appeal history */}
+                  <div className="bg-red-100 border border-red-300 p-4 rounded-lg space-y-2">
+                    <p className="font-medium text-red-800">{t.initialDeclineReason}</p>
+                    <p className="text-sm text-red-700">{selectedReview.decline_reason}</p>
+                  </div>
+                  
                   {appealHistory.map((hist) => (
                     <div key={hist.id} className="bg-orange-50 border border-orange-200 p-4 rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
@@ -289,7 +318,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                           {t.appealNumber}{hist.appeal_number} {hist.appeal_number === 2 ? `(${t.finalAppeal})` : `(${t.firstAppealStatus})`}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {t.appealed}: {format(new Date(hist.appeal_at), "MM/dd/yyyy HH:mm")}
+                          {t.appealed}: {formatDateTimeEST(hist.appeal_at)} EST
                         </p>
                       </div>
                       
@@ -304,7 +333,7 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                           <p className="text-sm text-red-600">{hist.decline_reason}</p>
                           {hist.declined_at && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              {t.declinedOn}: {format(new Date(hist.declined_at), "MM/dd/yyyy HH:mm")}
+                              {t.declinedOn}: {formatDateTimeEST(hist.declined_at)} EST
                             </p>
                           )}
                         </div>
