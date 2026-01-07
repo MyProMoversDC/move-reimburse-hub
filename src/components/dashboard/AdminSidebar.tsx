@@ -36,6 +36,9 @@ interface AdminSidebarProps {
     appeals: number;
     missingPayments: number;
     misconductReplies: number;
+    moverFeedback: number;
+    performanceReports: number;
+    violenceIncidents: number;
   };
   hasUnreadMessages?: boolean;
 }
@@ -67,7 +70,10 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "reviews") return pendingCounts.reviews;
     if (id === "missing-payments") return pendingCounts.missingPayments;
     if (id === "misconduct-responses") return pendingCounts.misconductReplies;
-    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies;
+    if (id === "mover-feedback") return pendingCounts.moverFeedback;
+    if (id === "performance-reports") return pendingCounts.performanceReports;
+    if (id === "violence-incidents") return pendingCounts.violenceIncidents;
+    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents;
     return 0;
   };
 

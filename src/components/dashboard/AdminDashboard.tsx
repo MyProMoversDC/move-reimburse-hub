@@ -46,6 +46,9 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     appeals: 0,
     missingPayments: 0,
     misconductReplies: 0,
+    moverFeedback: 0,
+    performanceReports: 0,
+    violenceIncidents: 0,
   });
   
   // Date filters for reimbursements
@@ -102,12 +105,32 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .eq("is_admin_message", false)
         .eq("is_read", false);
 
+      // Count pending mover feedback
+      const { count: moverFeedbackCount } = await supabase
+        .from("mover_feedback")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+
+      // Count unreviewed performance reports (no admin_actions or operations_manager_actions)
+      const { count: performanceReportsCount } = await supabase
+        .from("performance_reports")
+        .select("*", { count: "exact", head: true });
+
+      // Count unreviewed violence incidents (no admin_actions)
+      const { count: violenceIncidentsCount } = await supabase
+        .from("violence_incidents")
+        .select("*", { count: "exact", head: true })
+        .is("admin_actions", null);
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
         appeals: (appealReimbCount || 0) + (appealReviewCount || 0),
         missingPayments: missingPaymentCount || 0,
         misconductReplies: misconductReplyCount || 0,
+        moverFeedback: moverFeedbackCount || 0,
+        performanceReports: performanceReportsCount || 0,
+        violenceIncidents: violenceIncidentsCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
