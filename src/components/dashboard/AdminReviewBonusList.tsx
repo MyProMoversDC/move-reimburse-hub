@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { formatInEST } from "@/lib/dateUtils";
 import { toast } from "sonner";
 import { DashboardLanguage, dashboardTranslations } from "@/lib/dashboardTranslations";
 import { Check, X } from "lucide-react";
@@ -374,7 +375,10 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
                   Foreman: {review.foreman_name} | Invoice: {review.invoice_number}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Job Date: {format(new Date(review.job_date), "MM/dd/yyyy")} | Month: {review.review_month}
+                  Job Date: {formatInEST(review.job_date, "MM/dd/yyyy")} | Month: {review.review_month}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Submitted At: {formatInEST(review.submission_date, "MM/dd/yyyy hh:mm a")} EST
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   {getStatusBadge(review.status, review.appeal_count)}
