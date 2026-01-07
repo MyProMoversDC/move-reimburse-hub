@@ -7,10 +7,12 @@ import {
   AlertTriangle,
   LayoutDashboard,
   ChevronLeft,
+  ChevronDown,
   DollarSign,
   MessageSquare,
   Shield,
-  MessageCircle
+  MessageCircle,
+  BookOpen
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,7 +27,13 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import logo from "@/assets/logo.png";
+import { useState } from "react";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -49,14 +57,21 @@ const menuItems = [
   { id: "reviews", label: "Review Bonuses", icon: Star },
   { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
   { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle },
-  { id: "reimbursement-reports", label: "Reimbursement Reports", icon: FileBarChart },
-  { id: "review-reports", label: "Review Reports", icon: FileBarChart },
-  { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
   { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
+  { id: "handbook", label: "Handbook Management", icon: BookOpen },
   { id: "chat", label: "Chat", icon: MessageSquare },
+];
+
+const reportingItems = [
+  { id: "reimbursement-reports", label: "Reimbursement Reports" },
+  { id: "review-reports", label: "Customer Review Reports" },
+  { id: "missing-payment-reports", label: "Missing Payment Reports" },
+];
+
+const bottomMenuItems = [
   { id: "movers", label: "Movers Directory", icon: Users },
   { id: "roles", label: "Role Management", icon: UserCog },
 ];
@@ -64,6 +79,7 @@ const menuItems = [
 const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages = false }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [reportsOpen, setReportsOpen] = useState(false);
 
   const getBadgeCount = (id: string) => {
     if (id === "requests") return pendingCounts.reimbursements;
@@ -76,6 +92,8 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents;
     return 0;
   };
+
+  const isReportTab = reportingItems.some(item => item.id === activeTab);
 
   return (
     <Sidebar collapsible="icon">
@@ -124,6 +142,49 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                   </SidebarMenuItem>
                 );
               })}
+
+              {/* Mover Form Reports dropdown */}
+              {!isCollapsed && (
+                <Collapsible open={reportsOpen || isReportTab} onOpenChange={setReportsOpen}>
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip="Mover Form Reports">
+                        <FileBarChart className="h-4 w-4" />
+                        <span className="flex-1">Mover Form Reports</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${reportsOpen || isReportTab ? "rotate-180" : ""}`} />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                  </SidebarMenuItem>
+                  <CollapsibleContent>
+                    {reportingItems.map((item) => (
+                      <SidebarMenuItem key={item.id} className="pl-6">
+                        <SidebarMenuButton
+                          isActive={activeTab === item.id}
+                          onClick={() => onTabChange(item.id)}
+                          tooltip={item.label}
+                        >
+                          <span className="flex-1 text-sm">{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
+              {bottomMenuItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    isActive={activeTab === item.id}
+                    onClick={() => onTabChange(item.id)}
+                    tooltip={item.label}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {!isCollapsed && (
+                      <span className="flex-1">{item.label}</span>
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

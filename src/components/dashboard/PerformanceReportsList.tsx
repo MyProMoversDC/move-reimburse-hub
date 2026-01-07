@@ -132,11 +132,11 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
+              <TableHead>Submitted At</TableHead>
               <TableHead>Date of Incident</TableHead>
               <TableHead>Worker Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Severity</TableHead>
-              <TableHead>Created At</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -152,6 +152,9 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
                 <TableRow key={report.id}>
                   <TableCell className="font-medium">{report.title}</TableCell>
                   <TableCell>
+                    {format(new Date(report.created_at), "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell>
                     {format(new Date(report.incident_datetime), "MMM d, yyyy HH:mm")}
                   </TableCell>
                   <TableCell>{report.worker_name}</TableCell>
@@ -160,9 +163,6 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
                     <Badge className={severityColors[report.severity_level] || ""}>
                       {report.severity_level}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(report.created_at), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
