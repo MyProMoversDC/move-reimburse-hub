@@ -19,6 +19,7 @@ import UserSettings from "./UserSettings";
 import HandbookManager from "./HandbookManager";
 import { AdminFeedbackList } from "./AdminFeedbackList";
 import { AdminAIAssistant } from "./AdminAIAssistant";
+import FeedList from "./feed/FeedList";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
@@ -209,6 +210,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Admin Dashboard</h2>
             <AdminTodoList onNavigate={setActiveTab} />
+          </div>
+        );
+      case "feed":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Feed Management</h2>
+            <FeedList userId={userId} isAdmin={true} language={language} />
           </div>
         );
       case "requests":
