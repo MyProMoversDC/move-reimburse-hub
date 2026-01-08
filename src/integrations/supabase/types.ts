@@ -702,42 +702,75 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          branch: string | null
           created_at: string | null
+          custom_attributes: Json | null
           email: string
+          employee_number: string | null
+          employment_type: string | null
           first_name: string
+          hire_date: string | null
           hourly_rate: number | null
           id: string
+          job_role: string | null
           last_name: string
+          license_class: string | null
+          license_expires: string | null
+          license_number: string | null
           phone: string
           phone_type: string | null
+          physical_expires: string | null
+          termination_date: string | null
           title: string | null
           username: string
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          branch?: string | null
           created_at?: string | null
+          custom_attributes?: Json | null
           email: string
+          employee_number?: string | null
+          employment_type?: string | null
           first_name: string
+          hire_date?: string | null
           hourly_rate?: number | null
           id: string
+          job_role?: string | null
           last_name: string
+          license_class?: string | null
+          license_expires?: string | null
+          license_number?: string | null
           phone: string
           phone_type?: string | null
+          physical_expires?: string | null
+          termination_date?: string | null
           title?: string | null
           username: string
         }
         Update: {
           address?: string | null
           avatar_url?: string | null
+          branch?: string | null
           created_at?: string | null
+          custom_attributes?: Json | null
           email?: string
+          employee_number?: string | null
+          employment_type?: string | null
           first_name?: string
+          hire_date?: string | null
           hourly_rate?: number | null
           id?: string
+          job_role?: string | null
           last_name?: string
+          license_class?: string | null
+          license_expires?: string | null
+          license_number?: string | null
           phone?: string
           phone_type?: string | null
+          physical_expires?: string | null
+          termination_date?: string | null
           title?: string | null
           username?: string
         }
