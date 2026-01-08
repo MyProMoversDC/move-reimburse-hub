@@ -44,6 +44,8 @@ interface Profile {
   email: string;
   phone: string;
   username: string;
+  license_expires: string | null;
+  physical_expires: string | null;
 }
 
 interface HRDocument {
@@ -123,6 +125,8 @@ const hrTranslations = {
     description: "Description",
     severity: "Severity",
     comingSoon: "Coming Soon",
+    licenseExpiringSoon: "Driver's license expires within 90 days",
+    physicalExpiringSoon: "Physical exam expires within 90 days",
   },
   es: {
     title: "Gabinete de RRHH",
@@ -164,6 +168,8 @@ const hrTranslations = {
     description: "Descripción",
     severity: "Severidad",
     comingSoon: "Próximamente",
+    licenseExpiringSoon: "La licencia de conducir vence en 90 días",
+    physicalExpiringSoon: "El examen físico vence en 90 días",
   },
   ru: {
     title: "Кабинет HR",
@@ -205,7 +211,33 @@ const hrTranslations = {
     description: "Описание",
     severity: "Серьезность",
     comingSoon: "Скоро",
+    licenseExpiringSoon: "Водительские права истекают в течение 90 дней",
+    physicalExpiringSoon: "Медосмотр истекает в течение 90 дней",
   },
+};
+
+// Helper to check if a date is within 90 days from now
+const isExpiringWithin90Days = (dateStr: string | null): boolean => {
+  if (!dateStr) return false;
+  const expirationDate = new Date(dateStr);
+  const today = new Date();
+  const ninetyDaysFromNow = new Date();
+  ninetyDaysFromNow.setDate(today.getDate() + 90);
+  return expirationDate <= ninetyDaysFromNow && expirationDate >= today;
+};
+
+const isExpired = (dateStr: string | null): boolean => {
+  if (!dateStr) return false;
+  const expirationDate = new Date(dateStr);
+  const today = new Date();
+  return expirationDate < today;
+};
+
+const hasLicenseAlert = (user: Profile): boolean => {
+  return isExpiringWithin90Days(user.license_expires) || 
+         isExpired(user.license_expires) ||
+         isExpiringWithin90Days(user.physical_expires) || 
+         isExpired(user.physical_expires);
 };
 
 const HRDashboard = ({ userId }: HRDashboardProps) => {
@@ -256,7 +288,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, phone, username")
+        .select("id, first_name, last_name, email, phone, username, license_expires, physical_expires")
         .order("first_name");
 
       if (error) throw error;
@@ -462,27 +494,38 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                 <div className="p-4 text-center text-muted-foreground">{t.noUsersFound}</div>
               ) : (
                 <div className="divide-y">
-                  {filteredUsers.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => setSelectedUser(user)}
-                      className={`w-full p-3 text-left hover:bg-muted/50 transition-colors ${
-                        selectedUser?.id === user.id ? "bg-muted" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
+                  {filteredUsers.map((user) => {
+                    const showAlert = hasLicenseAlert(user);
+                    return (
+                      <button
+                        key={user.id}
+                        onClick={() => setSelectedUser(user)}
+                        className={`w-full p-3 text-left hover:bg-muted/50 transition-colors ${
+                          selectedUser?.id === user.id ? "bg-muted" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                            {showAlert && (
+                              <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-destructive border-2 border-background" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium truncate">
+                                {user.first_name} {user.last_name}
+                              </p>
+                              {showAlert && (
+                                <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">
-                            {user.first_name} {user.last_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
