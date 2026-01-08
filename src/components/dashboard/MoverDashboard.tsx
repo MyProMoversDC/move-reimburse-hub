@@ -55,12 +55,18 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
+  const [addressRefreshKey, setAddressRefreshKey] = useState(0);
   const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleNavigateToSettings = () => {
     settingsButtonRef.current?.click();
+  };
+
+  const handleSettingsClose = () => {
+    // Refresh address disclaimer after settings dialog closes
+    setAddressRefreshKey((prev) => prev + 1);
   };
 
   const handleFormSelect = (formType: string) => {
@@ -316,7 +322,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     <div className="space-y-6">
       <HandbookPopup userId={userId} language={language} />
       <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
-      <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+      <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
       
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -324,7 +330,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
         </Button>
         <MoverNotificationBell userId={userId} language={language} />
-        <MoverSettings userId={userId} language={language} ref={settingsButtonRef} />
+        <MoverSettings userId={userId} language={language} ref={settingsButtonRef} onClose={handleSettingsClose} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
 
@@ -384,13 +390,13 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <div className="p-6">
             <HandbookPopup userId={userId} language={language} />
             <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
-            <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+            <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             
             <div className="flex justify-between items-center mb-6">
               <SidebarTrigger className="md:hidden" />
               <div className="flex justify-end gap-2 ml-auto">
                 <MoverNotificationBell userId={userId} language={language} />
-                <MoverSettings userId={userId} language={language} ref={settingsButtonRef} />
+                <MoverSettings userId={userId} language={language} ref={settingsButtonRef} onClose={handleSettingsClose} />
                 <LanguageSelector language={language} onLanguageChange={setLanguage} />
               </div>
             </div>

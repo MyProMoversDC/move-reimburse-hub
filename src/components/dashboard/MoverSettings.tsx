@@ -5,10 +5,11 @@ import { DashboardLanguage } from "@/lib/dashboardTranslations";
 interface MoverSettingsProps {
   userId: string;
   language: DashboardLanguage;
+  onClose?: () => void;
 }
 
 const MoverSettings = forwardRef<HTMLButtonElement, MoverSettingsProps>(
-  ({ userId, language }, ref) => {
+  ({ userId, language, onClose }, ref) => {
     return (
       <UserSettings
         userId={userId}
@@ -16,6 +17,7 @@ const MoverSettings = forwardRef<HTMLButtonElement, MoverSettingsProps>(
         showBalance={true}
         showHourlyRate={true}
         ref={ref}
+        onClose={onClose}
       />
     );
   }
