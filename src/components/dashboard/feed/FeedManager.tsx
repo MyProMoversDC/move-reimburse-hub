@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus, Eye, Edit, Trash2, FileText, Image, Video, FileIcon, BarChart3 } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, FileText, Image, Video, FileIcon, BarChart3, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import CreatePostDialog from "./CreatePostDialog";
+import FeedPost from "./FeedPost";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewsDialogOpen, setViewsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
 
   const { data: posts, isLoading } = useQuery({
@@ -155,6 +157,11 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
     setDeleteDialogOpen(true);
   };
 
+  const handlePreview = (post: any) => {
+    setSelectedPost(post);
+    setPreviewDialogOpen(true);
+  };
+
   const getAttachmentIcon = (fileType: string) => {
     if (fileType.startsWith("image/")) return <Image className="h-4 w-4" />;
     if (fileType.startsWith("video/")) return <Video className="h-4 w-4" />;
@@ -216,6 +223,9 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handlePreview(post)} title="Preview as user">
+                      <Monitor className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleViewViews(post)}>
                       <Eye className="h-4 w-4 mr-1" />
                       <span className="text-xs">{getViewCount(post)}/{allUsers}</span>
@@ -299,6 +309,28 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
               </div>
             )}
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              User View Preview
+            </DialogTitle>
+          </DialogHeader>
+          <div className="border rounded-lg p-4 bg-muted/30">
+            {selectedPost && (
+              <FeedPost
+                post={selectedPost}
+                isAdmin={false}
+                userId={userId}
+                language="en"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

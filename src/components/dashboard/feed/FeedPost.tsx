@@ -109,6 +109,8 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [translatedPollQuestion, setTranslatedPollQuestion] = useState<string | null>(null);
+  const [translatedPollOptions, setTranslatedPollOptions] = useState<string[] | null>(null);
   const [translatedToLang, setTranslatedToLang] = useState<'es' | 'ru' | null>(null);
   const { translateTexts, isTranslating } = useTargetTranslation();
 
@@ -182,16 +184,36 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
   };
 
   const handleTranslate = async (targetLang: 'es' | 'ru') => {
-    if (!post.content) return;
-    const results = await translateTexts([post.content], targetLang);
-    if (results[0]) {
-      setTranslatedContent(results[0]);
-      setTranslatedToLang(targetLang);
+    // Collect all texts to translate
+    const textsToTranslate: string[] = [];
+    if (post.content) textsToTranslate.push(post.content);
+    if (poll) {
+      textsToTranslate.push(poll.question);
+      poll.options.forEach(opt => textsToTranslate.push(opt.option_text));
     }
+    
+    if (textsToTranslate.length === 0) return;
+    
+    const results = await translateTexts(textsToTranslate, targetLang);
+    
+    let idx = 0;
+    if (post.content) {
+      setTranslatedContent(results[idx]);
+      idx++;
+    }
+    if (poll) {
+      setTranslatedPollQuestion(results[idx]);
+      idx++;
+      const translatedOpts = poll.options.map(() => results[idx++]);
+      setTranslatedPollOptions(translatedOpts);
+    }
+    setTranslatedToLang(targetLang);
   };
 
   const handleShowOriginal = () => {
     setTranslatedContent(null);
+    setTranslatedPollQuestion(null);
+    setTranslatedPollOptions(null);
     setTranslatedToLang(null);
   };
 
@@ -322,7 +344,13 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
         )}
 
         {poll && (
-          <FeedPoll poll={poll} userId={userId} language={language} />
+          <FeedPoll 
+            poll={poll} 
+            userId={userId} 
+            language={language}
+            translatedQuestion={translatedPollQuestion}
+            translatedOptions={translatedPollOptions}
+          />
         )}
       </CardContent>
 

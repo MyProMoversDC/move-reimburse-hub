@@ -19,6 +19,8 @@ interface FeedPollProps {
   };
   userId: string;
   language: 'en' | 'es' | 'ru';
+  translatedQuestion?: string | null;
+  translatedOptions?: string[] | null;
 }
 
 const translations = {
@@ -39,12 +41,14 @@ const translations = {
   },
 };
 
-const FeedPoll = ({ poll, userId, language }: FeedPollProps) => {
+const FeedPoll = ({ poll, userId, language, translatedQuestion, translatedOptions }: FeedPollProps) => {
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [userVote, setUserVote] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const t = translations[language];
+  
+  const displayQuestion = translatedQuestion || poll.question;
 
   useEffect(() => {
     fetchVotes();
@@ -102,13 +106,14 @@ const FeedPoll = ({ poll, userId, language }: FeedPollProps) => {
 
   return (
     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-      <p className="font-medium">{poll.question}</p>
+      <p className="font-medium">{displayQuestion}</p>
       
       <div className="space-y-2">
-        {poll.options.map((option) => {
+        {poll.options.map((option, index) => {
           const voteCount = votes[option.id] || 0;
           const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
           const isSelected = userVote === option.id;
+          const displayOptionText = translatedOptions?.[index] || option.option_text;
 
           return (
             <button
@@ -124,7 +129,7 @@ const FeedPoll = ({ poll, userId, language }: FeedPollProps) => {
                 <div className="flex items-center gap-2">
                   {isSelected && <Check className="h-4 w-4 text-primary" />}
                   <span className={cn("text-sm", isSelected && "font-medium")}>
-                    {option.option_text}
+                    {displayOptionText}
                   </span>
                 </div>
                 {hasVoted && (
