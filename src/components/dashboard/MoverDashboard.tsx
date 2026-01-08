@@ -3,14 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, MessageSquare, Lightbulb, ChevronDown, LogOut } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut } from "lucide-react";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
 import ReimbursementHistory from "./ReimbursementHistory";
 import ReviewBonusForm from "./ReviewBonusForm";
@@ -23,6 +24,7 @@ import ViolenceIncidentHistory from "./ViolenceIncidentHistory";
 import { MoverFeedbackForm } from "./MoverFeedbackForm";
 import { MoverFeedbackHistory } from "./MoverFeedbackHistory";
 import ChatContainer from "./chat/ChatContainer";
+import FeedList from "./feed/FeedList";
 import MoverSettings from "./MoverSettings";
 import { MoverNotificationBell } from "./MoverNotificationBell";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -42,7 +44,7 @@ interface MoverDashboardProps {
 }
 
 const MoverDashboard = ({ userId }: MoverDashboardProps) => {
-  const [activeTab, setActiveTab] = useState("violence");
+  const [activeTab, setActiveTab] = useState("feed");
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
@@ -58,20 +60,16 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleNavigateToSettings = () => {
-    // Open settings dialog by programmatically clicking the settings button
     settingsButtonRef.current?.click();
   };
 
-  // Form selection handlers for mobile dropdown
   const handleFormSelect = (formType: string) => {
-    // Reset all forms first
     setShowReimbursementForm(false);
     setShowReviewForm(false);
     setShowMissingPaymentForm(false);
     setShowViolenceForm(false);
     setShowFeedbackForm(false);
 
-    // Navigate to tab and show form
     switch (formType) {
       case 'reimbursement':
         setActiveTab('reimbursements');
@@ -150,25 +148,178 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     toast.success(language === 'ru' ? 'Вы вышли из системы' : language === 'es' ? 'Sesión cerrada' : 'Logged out successfully');
   };
 
-  return (
+  const renderContent = () => {
+    switch (activeTab) {
+      case "feed":
+        return <FeedList userId={userId} isAdmin={false} language={language} />;
+      
+      case "reimbursements":
+        return (
+          <div className="space-y-6">
+            {!showReimbursementForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowReimbursementForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t.submitReimbursement}
+                </Button>
+              </Card>
+            )}
+            {showReimbursementForm && (
+              <Card className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
+                  <h2 className="text-lg md:text-2xl font-bold">{t.reimbursementForm}</h2>
+                  <Button variant="outline" size="sm" onClick={() => setShowReimbursementForm(false)}>
+                    {t.close}
+                  </Button>
+                </div>
+                <ReimbursementForm userId={userId} onSuccess={handleReimbursementSuccess} onCancel={() => setShowReimbursementForm(false)} language={language} />
+              </Card>
+            )}
+            <div>
+              <h2 className="text-lg md:text-2xl font-bold mb-4">{t.reimbursementHistory}</h2>
+              <ReimbursementHistory userId={userId} refreshKey={refreshKey} userRole="mover" language={language} />
+            </div>
+          </div>
+        );
+      
+      case "reviews":
+        return (
+          <div className="space-y-6">
+            {!showReviewForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowReviewForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {rt.submitReview}
+                </Button>
+              </Card>
+            )}
+            {showReviewForm && (
+              <Card className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
+                  <h2 className="text-lg md:text-2xl font-bold">{rt.formTitle}</h2>
+                  <Button variant="outline" size="sm" onClick={() => setShowReviewForm(false)}>
+                    {rt.close}
+                  </Button>
+                </div>
+                <ReviewBonusForm 
+                  userId={userId} 
+                  foremanName={foremanName}
+                  onSuccess={handleReviewSuccess} 
+                  onCancel={() => setShowReviewForm(false)}
+                  language={language} 
+                />
+              </Card>
+            )}
+            <div>
+              <h2 className="text-lg md:text-2xl font-bold mb-4">{rt.reviewHistory}</h2>
+              <ReviewBonusHistory userId={userId} refreshKey={reviewRefreshKey} language={language} />
+            </div>
+          </div>
+        );
+      
+      case "missing-payments":
+        return (
+          <div className="space-y-6">
+            {!showMissingPaymentForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowMissingPaymentForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {mt.submitMissingPayment}
+                </Button>
+              </Card>
+            )}
+            {showMissingPaymentForm && (
+              <Card className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
+                  <h2 className="text-lg md:text-2xl font-bold">{mt.formTitle}</h2>
+                  <Button variant="outline" size="sm" onClick={() => setShowMissingPaymentForm(false)}>
+                    {mt.close}
+                  </Button>
+                </div>
+                <MissingPaymentForm userId={userId} onSuccess={handleMissingPaymentSuccess} onCancel={() => setShowMissingPaymentForm(false)} language={language} />
+              </Card>
+            )}
+            <div>
+              <h2 className="text-lg md:text-2xl font-bold mb-4">{mt.historyTitle}</h2>
+              <MissingPaymentHistory userId={userId} refreshKey={missingPaymentRefreshKey} language={language} />
+            </div>
+          </div>
+        );
+      
+      case "misconduct":
+        return <MoverMisconductCases userId={userId} language={language} />;
+      
+      case "violence":
+        return (
+          <div className="space-y-6">
+            {!showViolenceForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowViolenceForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {vt.submitReport}
+                </Button>
+              </Card>
+            )}
+            {showViolenceForm && (
+              <Card className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
+                  <h2 className="text-lg md:text-2xl font-bold">{vt.formTitle}</h2>
+                  <Button variant="outline" size="sm" onClick={() => setShowViolenceForm(false)}>
+                    {vt.close}
+                  </Button>
+                </div>
+                <ViolenceIncidentForm userId={userId} onSuccess={handleViolenceSuccess} onCancel={() => setShowViolenceForm(false)} language={language} />
+              </Card>
+            )}
+            <div>
+              <h2 className="text-lg md:text-2xl font-bold mb-4">{vt.historyTitle}</h2>
+              <ViolenceIncidentHistory userId={userId} refreshKey={violenceRefreshKey} language={language} />
+            </div>
+          </div>
+        );
+      
+      case "feedback":
+        return (
+          <div className="space-y-6">
+            {!showFeedbackForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowFeedbackForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+                </Button>
+              </Card>
+            )}
+            {showFeedbackForm && (
+              <div>
+                <div className="flex justify-end mb-4">
+                  <Button variant="outline" size="sm" onClick={() => setShowFeedbackForm(false)}>
+                    {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
+                  </Button>
+                </div>
+                <MoverFeedbackForm userId={userId} language={language} onSuccess={handleFeedbackSuccess} onCancel={() => setShowFeedbackForm(false)} />
+              </div>
+            )}
+            <MoverFeedbackHistory userId={userId} language={language} refreshKey={feedbackRefreshKey} />
+          </div>
+        );
+      
+      case "chat":
+        return <ChatContainer userId={userId} userRole="mover" language={language} />;
+      
+      default:
+        return null;
+    }
+  };
+
+  // Mobile Layout
+  const MobileLayout = () => (
     <div className="space-y-6">
-      {/* Handbook Popup for unacknowledged handbooks */}
       <HandbookPopup userId={userId} language={language} />
-      
-      {/* Driver Prompt for first-time users */}
       <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
-      
-      {/* Address Disclaimer if address is missing */}
       <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
       
       <div className="flex justify-end gap-2">
-        {/* Mobile Exit button - shown before Settings */}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleLogout}
-          className="md:hidden"
-        >
+        <Button variant="outline" size="sm" onClick={handleLogout}>
           <LogOut className="h-4 w-4 mr-1" />
           {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
         </Button>
@@ -176,235 +327,93 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         <MoverSettings userId={userId} language={language} ref={settingsButtonRef} />
         <LanguageSelector language={language} onLanguageChange={setLanguage} />
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
-          <TabsList className="inline-flex min-w-max md:flex md:flex-wrap gap-1 h-auto p-1">
-            <TabsTrigger value="reimbursements" className="hidden md:flex text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {language === 'ru' ? 'Возмещения' : language === 'es' ? 'Reembolsos' : 'Reimbursements'}
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="hidden md:flex text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <Star className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {language === 'ru' ? 'Отзывы клиентов' : language === 'es' ? 'Reseñas' : 'Reviews'}
-            </TabsTrigger>
-            <TabsTrigger value="missing-payments" className="hidden md:flex text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {language === 'ru' ? 'Пропущенные платежи' : language === 'es' ? 'Pagos faltantes' : 'Missing Payments'}
-            </TabsTrigger>
-            <TabsTrigger value="violence" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">{vt.formTitle}</span>
-              <span className="sm:hidden">{language === 'ru' ? 'Инциденты' : language === 'es' ? 'Incidentes' : 'Incidents'}</span>
-            </TabsTrigger>
-            <TabsTrigger value="misconduct" className="hidden md:flex text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {language === 'ru' ? 'Дела' : language === 'es' ? 'Casos' : 'Cases'}
-            </TabsTrigger>
-            <TabsTrigger value="feedback" className="hidden md:flex text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <Lightbulb className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {language === 'ru' ? 'Отзывы' : language === 'es' ? 'Comentarios' : 'Feedback'}
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              {ct.chat}
-              {hasUnreadMessages && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-              )}
-            </TabsTrigger>
-          </TabsList>
-        </div>
 
-        {/* Mobile dropdown for form selection - visible on all tabs */}
-        <div className="md:hidden mt-4">
-          <Card className="p-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="w-full justify-between">
-                  <span className="flex items-center">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
-                  </span>
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
-                <DropdownMenuItem onClick={() => handleFormSelect('reimbursement')} className="py-3">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  {t.submitReimbursement}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleFormSelect('review')} className="py-3">
-                  <Star className="h-4 w-4 mr-2" />
-                  {rt.submitReview}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleFormSelect('missing-payment')} className="py-3">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  {mt.submitMissingPayment}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleFormSelect('violence')} className="py-3">
-                  <Shield className="h-4 w-4 mr-2" />
-                  {vt.submitReport}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleFormSelect('feedback')} className="py-3">
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Card>
-        </div>
-
-        <TabsContent value="reimbursements" className="space-y-6">
-          {!showReimbursementForm && (
-            <Card className="p-6 hidden md:block">
-              <Button onClick={() => setShowReimbursementForm(true)} className="w-full sm:w-auto">
+      {/* Form Selection Dropdown */}
+      <Card className="p-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="w-full justify-between">
+              <span className="flex items-center">
                 <Plus className="h-4 w-4 mr-2" />
-                {t.submitReimbursement}
-              </Button>
-            </Card>
-          )}
+                {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
+              </span>
+              <ChevronDown className="h-4 w-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
+            <DropdownMenuItem onClick={() => handleFormSelect('reimbursement')} className="py-3">
+              <DollarSign className="h-4 w-4 mr-2" />
+              {t.submitReimbursement}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFormSelect('review')} className="py-3">
+              <Star className="h-4 w-4 mr-2" />
+              {rt.submitReview}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFormSelect('missing-payment')} className="py-3">
+              <DollarSign className="h-4 w-4 mr-2" />
+              {mt.submitMissingPayment}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFormSelect('violence')} className="py-3">
+              <Shield className="h-4 w-4 mr-2" />
+              {vt.submitReport}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFormSelect('feedback')} className="py-3">
+              <Lightbulb className="h-4 w-4 mr-2" />
+              {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Card>
 
-          {showReimbursementForm && (
-            <Card className="p-4 md:p-6">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold">{t.reimbursementForm}</h2>
-                <Button variant="outline" size="sm" onClick={() => setShowReimbursementForm(false)}>
-                  {t.close}
-                </Button>
-              </div>
-              <ReimbursementForm userId={userId} onSuccess={handleReimbursementSuccess} onCancel={() => setShowReimbursementForm(false)} language={language} />
-            </Card>
-          )}
-
-          <div>
-            <h2 className="text-lg md:text-2xl font-bold mb-4">{t.reimbursementHistory}</h2>
-            <ReimbursementHistory userId={userId} refreshKey={refreshKey} userRole="mover" language={language} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="reviews" className="space-y-6">
-          {!showReviewForm && (
-            <Card className="p-6 hidden md:block">
-              <Button onClick={() => setShowReviewForm(true)} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                {rt.submitReview}
-              </Button>
-            </Card>
-          )}
-
-          {showReviewForm && (
-            <Card className="p-4 md:p-6">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold">{rt.formTitle}</h2>
-                <Button variant="outline" size="sm" onClick={() => setShowReviewForm(false)}>
-                  {rt.close}
-                </Button>
-              </div>
-              <ReviewBonusForm 
-                userId={userId} 
-                foremanName={foremanName}
-                onSuccess={handleReviewSuccess} 
-                onCancel={() => setShowReviewForm(false)}
-                language={language} 
-              />
-            </Card>
-          )}
-
-          <div>
-            <h2 className="text-lg md:text-2xl font-bold mb-4">{rt.reviewHistory}</h2>
-            <ReviewBonusHistory userId={userId} refreshKey={reviewRefreshKey} language={language} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="missing-payments" className="space-y-6">
-          {!showMissingPaymentForm && (
-            <Card className="p-6 hidden md:block">
-              <Button onClick={() => setShowMissingPaymentForm(true)} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                {mt.submitMissingPayment}
-              </Button>
-            </Card>
-          )}
-
-          {showMissingPaymentForm && (
-            <Card className="p-4 md:p-6">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold">{mt.formTitle}</h2>
-                <Button variant="outline" size="sm" onClick={() => setShowMissingPaymentForm(false)}>
-                  {mt.close}
-                </Button>
-              </div>
-              <MissingPaymentForm userId={userId} onSuccess={handleMissingPaymentSuccess} onCancel={() => setShowMissingPaymentForm(false)} language={language} />
-            </Card>
-          )}
-
-          <div>
-            <h2 className="text-lg md:text-2xl font-bold mb-4">{mt.historyTitle}</h2>
-            <MissingPaymentHistory userId={userId} refreshKey={missingPaymentRefreshKey} language={language} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="misconduct" className="space-y-6">
-          <MoverMisconductCases userId={userId} language={language} />
-        </TabsContent>
-
-        <TabsContent value="violence" className="space-y-6">
-          {!showViolenceForm && (
-            <Card className="p-6 hidden md:block">
-              <Button onClick={() => setShowViolenceForm(true)} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                {vt.submitReport}
-              </Button>
-            </Card>
-          )}
-
-          {showViolenceForm && (
-            <Card className="p-4 md:p-6">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold">{vt.formTitle}</h2>
-                <Button variant="outline" size="sm" onClick={() => setShowViolenceForm(false)}>
-                  {vt.close}
-                </Button>
-              </div>
-              <ViolenceIncidentForm userId={userId} onSuccess={handleViolenceSuccess} onCancel={() => setShowViolenceForm(false)} language={language} />
-            </Card>
-          )}
-
-          <div>
-            <h2 className="text-lg md:text-2xl font-bold mb-4">{vt.historyTitle}</h2>
-            <ViolenceIncidentHistory userId={userId} refreshKey={violenceRefreshKey} language={language} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="feedback" className="space-y-6">
-          {!showFeedbackForm && (
-            <Card className="p-6 hidden md:block">
-              <Button onClick={() => setShowFeedbackForm(true)} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
-              </Button>
-            </Card>
-          )}
-
-          {showFeedbackForm && (
-            <div>
-              <div className="flex justify-end mb-4">
-                <Button variant="outline" size="sm" onClick={() => setShowFeedbackForm(false)}>
-                  {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
-                </Button>
-              </div>
-              <MoverFeedbackForm userId={userId} language={language} onSuccess={handleFeedbackSuccess} onCancel={() => setShowFeedbackForm(false)} />
-            </div>
-          )}
-
-          <MoverFeedbackHistory userId={userId} language={language} refreshKey={feedbackRefreshKey} />
-        </TabsContent>
-
-        <TabsContent value="chat">
-          <ChatContainer userId={userId} userRole="mover" language={language} />
-        </TabsContent>
-      </Tabs>
+      {/* Feed Section - Below Form Selector */}
+      <FeedList userId={userId} isAdmin={false} language={language} />
     </div>
+  );
+
+  // Desktop Layout with Sidebar
+  const DesktopLayout = () => (
+    <SidebarProvider>
+      <div className="flex min-h-[calc(100vh-8rem)] w-full">
+        <MoverSidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          hasUnreadMessages={hasUnreadMessages}
+          language={language}
+        />
+        <SidebarInset className="flex-1">
+          <div className="p-6">
+            <HandbookPopup userId={userId} language={language} />
+            <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+            <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+            
+            <div className="flex justify-between items-center mb-6">
+              <SidebarTrigger className="md:hidden" />
+              <div className="flex justify-end gap-2 ml-auto">
+                <MoverNotificationBell userId={userId} language={language} />
+                <MoverSettings userId={userId} language={language} ref={settingsButtonRef} />
+                <LanguageSelector language={language} onLanguageChange={setLanguage} />
+              </div>
+            </div>
+
+            {renderContent()}
+          </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
+
+  return (
+    <>
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        <MobileLayout />
+      </div>
+      
+      {/* Desktop Layout */}
+      <div className="hidden md:block">
+        <DesktopLayout />
+      </div>
+    </>
   );
 };
 
