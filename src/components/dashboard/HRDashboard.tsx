@@ -25,9 +25,12 @@ import {
   AlertTriangle,
   Shield,
   Download,
-  Eye
+  Eye,
+  ClipboardList,
+  Info
 } from "lucide-react";
 import UserSettings from "./UserSettings";
+import EmployeeGeneralTab from "./EmployeeGeneralTab";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage as useLang } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -83,6 +86,8 @@ const hrTranslations = {
     title: "HR Cabinet",
     searchPlaceholder: "Search users by name, email, or phone...",
     allUsers: "All Users",
+    general: "General",
+    employeeInfo: "Employee Info",
     documents: "Documents",
     incidents: "Incidents & Reports",
     name: "Name",
@@ -116,11 +121,14 @@ const hrTranslations = {
     type: "Type",
     description: "Description",
     severity: "Severity",
+    comingSoon: "Coming Soon",
   },
   es: {
     title: "Gabinete de RRHH",
     searchPlaceholder: "Buscar usuarios por nombre, correo o teléfono...",
     allUsers: "Todos los Usuarios",
+    general: "General",
+    employeeInfo: "Info del Empleado",
     documents: "Documentos",
     incidents: "Incidentes y Reportes",
     name: "Nombre",
@@ -154,11 +162,14 @@ const hrTranslations = {
     type: "Tipo",
     description: "Descripción",
     severity: "Severidad",
+    comingSoon: "Próximamente",
   },
   ru: {
     title: "Кабинет HR",
     searchPlaceholder: "Поиск пользователей по имени, email или телефону...",
     allUsers: "Все Пользователи",
+    general: "Общее",
+    employeeInfo: "Инфо Сотрудника",
     documents: "Документы",
     incidents: "Инциденты и Отчеты",
     name: "Имя",
@@ -192,6 +203,7 @@ const hrTranslations = {
     type: "Тип",
     description: "Описание",
     severity: "Серьезность",
+    comingSoon: "Скоро",
   },
 };
 
@@ -506,8 +518,16 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                 </div>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="documents">
-                  <TabsList className="grid w-full grid-cols-2">
+                <Tabs defaultValue="general">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="general" className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      {t.general}
+                    </TabsTrigger>
+                    <TabsTrigger value="employee-info" className="flex items-center gap-2">
+                      <Info className="h-4 w-4" />
+                      {t.employeeInfo}
+                    </TabsTrigger>
                     <TabsTrigger value="documents" className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       {t.documents}
@@ -517,6 +537,23 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                       {t.incidents}
                     </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="general" className="mt-4">
+                    <EmployeeGeneralTab
+                      userId={userId}
+                      employeeId={selectedUser.id}
+                      employeeName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="employee-info" className="mt-4">
+                    <div className="flex items-center justify-center py-12 text-muted-foreground">
+                      <div className="text-center">
+                        <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p>{t.comingSoon}</p>
+                      </div>
+                    </div>
+                  </TabsContent>
 
                   <TabsContent value="documents" className="mt-4">
                     <div className="flex justify-end mb-4">

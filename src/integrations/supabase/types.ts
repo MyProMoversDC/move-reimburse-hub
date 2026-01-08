@@ -196,6 +196,42 @@ export type Database = {
           },
         ]
       }
+      emergency_contacts: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string | null
+          phone: string | null
+          phone_type: string | null
+          relationship: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          phone_type?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          phone_type?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       handbook_acknowledgments: {
         Row: {
           acknowledged_at: string
@@ -673,6 +709,8 @@ export type Database = {
           id: string
           last_name: string
           phone: string
+          phone_type: string | null
+          title: string | null
           username: string
         }
         Insert: {
@@ -685,6 +723,8 @@ export type Database = {
           id: string
           last_name: string
           phone: string
+          phone_type?: string | null
+          title?: string | null
           username: string
         }
         Update: {
@@ -697,6 +737,8 @@ export type Database = {
           id?: string
           last_name?: string
           phone?: string
+          phone_type?: string | null
+          title?: string | null
           username?: string
         }
         Relationships: []
