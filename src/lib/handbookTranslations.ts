@@ -29,6 +29,12 @@ export const handbookTranslations: Record<HandbookLanguage, {
   acknowledgments: string;
   usersAcknowledged: string;
   pendingAcknowledgment: string;
+  viewAcknowledgmentDetails: string;
+  confirmedUsers: string;
+  pendingUsers: string;
+  acknowledgedAt: string;
+  notYetViewed: string;
+  hideDetails: string;
   driverQuestion: string;
   areYouDriver: string;
   yes: string;
@@ -67,6 +73,12 @@ export const handbookTranslations: Record<HandbookLanguage, {
     acknowledgments: "Acknowledgments",
     usersAcknowledged: "users have acknowledged",
     pendingAcknowledgment: "pending acknowledgment",
+    viewAcknowledgmentDetails: "View Details",
+    confirmedUsers: "Confirmed Users",
+    pendingUsers: "Pending Users",
+    acknowledgedAt: "Acknowledged",
+    notYetViewed: "Not yet viewed",
+    hideDetails: "Hide Details",
     driverQuestion: "Driver Status",
     areYouDriver: "Are you a driver?",
     yes: "Yes",
@@ -105,6 +117,12 @@ export const handbookTranslations: Record<HandbookLanguage, {
     acknowledgments: "Confirmaciones",
     usersAcknowledged: "usuarios han confirmado",
     pendingAcknowledgment: "pendiente de confirmación",
+    viewAcknowledgmentDetails: "Ver Detalles",
+    confirmedUsers: "Usuarios Confirmados",
+    pendingUsers: "Usuarios Pendientes",
+    acknowledgedAt: "Confirmado",
+    notYetViewed: "Aún no visto",
+    hideDetails: "Ocultar Detalles",
     driverQuestion: "Estado de Conductor",
     areYouDriver: "¿Eres conductor?",
     yes: "Sí",
@@ -143,6 +161,12 @@ export const handbookTranslations: Record<HandbookLanguage, {
     acknowledgments: "Подтверждения",
     usersAcknowledged: "пользователей подтвердили",
     pendingAcknowledgment: "ожидают подтверждения",
+    viewAcknowledgmentDetails: "Подробности",
+    confirmedUsers: "Подтвердившие пользователи",
+    pendingUsers: "Ожидающие пользователи",
+    acknowledgedAt: "Подтверждено",
+    notYetViewed: "Еще не просмотрено",
+    hideDetails: "Скрыть подробности",
     driverQuestion: "Статус водителя",
     areYouDriver: "Вы водитель?",
     yes: "Да",

@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Upload, Share2, FileText, Download, Eye, Users, Loader2 } from "lucide-react";
+import { Upload, Share2, FileText, Download, Eye, Users, Loader2, ChevronDown, ChevronUp, CheckCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { handbookTranslations, HandbookLanguage } from "@/lib/handbookTranslations";
@@ -28,6 +29,21 @@ interface HandbookManagerProps {
   language: HandbookLanguage;
 }
 
+interface AcknowledgedUser {
+  user_id: string;
+  acknowledged_at: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+interface PendingUser {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
 const HandbookManager = ({ language }: HandbookManagerProps) => {
   const t = handbookTranslations[language];
   
@@ -39,6 +55,10 @@ const HandbookManager = ({ language }: HandbookManagerProps) => {
   const [showChanges, setShowChanges] = useState(false);
   const [acknowledgmentCount, setAcknowledgmentCount] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [acknowledgedUsers, setAcknowledgedUsers] = useState<AcknowledgedUser[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     fetchHandbook();
@@ -94,6 +114,70 @@ const HandbookManager = ({ language }: HandbookManagerProps) => {
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
+  };
+
+  const fetchUserDetails = async () => {
+    if (!handbook?.id || !handbook.is_shared) return;
+    
+    setLoadingUsers(true);
+    try {
+      // Fetch users who acknowledged
+      const { data: acknowledgments, error: ackError } = await supabase
+        .from("handbook_acknowledgments")
+        .select(`
+          user_id,
+          acknowledged_at,
+          profiles!inner(first_name, last_name, email)
+        `)
+        .eq("handbook_id", handbook.id);
+
+      if (ackError) throw ackError;
+
+      const acknowledgedList: AcknowledgedUser[] = (acknowledgments || []).map((ack: any) => ({
+        user_id: ack.user_id,
+        acknowledged_at: ack.acknowledged_at,
+        first_name: ack.profiles.first_name || '',
+        last_name: ack.profiles.last_name || '',
+        email: ack.profiles.email || '',
+      }));
+
+      setAcknowledgedUsers(acknowledgedList);
+
+      // Get all movers
+      const { data: allMovers, error: moverError } = await supabase
+        .from("user_roles")
+        .select(`
+          user_id,
+          profiles!inner(id, first_name, last_name, email)
+        `)
+        .eq("role", "mover");
+
+      if (moverError) throw moverError;
+
+      // Find pending users (movers who haven't acknowledged)
+      const acknowledgedIds = new Set(acknowledgedList.map(u => u.user_id));
+      const pendingList: PendingUser[] = (allMovers || [])
+        .filter((m: any) => !acknowledgedIds.has(m.user_id))
+        .map((m: any) => ({
+          id: m.user_id,
+          first_name: m.profiles.first_name || '',
+          last_name: m.profiles.last_name || '',
+          email: m.profiles.email || '',
+        }));
+
+      setPendingUsers(pendingList);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleToggleDetails = () => {
+    if (!showUserDetails && acknowledgedUsers.length === 0 && pendingUsers.length === 0) {
+      fetchUserDetails();
+    }
+    setShowUserDetails(!showUserDetails);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,17 +329,87 @@ const HandbookManager = ({ language }: HandbookManagerProps) => {
             </div>
 
             {handbook.is_shared && (
-              <div className="flex items-center gap-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600" />
-                <div className="text-sm">
-                  <span className="font-medium">{acknowledgmentCount}</span> {t.usersAcknowledged}
-                  {totalUsers > acknowledgmentCount && (
-                    <span className="text-muted-foreground ml-2">
-                      ({totalUsers - acknowledgmentCount} {t.pendingAcknowledgment})
-                    </span>
-                  )}
+              <Collapsible open={showUserDetails} onOpenChange={handleToggleDetails}>
+                <div className="border rounded-lg overflow-hidden">
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Users className="h-5 w-5 text-blue-600" />
+                        <div className="text-sm text-left">
+                          <span className="font-medium">{acknowledgmentCount}</span> {t.usersAcknowledged}
+                          {totalUsers > acknowledgmentCount && (
+                            <span className="text-muted-foreground ml-2">
+                              ({totalUsers - acknowledgmentCount} {t.pendingAcknowledgment})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{showUserDetails ? t.hideDetails : t.viewAcknowledgmentDetails}</span>
+                        {showUserDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </div>
+                    </button>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <div className="p-4 space-y-4 bg-background">
+                      {loadingUsers ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <>
+                          {/* Confirmed Users */}
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-sm flex items-center gap-2 text-green-700 dark:text-green-400">
+                              <CheckCircle className="h-4 w-4" />
+                              {t.confirmedUsers} ({acknowledgedUsers.length})
+                            </h4>
+                            {acknowledgedUsers.length > 0 ? (
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {acknowledgedUsers.map((user) => (
+                                  <div key={user.user_id} className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/30 rounded text-sm">
+                                    <span className="font-medium">
+                                      {user.first_name} {user.last_name}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                      {t.acknowledgedAt}: {formatDateEST(user.acknowledged_at)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">{t.notYetViewed}</p>
+                            )}
+                          </div>
+
+                          {/* Pending Users */}
+                          {pendingUsers.length > 0 && (
+                            <div className="space-y-2">
+                              <h4 className="font-medium text-sm flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                                <Clock className="h-4 w-4" />
+                                {t.pendingUsers} ({pendingUsers.length})
+                              </h4>
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {pendingUsers.map((user) => (
+                                  <div key={user.id} className="flex items-center justify-between p-2 bg-orange-50 dark:bg-orange-950/30 rounded text-sm">
+                                    <span className="font-medium">
+                                      {user.first_name} {user.last_name}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                      {t.notYetViewed}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </CollapsibleContent>
                 </div>
-              </div>
+              </Collapsible>
             )}
 
             <div className="flex gap-3">
