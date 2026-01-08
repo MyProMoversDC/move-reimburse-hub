@@ -22,6 +22,7 @@ interface UserSettingsProps {
   language: DashboardLanguage;
   showBalance?: boolean;
   showHourlyRate?: boolean;
+  onClose?: () => void;
 }
 
 const translations = {
@@ -32,6 +33,7 @@ const translations = {
     lastName: "Last Name",
     email: "Email",
     phone: "Phone",
+    address: "Current Physical Address",
     hourlyRate: "Hourly Rate ($)",
     hourlyRateDescription: "Your hourly rate for bonus calculations",
     saveChanges: "Save Changes",
@@ -52,6 +54,7 @@ const translations = {
     lastName: "Apellido",
     email: "Correo Electrónico",
     phone: "Teléfono",
+    address: "Dirección Física Actual",
     hourlyRate: "Tarifa por Hora ($)",
     hourlyRateDescription: "Tu tarifa por hora para cálculo de bonificaciones",
     saveChanges: "Guardar Cambios",
@@ -72,6 +75,7 @@ const translations = {
     lastName: "Фамилия",
     email: "Электронная Почта",
     phone: "Телефон",
+    address: "Текущий Физический Адрес",
     hourlyRate: "Почасовая Ставка ($)",
     hourlyRateDescription: "Ваша почасовая ставка для расчета бонусов",
     saveChanges: "Сохранить Изменения",
@@ -88,7 +92,7 @@ const translations = {
 };
 
 const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
-  ({ userId, language, showBalance = false, showHourlyRate = false }, ref) => {
+  ({ userId, language, showBalance = false, showHourlyRate = false, onClose }, ref) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -98,6 +102,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     last_name: "",
     email: "",
     phone: "",
+    address: "",
     hourly_rate: 0,
     avatar_url: "",
   });
@@ -120,7 +125,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, hourly_rate, avatar_url")
+        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url")
         .eq("id", userId)
         .single();
 
@@ -131,6 +136,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           last_name: data.last_name || "",
           email: data.email || "",
           phone: data.phone || "",
+          address: data.address || "",
           hourly_rate: data.hourly_rate || 0,
           avatar_url: data.avatar_url || "",
         });
@@ -253,6 +259,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
         first_name: profile.first_name,
         last_name: profile.last_name,
         phone: profile.phone,
+        address: profile.address,
       };
 
       if (showHourlyRate) {
@@ -280,8 +287,15 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     return (first + last).toUpperCase() || '?';
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" ref={ref}>
           <Settings className="h-4 w-4 mr-2" />
@@ -387,6 +401,18 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               />
             </div>
+
+            {showHourlyRate && (
+              <div className="space-y-2">
+                <Label htmlFor="address">{t.address}</Label>
+                <Input
+                  id="address"
+                  value={profile.address}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  placeholder="Enter your current physical address"
+                />
+              </div>
+            )}
 
             {showHourlyRate && (
               <div className="space-y-2">

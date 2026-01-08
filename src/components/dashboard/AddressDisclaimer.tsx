@@ -9,16 +9,17 @@ interface AddressDisclaimerProps {
   userId: string;
   language: HandbookLanguage;
   onNavigateToSettings: () => void;
+  refreshKey?: number;
 }
 
-const AddressDisclaimer = ({ userId, language, onNavigateToSettings }: AddressDisclaimerProps) => {
+const AddressDisclaimer = ({ userId, language, onNavigateToSettings, refreshKey }: AddressDisclaimerProps) => {
   const t = handbookTranslations[language];
   
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   useEffect(() => {
     checkAddress();
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   const checkAddress = async () => {
     try {
@@ -34,9 +35,7 @@ const AddressDisclaimer = ({ userId, language, onNavigateToSettings }: AddressDi
       }
 
       // Show disclaimer if address is missing or empty
-      if (!data?.address || data.address.trim() === "") {
-        setShowDisclaimer(true);
-      }
+      setShowDisclaimer(!data?.address || data.address.trim() === "");
     } catch (error) {
       console.error("Error checking address:", error);
     }
