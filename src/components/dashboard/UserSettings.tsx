@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -12,10 +12,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Settings, Save, Camera, X } from "lucide-react";
+import { Settings, Save, Camera, X, Car, Calendar as CalendarIcon } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface UserSettingsProps {
   userId: string;
@@ -46,6 +50,12 @@ const translations = {
     uploading: "Uploading...",
     photoUpdated: "Profile photo updated!",
     photoRemoved: "Profile photo removed!",
+    driversLicenseInfo: "Driver's License Information",
+    licenseNumber: "Driver's License Number",
+    licenseClass: "License Class",
+    licenseExpires: "Driver License Expires",
+    physicalExpires: "Physical Expiration Date",
+    selectDate: "Select date",
   },
   es: {
     settings: "Configuración",
@@ -67,6 +77,12 @@ const translations = {
     uploading: "Subiendo...",
     photoUpdated: "¡Foto de perfil actualizada!",
     photoRemoved: "¡Foto de perfil eliminada!",
+    driversLicenseInfo: "Información de Licencia de Conducir",
+    licenseNumber: "Número de Licencia de Conducir",
+    licenseClass: "Clase de Licencia",
+    licenseExpires: "Vencimiento de Licencia",
+    physicalExpires: "Fecha de Expiración Física",
+    selectDate: "Seleccionar fecha",
   },
   ru: {
     settings: "Настройки",
@@ -88,8 +104,20 @@ const translations = {
     uploading: "Загрузка...",
     photoUpdated: "Фото профиля обновлено!",
     photoRemoved: "Фото профиля удалено!",
+    driversLicenseInfo: "Информация о Водительских Правах",
+    licenseNumber: "Номер Водительского Удостоверения",
+    licenseClass: "Класс Прав",
+    licenseExpires: "Срок Действия Прав",
+    physicalExpires: "Дата Истечения Медосмотра",
+    selectDate: "Выберите дату",
   },
 };
+interface DriversLicense {
+  number: string;
+  licenseClass: string;
+  expires: Date | undefined;
+  physicalExpires: Date | undefined;
+}
 
 const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   ({ userId, language, showBalance = false, showHourlyRate = false, onClose }, ref) => {
@@ -97,6 +125,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDriver, setIsDriver] = useState(false);
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -106,8 +135,16 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     hourly_rate: 0,
     avatar_url: "",
   });
+  const [driversLicense, setDriversLicense] = useState<DriversLicense>({
+    number: "",
+    licenseClass: "",
+    expires: undefined,
+    physicalExpires: undefined,
+  });
   const [balance, setBalance] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [licenseExpiresOpen, setLicenseExpiresOpen] = useState(false);
+  const [physicalExpiresOpen, setPhysicalExpiresOpen] = useState(false);
 
   const t = translations[language];
 
@@ -117,15 +154,32 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
       if (showBalance) {
         fetchBalance();
       }
+      if (showHourlyRate) {
+        fetchDriverStatus();
+      }
     }
   }, [open, userId]);
+
+  const fetchDriverStatus = async () => {
+    try {
+      const { data } = await supabase
+        .from("user_driver_status")
+        .select("is_driver")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      setIsDriver(data?.is_driver === true);
+    } catch (error) {
+      console.error("Error fetching driver status:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url")
+        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires")
         .eq("id", userId)
         .single();
 
@@ -139,6 +193,12 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           address: data.address || "",
           hourly_rate: data.hourly_rate || 0,
           avatar_url: data.avatar_url || "",
+        });
+        setDriversLicense({
+          number: data.license_number || "",
+          licenseClass: data.license_class || "",
+          expires: data.license_expires ? new Date(data.license_expires) : undefined,
+          physicalExpires: data.physical_expires ? new Date(data.physical_expires) : undefined,
         });
       }
     } catch (error: unknown) {
@@ -264,6 +324,14 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
 
       if (showHourlyRate) {
         updateData.hourly_rate = profile.hourly_rate;
+      }
+
+      // Include driver's license info if user is a driver
+      if (isDriver && showHourlyRate) {
+        updateData.license_number = driversLicense.number || null;
+        updateData.license_class = driversLicense.licenseClass || null;
+        updateData.license_expires = driversLicense.expires ? format(driversLicense.expires, "yyyy-MM-dd") : null;
+        updateData.physical_expires = driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "yyyy-MM-dd") : null;
       }
 
       const { error } = await supabase
@@ -429,6 +497,95 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                 />
                 <p className="text-sm text-muted-foreground">{t.hourlyRateDescription}</p>
               </div>
+            )}
+
+            {/* Driver's License Section - Only shown for drivers */}
+            {showHourlyRate && isDriver && (
+              <Card className="border-primary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    {t.driversLicenseInfo}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="license_number">{t.licenseNumber}</Label>
+                    <Input
+                      id="license_number"
+                      value={driversLicense.number}
+                      onChange={(e) => setDriversLicense({ ...driversLicense, number: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="license_class">{t.licenseClass}</Label>
+                    <Input
+                      id="license_class"
+                      value={driversLicense.licenseClass}
+                      onChange={(e) => setDriversLicense({ ...driversLicense, licenseClass: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t.licenseExpires}</Label>
+                    <Popover open={licenseExpiresOpen} onOpenChange={setLicenseExpiresOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !driversLicense.expires && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {driversLicense.expires ? format(driversLicense.expires, "PPP") : t.selectDate}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={driversLicense.expires}
+                          onSelect={(date) => {
+                            setDriversLicense({ ...driversLicense, expires: date });
+                            setLicenseExpiresOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t.physicalExpires}</Label>
+                    <Popover open={physicalExpiresOpen} onOpenChange={setPhysicalExpiresOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !driversLicense.physicalExpires && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "PPP") : t.selectDate}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={driversLicense.physicalExpires}
+                          onSelect={(date) => {
+                            setDriversLicense({ ...driversLicense, physicalExpires: date });
+                            setPhysicalExpiresOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             <Button onClick={handleSave} disabled={saving} className="w-full">
