@@ -12,8 +12,7 @@ import {
   MessageSquare,
   Shield,
   MessageCircle,
-  BookOpen,
-  Newspaper
+  BookOpen
 } from "lucide-react";
 import {
   Sidebar,
@@ -54,7 +53,6 @@ interface AdminSidebarProps {
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "feed", label: "Feed", icon: Newspaper },
   { id: "requests", label: "Reimbursements", icon: FileText },
   { id: "reviews", label: "Review Bonuses", icon: Star },
   { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
