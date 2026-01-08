@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import UserSettings from "./UserSettings";
 import EmployeeGeneralTab from "./EmployeeGeneralTab";
+import EmployeeInfoTab from "./EmployeeInfoTab";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage as useLang } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -547,12 +548,11 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                   </TabsContent>
 
                   <TabsContent value="employee-info" className="mt-4">
-                    <div className="flex items-center justify-center py-12 text-muted-foreground">
-                      <div className="text-center">
-                        <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>{t.comingSoon}</p>
-                      </div>
-                    </div>
+                    <EmployeeInfoTab
+                      userId={userId}
+                      employeeId={selectedUser.id}
+                      employeeName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+                    />
                   </TabsContent>
 
                   <TabsContent value="documents" className="mt-4">
