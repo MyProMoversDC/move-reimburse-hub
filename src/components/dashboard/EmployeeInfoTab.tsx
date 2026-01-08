@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle } from "lucide-react";
+import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/lib/storageUtils";
@@ -117,6 +118,12 @@ const translations = {
     branchA: "Branch A",
     branchB: "Branch B",
     branchC: "Branch C",
+    licenseExpiringSoon: "Driver's license expires within 90 days!",
+    licenseExpired: "Driver's license has expired!",
+    physicalExpiringSoon: "Physical exam expires within 90 days!",
+    physicalExpired: "Physical exam has expired!",
+    expiresOn: "Expires on",
+    expiredOn: "Expired on",
   },
   es: {
     employmentInfo: "Información de Empleo",
@@ -176,6 +183,12 @@ const translations = {
     branchA: "Sucursal A",
     branchB: "Sucursal B",
     branchC: "Sucursal C",
+    licenseExpiringSoon: "¡La licencia de conducir vence en 90 días!",
+    licenseExpired: "¡La licencia de conducir ha vencido!",
+    physicalExpiringSoon: "¡El examen físico vence en 90 días!",
+    physicalExpired: "¡El examen físico ha vencido!",
+    expiresOn: "Vence el",
+    expiredOn: "Venció el",
   },
   ru: {
     employmentInfo: "Информация о Трудоустройстве",
@@ -235,7 +248,29 @@ const translations = {
     branchA: "Филиал A",
     branchB: "Филиал B",
     branchC: "Филиал C",
+    licenseExpiringSoon: "Водительские права истекают в течение 90 дней!",
+    licenseExpired: "Срок действия водительских прав истек!",
+    physicalExpiringSoon: "Медосмотр истекает в течение 90 дней!",
+    physicalExpired: "Срок действия медосмотра истек!",
+    expiresOn: "Истекает",
+    expiredOn: "Истек",
   },
+};
+
+// Helper functions for expiration checks
+const isExpiringWithin90Days = (date: Date | undefined): boolean => {
+  if (!date) return false;
+  const today = new Date();
+  const ninetyDaysFromNow = new Date();
+  ninetyDaysFromNow.setDate(today.getDate() + 90);
+  return date <= ninetyDaysFromNow && date >= today;
+};
+
+const isExpired = (date: Date | undefined): boolean => {
+  if (!date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today;
 };
 
 const defaultAttributes: CustomAttributes = {
@@ -510,8 +545,39 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
     { key: "special_project", label: t.specialProject },
   ];
 
+  // Check for license expiration alerts
+  const licenseExpiredAlert = isExpired(driversLicense.expires);
+  const licenseExpiringSoonAlert = !licenseExpiredAlert && isExpiringWithin90Days(driversLicense.expires);
+  const physicalExpiredAlert = isExpired(driversLicense.physicalExpires);
+  const physicalExpiringSoonAlert = !physicalExpiredAlert && isExpiringWithin90Days(driversLicense.physicalExpires);
+
   return (
     <div className="space-y-6 pb-20">
+      {/* License Expiration Alerts */}
+      {(licenseExpiredAlert || licenseExpiringSoonAlert) && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>
+            {licenseExpiredAlert ? t.licenseExpired : t.licenseExpiringSoon}
+          </AlertTitle>
+          <AlertDescription>
+            {licenseExpiredAlert ? t.expiredOn : t.expiresOn}: {driversLicense.expires ? format(driversLicense.expires, "MM/dd/yyyy") : ""}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {(physicalExpiredAlert || physicalExpiringSoonAlert) && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>
+            {physicalExpiredAlert ? t.physicalExpired : t.physicalExpiringSoon}
+          </AlertTitle>
+          <AlertDescription>
+            {physicalExpiredAlert ? t.expiredOn : t.expiresOn}: {driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "MM/dd/yyyy") : ""}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Employment Information Section */}
       <Card>
         <CardHeader className="pb-4">
