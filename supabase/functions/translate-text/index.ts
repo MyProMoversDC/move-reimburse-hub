@@ -5,13 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const languageNames: Record<string, string> = {
+  en: 'English',
+  es: 'Spanish',
+  ru: 'Russian',
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { texts } = await req.json();
+    const { texts, targetLanguage = 'en' } = await req.json();
     
     if (!texts || !Array.isArray(texts) || texts.length === 0) {
       return new Response(
@@ -40,7 +46,9 @@ serve(async (req) => {
       );
     }
 
-    const prompt = `Translate the following texts to English. If the text is already in English, return it unchanged. Return ONLY a JSON array of translated strings in the same order, nothing else.
+    const targetLangName = languageNames[targetLanguage] || 'English';
+    
+    const prompt = `Translate the following texts to ${targetLangName}. If the text is already in ${targetLangName}, return it unchanged. Return ONLY a JSON array of translated strings in the same order, nothing else.
 
 Texts to translate:
 ${nonEmptyTexts.map((item, i) => `${i + 1}. "${item.text}"`).join('\n')}
@@ -58,7 +66,7 @@ Return format: ["translated text 1", "translated text 2", ...]`;
         messages: [
           { 
             role: "system", 
-            content: "You are a translation assistant. Translate texts to English accurately while preserving the original meaning. Return only the JSON array of translations, no other text or markdown formatting." 
+            content: `You are a translation assistant. Translate texts to ${targetLangName} accurately while preserving the original meaning. Return only the JSON array of translations, no other text or markdown formatting.` 
           },
           { role: "user", content: prompt }
         ],

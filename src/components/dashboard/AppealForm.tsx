@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, X, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MoverTranslateButton } from "./MoverTranslateButton";
+import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 
 interface AppealFormProps {
   type: "reimbursement" | "review" | "missing_payment";
@@ -27,6 +29,25 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
   const [appealNote, setAppealNote] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Translation state
+  const [translatedDeclineReason, setTranslatedDeclineReason] = useState<string | null>(null);
+  const [translatedToLang, setTranslatedToLang] = useState<'es' | 'ru' | null>(null);
+  const { translateTexts, isTranslating } = useTargetTranslation();
+
+  const handleTranslateDeclineReason = async (targetLang: 'es' | 'ru') => {
+    if (!declineReason) return;
+    const results = await translateTexts([declineReason], targetLang);
+    if (results[0]) {
+      setTranslatedDeclineReason(results[0]);
+      setTranslatedToLang(targetLang);
+    }
+  };
+
+  const handleShowOriginalDeclineReason = () => {
+    setTranslatedDeclineReason(null);
+    setTranslatedToLang(null);
+  };
 
   const finalAppealWarning = {
     en: "⚠️ This is your FINAL appeal. Be very careful and detailed in your explanation. If declined, there will be no further opportunities to appeal.",
@@ -245,11 +266,25 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
       )}
 
       {declineReason && (
-        <Alert className="border-destructive/50 bg-destructive/10">
-          <AlertDescription className="text-destructive">
-            <strong>Reason for Decline:</strong> {declineReason}
-          </AlertDescription>
-        </Alert>
+        <div className="space-y-2">
+          <Alert className="border-destructive/50 bg-destructive/10">
+            <AlertDescription className="text-destructive">
+              <strong>Reason for Decline:</strong> {translatedDeclineReason || declineReason}
+              {translatedToLang && (
+                <span className="block text-xs italic mt-1">
+                  Translated to {translatedToLang === 'es' ? 'Español' : 'Русский'}
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+          <MoverTranslateButton
+            onTranslate={handleTranslateDeclineReason}
+            onShowOriginal={handleShowOriginalDeclineReason}
+            isTranslating={isTranslating}
+            isTranslated={!!translatedDeclineReason}
+            translatedToLang={translatedToLang}
+          />
+        </div>
       )}
 
       <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500 shadow-md">

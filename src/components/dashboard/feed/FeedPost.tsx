@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/dialog";
 import FeedPoll from "./FeedPoll";
 import FeedReactions from "./FeedReactions";
+import { MoverTranslateButton } from "../MoverTranslateButton";
+import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 
 interface Attachment {
   id: string;
@@ -72,6 +74,7 @@ const translations = {
     noViews: "No views yet",
     viewers: "Viewers",
     close: "Close",
+    translatedTo: "Translated to",
   },
   es: {
     postedBy: "Publicado por Admin",
@@ -82,6 +85,7 @@ const translations = {
     noViews: "Sin vistas aún",
     viewers: "Espectadores",
     close: "Cerrar",
+    translatedTo: "Traducido a",
   },
   ru: {
     postedBy: "Опубликовано Админом",
@@ -92,6 +96,7 @@ const translations = {
     noViews: "Пока нет просмотров",
     viewers: "Просмотревшие",
     close: "Закрыть",
+    translatedTo: "Переведено на",
   },
 };
 
@@ -101,6 +106,11 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
   const [views, setViews] = useState<PostView[]>([]);
   const [showViewers, setShowViewers] = useState(false);
   const [hasRecordedView, setHasRecordedView] = useState(false);
+  
+  // Translation state
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [translatedToLang, setTranslatedToLang] = useState<'es' | 'ru' | null>(null);
+  const { translateTexts, isTranslating } = useTargetTranslation();
 
   const t = translations[language];
 
@@ -169,6 +179,20 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
     } catch (error) {
       // Ignore duplicate errors
     }
+  };
+
+  const handleTranslate = async (targetLang: 'es' | 'ru') => {
+    if (!post.content) return;
+    const results = await translateTexts([post.content], targetLang);
+    if (results[0]) {
+      setTranslatedContent(results[0]);
+      setTranslatedToLang(targetLang);
+    }
+  };
+
+  const handleShowOriginal = () => {
+    setTranslatedContent(null);
+    setTranslatedToLang(null);
   };
 
   const getFileIcon = (fileType: string) => {
@@ -268,7 +292,27 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
 
       <CardContent className="space-y-4">
         {post.content && (
-          <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+          <div className="space-y-2">
+            <p className="text-sm whitespace-pre-wrap">
+              {translatedContent || post.content}
+            </p>
+            {translatedToLang && (
+              <p className="text-xs text-muted-foreground italic">
+                {t.translatedTo} {translatedToLang === 'es' ? 'Español' : 'Русский'}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Translation button for non-admin users */}
+        {!isAdmin && post.content && (
+          <MoverTranslateButton
+            onTranslate={handleTranslate}
+            onShowOriginal={handleShowOriginal}
+            isTranslating={isTranslating}
+            isTranslated={!!translatedContent}
+            translatedToLang={translatedToLang}
+          />
         )}
 
         {attachments.length > 0 && (
