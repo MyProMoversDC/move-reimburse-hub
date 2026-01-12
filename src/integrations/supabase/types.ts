@@ -1310,6 +1310,7 @@ export type Database = {
           is_driver: boolean | null
           license_uploaded_at: string | null
           license_url: string | null
+          medical_card_url: string | null
           updated_at: string
           user_id: string
         }
@@ -1320,6 +1321,7 @@ export type Database = {
           is_driver?: boolean | null
           license_uploaded_at?: string | null
           license_url?: string | null
+          medical_card_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1330,6 +1332,7 @@ export type Database = {
           is_driver?: boolean | null
           license_uploaded_at?: string | null
           license_url?: string | null
+          medical_card_url?: string | null
           updated_at?: string
           user_id?: string
         }

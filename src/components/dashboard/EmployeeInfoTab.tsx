@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -64,6 +64,9 @@ const translations = {
     employmentInfo: "Employment Information",
     driversLicense: "Driver's License Info",
     customAttributes: "Custom Attributes",
+    documents: "Documents",
+    medicalCard: "Medical Card",
+    noDocumentUploaded: "No document uploaded",
     role: "Role",
     employeeNumber: "Employee Number",
     branch: "Branch",
@@ -129,6 +132,9 @@ const translations = {
     employmentInfo: "Información de Empleo",
     driversLicense: "Información de Licencia de Conducir",
     customAttributes: "Atributos Personalizados",
+    documents: "Documentos",
+    medicalCard: "Tarjeta Médica",
+    noDocumentUploaded: "Sin documento subido",
     role: "Rol",
     employeeNumber: "Número de Empleado",
     branch: "Sucursal",
@@ -194,6 +200,9 @@ const translations = {
     employmentInfo: "Информация о Трудоустройстве",
     driversLicense: "Информация о Водительских Правах",
     customAttributes: "Пользовательские Атрибуты",
+    documents: "Документы",
+    medicalCard: "Медицинская Карта",
+    noDocumentUploaded: "Документ не загружен",
     role: "Роль",
     employeeNumber: "Табельный Номер",
     branch: "Филиал",
@@ -316,6 +325,7 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
   const [isDriver, setIsDriver] = useState(false);
   const [originalIsDriver, setOriginalIsDriver] = useState(false);
   const [licenseImages, setLicenseImages] = useState<{ front: string; back: string }>({ front: "", back: "" });
+  const [medicalCardUrl, setMedicalCardUrl] = useState<string>("");
 
   const [customAttributes, setCustomAttributes] = useState<CustomAttributes>(defaultAttributes);
   const [originalData, setOriginalData] = useState<{
@@ -381,13 +391,14 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
       // Fetch driver status
       const { data: driverStatus } = await supabase
         .from("user_driver_status")
-        .select("is_driver, license_url")
+        .select("is_driver, license_url, medical_card_url")
         .eq("user_id", employeeId)
         .maybeSingle();
 
       const driverFlag = driverStatus?.is_driver === true;
       setIsDriver(driverFlag);
       setOriginalIsDriver(driverFlag);
+      setMedicalCardUrl(driverStatus?.medical_card_url || "");
 
       // Parse license images
       if (driverStatus?.license_url) {
@@ -935,6 +946,29 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
           </div>
         </CardContent>
       </Card>
+
+      {/* Documents Section - Show Medical Card uploaded by mover */}
+      {medicalCardUrl && (
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="h-5 w-5" />
+              {t.documents}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">{t.medicalCard}</Label>
+              <img 
+                src={medicalCardUrl} 
+                alt="Medical Card" 
+                className="w-full max-w-md h-48 object-cover rounded-md border cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => window.open(medicalCardUrl, '_blank')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Custom Attributes Section */}
       <Card>
