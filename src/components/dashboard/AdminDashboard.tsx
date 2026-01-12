@@ -20,6 +20,7 @@ import HandbookManager from "./HandbookManager";
 import { AdminFeedbackList } from "./AdminFeedbackList";
 import { AdminAIAssistant } from "./AdminAIAssistant";
 import { FeedManager } from "./feed/FeedManager";
+import AdminEmailLogs from "./AdminEmailLogs";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
@@ -366,6 +367,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Handbook Management</h2>
             <HandbookManager language={language} />
+          </div>
+        );
+      case "email-logs":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Email Logs</h2>
+            <AdminEmailLogs />
           </div>
         );
       case "chat":

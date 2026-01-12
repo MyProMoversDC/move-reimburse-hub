@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -91,40 +92,71 @@ const handler = async (req: Request): Promise<Response> => {
       const sanitizedFeedback = feedbackType.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const sanitizedResponse = responseMessage.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
 
+      const fromEmail = "MyProMovers <noreply@mypromoversreimbursements.com>";
+      const toEmails = [moverEmail];
+      const subject = "Response to Your Feedback - MyProMovers";
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Response to Your Feedback</h2>
+          
+          <p>Dear ${sanitizedName},</p>
+          
+          <p>Management has reviewed and responded to your recent feedback submission.</p>
+          
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>Your Feedback:</strong></p>
+            <p style="margin: 0; color: #666;">${sanitizedFeedback}</p>
+          </div>
+          
+          <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>Management Response:</strong></p>
+            <p style="margin: 0;">${sanitizedResponse}</p>
+          </div>
+          
+          <p>You can also view this response in your Mover Cabinet under the Feedback & Improvement section.</p>
+          
+          <p>Thank you for taking the time to share your thoughts with us. Your input helps us improve as a team.</p>
+          
+          <p style="margin-top: 30px;">Best regards,<br>MyProMovers Management</p>
+        </div>
+      `;
+
       try {
-        await resend.emails.send({
-          from: "MyProMovers <noreply@mypromoversreimbursements.com>",
-          to: [moverEmail],
-          subject: "Response to Your Feedback - MyProMovers",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #333;">Response to Your Feedback</h2>
-              
-              <p>Dear ${sanitizedName},</p>
-              
-              <p>Management has reviewed and responded to your recent feedback submission.</p>
-              
-              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>Your Feedback:</strong></p>
-                <p style="margin: 0; color: #666;">${sanitizedFeedback}</p>
-              </div>
-              
-              <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>Management Response:</strong></p>
-                <p style="margin: 0;">${sanitizedResponse}</p>
-              </div>
-              
-              <p>You can also view this response in your Mover Cabinet under the Feedback & Improvement section.</p>
-              
-              <p>Thank you for taking the time to share your thoughts with us. Your input helps us improve as a team.</p>
-              
-              <p style="margin-top: 30px;">Best regards,<br>MyProMovers Management</p>
-            </div>
-          `,
+        const emailResponse = await resend.emails.send({
+          from: fromEmail,
+          to: toEmails,
+          subject: subject,
+          html: htmlContent,
         });
         console.log("Email sent successfully to:", moverEmail);
-      } catch (emailError) {
+
+        // Log the email
+        await logEmail({
+          email_type: "feedback_response",
+          from_email: fromEmail,
+          to_emails: toEmails,
+          subject,
+          body_html: htmlContent,
+          status: "sent",
+          resend_id: (emailResponse as any).id,
+          reference_type: "mover_feedback",
+          reference_id: feedbackId,
+        });
+      } catch (emailError: any) {
         console.error("Error sending email:", emailError);
+        
+        // Log the failed email
+        await logEmail({
+          email_type: "feedback_response",
+          from_email: fromEmail,
+          to_emails: toEmails,
+          subject,
+          body_html: htmlContent,
+          status: "failed",
+          error_message: emailError.message,
+          reference_type: "mover_feedback",
+          reference_id: feedbackId,
+        });
         // Don't fail the whole request if email fails
       }
     }

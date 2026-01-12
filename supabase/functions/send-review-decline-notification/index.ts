@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -17,6 +18,7 @@ const declineEmailSchema = z.object({
   moverName: z.string().min(1).max(200),
   clientName: z.string().min(1).max(200),
   declineReason: z.string().min(1).max(1000),
+  reviewBonusId: z.string().uuid().optional(),
 });
 
 // Sanitize string for HTML to prevent injection
@@ -100,34 +102,71 @@ const handler = async (req: Request): Promise<Response> => {
       adminId: user.id
     });
 
-    const emailResponse = await resend.emails.send({
-      from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
-      to: [data.moverEmail],
-      subject: `Review Bonus Submission Declined - Invoice #${safeInvoiceNumber}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Review Bonus Submission Declined</h1>
-          <p>Hello ${safeMoverName},</p>
-          <p>Your review bonus submission for client <strong>${safeClientName}</strong> (Invoice #${safeInvoiceNumber}) has been declined.</p>
-          
-          <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #dc3545;">
-            <p style="margin: 0;"><strong>Reason for Decline:</strong></p>
-            <p style="margin: 10px 0 0 0;">${safeDeclineReason}</p>
-          </div>
-          
-          <p style="margin-top: 20px;">If you have questions or would like to resubmit with corrections, please contact your administrator.</p>
-          
-          <p style="margin-top: 30px; color: #666;">Thank you,<br>MyProMovers Team</p>
+    const fromEmail = "MyProMovers <reimbursements@mypromoversreimbursements.com>";
+    const toEmails = [data.moverEmail];
+    const subject = `Review Bonus Submission Declined - Invoice #${safeInvoiceNumber}`;
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">Review Bonus Submission Declined</h1>
+        <p>Hello ${safeMoverName},</p>
+        <p>Your review bonus submission for client <strong>${safeClientName}</strong> (Invoice #${safeInvoiceNumber}) has been declined.</p>
+        
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #dc3545;">
+          <p style="margin: 0;"><strong>Reason for Decline:</strong></p>
+          <p style="margin: 10px 0 0 0;">${safeDeclineReason}</p>
         </div>
-      `,
-    });
+        
+        <p style="margin-top: 20px;">If you have questions or would like to resubmit with corrections, please contact your administrator.</p>
+        
+        <p style="margin-top: 30px; color: #666;">Thank you,<br>MyProMovers Team</p>
+      </div>
+    `;
 
-    console.log("Email sent successfully:", emailResponse);
+    try {
+      const emailResponse = await resend.emails.send({
+        from: fromEmail,
+        to: toEmails,
+        subject: subject,
+        html: htmlContent,
+      });
 
-    return new Response(JSON.stringify(emailResponse), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+      console.log("Email sent successfully:", emailResponse);
+
+      // Log the email
+      await logEmail({
+        email_type: "review_decline",
+        from_email: fromEmail,
+        to_emails: toEmails,
+        subject,
+        body_html: htmlContent,
+        status: "sent",
+        resend_id: (emailResponse as any).id,
+        reference_type: "review_bonus",
+        reference_id: data.reviewBonusId,
+      });
+
+      return new Response(JSON.stringify(emailResponse), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    } catch (emailError: any) {
+      console.error("Error sending email:", emailError);
+
+      // Log the failed email
+      await logEmail({
+        email_type: "review_decline",
+        from_email: fromEmail,
+        to_emails: toEmails,
+        subject,
+        body_html: htmlContent,
+        status: "failed",
+        error_message: emailError.message,
+        reference_type: "review_bonus",
+        reference_id: data.reviewBonusId,
+      });
+
+      throw emailError;
+    }
   } catch (error: any) {
     console.error("Error in send-review-decline-notification function:", error);
     return new Response(

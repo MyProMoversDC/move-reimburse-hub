@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -15,6 +16,7 @@ const replySchema = z.object({
   reportTitle: z.string().min(1).max(500),
   message: z.string().min(1).max(5000),
   adminId: z.string().uuid(),
+  reportId: z.string().uuid().optional(),
 });
 
 // Sanitize string for HTML to prevent injection
@@ -106,6 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
         message: data.message,
         is_admin_message: false,
         is_read: false,
+        report_id: data.reportId || null,
       });
 
     if (insertError) {
@@ -121,45 +124,82 @@ const handler = async (req: Request): Promise<Response> => {
     const safeReportTitle = sanitizeHtml(data.reportTitle);
     const safeMoverName = sanitizeHtml(moverName);
 
-    const emailResult = await resend.emails.send({
-      from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
-      to: ["management@mypromovers.com"],
-      subject: `Reply from ${moverName} - ${data.reportTitle}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-            <h2 style="margin: 0 0 16px 0; color: #333;">
-              Reply to Misconduct Case
-            </h2>
-            
-            <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">
-              <strong>From:</strong> ${safeMoverName} (${moverProfile.email})
-            </p>
-            
-            <p style="margin: 0 0 16px 0; font-size: 14px; color: #666;">
-              <strong>Regarding:</strong> ${safeReportTitle}
-            </p>
-            
-            <div style="margin: 20px 0; padding: 16px; background-color: #ffffff; border-left: 4px solid #22c55e; border-radius: 4px;">
-              <p style="margin: 0; font-size: 16px; line-height: 1.6;">
-                ${safeMessage}
-              </p>
-            </div>
-          </div>
+    const fromEmail = "MyProMovers <reimbursements@mypromoversreimbursements.com>";
+    const toEmails = ["management@mypromovers.com"];
+    const subject = `Reply from ${moverName} - ${data.reportTitle}`;
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+          <h2 style="margin: 0 0 16px 0; color: #333;">
+            Reply to Misconduct Case
+          </h2>
           
-          <p style="margin-top: 30px; color: #666; font-size: 12px;">
-            This is an automated message from the MyProMovers Reimbursement Portal.
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">
+            <strong>From:</strong> ${safeMoverName} (${moverProfile.email})
           </p>
+          
+          <p style="margin: 0 0 16px 0; font-size: 14px; color: #666;">
+            <strong>Regarding:</strong> ${safeReportTitle}
+          </p>
+          
+          <div style="margin: 20px 0; padding: 16px; background-color: #ffffff; border-left: 4px solid #22c55e; border-radius: 4px;">
+            <p style="margin: 0; font-size: 16px; line-height: 1.6;">
+              ${safeMessage}
+            </p>
+          </div>
         </div>
-      `,
-    });
+        
+        <p style="margin-top: 30px; color: #666; font-size: 12px;">
+          This is an automated message from the MyProMovers Reimbursement Portal.
+        </p>
+      </div>
+    `;
 
-    console.log("Email sent successfully:", emailResult);
+    try {
+      const emailResult = await resend.emails.send({
+        from: fromEmail,
+        to: toEmails,
+        subject: subject,
+        html: htmlContent,
+      });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+      console.log("Email sent successfully:", emailResult);
+
+      // Log the email
+      await logEmail({
+        email_type: "misconduct_reply",
+        from_email: fromEmail,
+        to_emails: toEmails,
+        subject,
+        body_html: htmlContent,
+        status: "sent",
+        resend_id: (emailResult as any).id,
+        reference_type: "performance_report",
+        reference_id: data.reportId,
+      });
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    } catch (emailError: any) {
+      console.error("Error sending email:", emailError);
+
+      // Log the failed email
+      await logEmail({
+        email_type: "misconduct_reply",
+        from_email: fromEmail,
+        to_emails: toEmails,
+        subject,
+        body_html: htmlContent,
+        status: "failed",
+        error_message: emailError.message,
+        reference_type: "performance_report",
+        reference_id: data.reportId,
+      });
+
+      throw emailError;
+    }
   } catch (error: any) {
     console.error("Error in send-misconduct-reply function:", error);
     return new Response(
