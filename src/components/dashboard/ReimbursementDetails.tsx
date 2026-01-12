@@ -20,7 +20,9 @@ import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTransla
 import { handleError } from "@/lib/errorHandler";
 import { createMoverNotification, getNotificationMessages } from "@/lib/notificationHelpers";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 import { TranslateButton } from "./TranslateButton";
+import { MoverTranslateButton } from "./MoverTranslateButton";
 
 interface Reimbursement {
   id: string;
@@ -69,7 +71,12 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
     zelle_info: string;
   } | null>(null);
   
+  // Mover decline reason translation state
+  const [translatedDeclineReason, setTranslatedDeclineReason] = useState<string | null>(null);
+  const [declineTranslatedToLang, setDeclineTranslatedToLang] = useState<'es' | 'ru' | null>(null);
+  
   const { translateTexts, isTranslating } = useTranslation();
+  const { translateTexts: translateToTarget, isTranslating: isTranslatingDecline } = useTargetTranslation();
   const t = dashboardTranslations[language];
 
   useEffect(() => {
@@ -318,6 +325,20 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
 
   const displayCustomerName = isTranslated && translatedData ? translatedData.customer_name : reimbursement.customer_name;
   const displayZelleInfo = isTranslated && translatedData ? translatedData.zelle_info : reimbursement.zelle_info;
+  
+  const handleTranslateDeclineReason = async (targetLang: 'es' | 'ru') => {
+    if (!reimbursement.decline_reason) return;
+    const results = await translateToTarget([reimbursement.decline_reason], targetLang);
+    if (results[0]) {
+      setTranslatedDeclineReason(results[0]);
+      setDeclineTranslatedToLang(targetLang);
+    }
+  };
+
+  const handleShowOriginalDeclineReason = () => {
+    setTranslatedDeclineReason(null);
+    setDeclineTranslatedToLang(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -382,9 +403,25 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
       </div>
 
       {reimbursement.status === "declined" && reimbursement.decline_reason && (
-        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-sm font-medium text-destructive">{t.declineReasonLabel}</p>
-          <p className="text-base mt-1">{reimbursement.decline_reason}</p>
+        <div className="space-y-2">
+          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-sm font-medium text-destructive">{t.declineReasonLabel}</p>
+            <p className="text-base mt-1">{translatedDeclineReason || reimbursement.decline_reason}</p>
+            {declineTranslatedToLang && (
+              <p className="text-xs italic mt-1 text-muted-foreground">
+                Translated to {declineTranslatedToLang === 'es' ? 'Español' : 'Русский'}
+              </p>
+            )}
+          </div>
+          {userRole === "mover" && (
+            <MoverTranslateButton
+              onTranslate={handleTranslateDeclineReason}
+              onShowOriginal={handleShowOriginalDeclineReason}
+              isTranslating={isTranslatingDecline}
+              isTranslated={!!translatedDeclineReason}
+              translatedToLang={declineTranslatedToLang}
+            />
+          )}
         </div>
       )}
 

@@ -9,6 +9,8 @@ import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { AlertCircle } from "lucide-react";
 import AppealForm from "./AppealForm";
+import { MoverTranslateButton } from "./MoverTranslateButton";
+import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 
 interface MissingPayment {
   id: string;
@@ -47,6 +49,25 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<MissingPayment | null>(null);
   const [appealPayment, setAppealPayment] = useState<MissingPayment | null>(null);
+  
+  // Translation state
+  const [translatedDeclineReason, setTranslatedDeclineReason] = useState<string | null>(null);
+  const [declineTranslatedToLang, setDeclineTranslatedToLang] = useState<'es' | 'ru' | null>(null);
+  const { translateTexts, isTranslating } = useTargetTranslation();
+
+  const handleTranslateDeclineReason = async (targetLang: 'es' | 'ru') => {
+    if (!selectedPayment?.decline_reason) return;
+    const results = await translateTexts([selectedPayment.decline_reason], targetLang);
+    if (results[0]) {
+      setTranslatedDeclineReason(results[0]);
+      setDeclineTranslatedToLang(targetLang);
+    }
+  };
+
+  const handleShowOriginalDeclineReason = () => {
+    setTranslatedDeclineReason(null);
+    setDeclineTranslatedToLang(null);
+  };
 
   useEffect(() => {
     fetchPayments();
@@ -189,9 +210,23 @@ const MissingPaymentHistory = ({ userId, refreshKey, language }: MissingPaymentH
               </div>
 
               {selectedPayment.status === "declined" && selectedPayment.decline_reason && (
-                <div className="bg-destructive/10 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
-                  <p className="mt-1">{selectedPayment.decline_reason}</p>
+                <div className="space-y-2">
+                  <div className="bg-destructive/10 p-4 rounded-lg">
+                    <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
+                    <p className="mt-1">{translatedDeclineReason || selectedPayment.decline_reason}</p>
+                    {declineTranslatedToLang && (
+                      <p className="text-xs italic mt-1 text-muted-foreground">
+                        Translated to {declineTranslatedToLang === 'es' ? 'Español' : 'Русский'}
+                      </p>
+                    )}
+                  </div>
+                  <MoverTranslateButton
+                    onTranslate={handleTranslateDeclineReason}
+                    onShowOriginal={handleShowOriginalDeclineReason}
+                    isTranslating={isTranslating}
+                    isTranslated={!!translatedDeclineReason}
+                    translatedToLang={declineTranslatedToLang}
+                  />
                 </div>
               )}
 
