@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -44,6 +45,10 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const fromEmail = "MyProMovers <reimbursements@mypromoversreimbursements.com>";
+  const toEmails = ["Daniel@mypromoversdc.com"];
+  let subject = 'Performance Report Notification';
 
   try {
     // Authorization check
@@ -111,6 +116,54 @@ const handler = async (req: Request): Promise<Response> => {
       timeStyle: 'short'
     });
 
+    subject = `New Performance/Misconduct Report: ${safeTitle}`;
+    const severityColor = getSeverityColor(data.severityLevel);
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">New Performance/Misconduct Report Submitted</h1>
+        
+        <p>A new performance/misconduct report has been submitted for your review.</p>
+        
+        <div style="margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555; width: 140px;">Title:</td>
+              <td style="padding: 8px 0;">${safeTitle}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Worker Name:</td>
+              <td style="padding: 8px 0;">${safeWorkerName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Category:</td>
+              <td style="padding: 8px 0;">${safeIncidentCategory}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Severity Level:</td>
+              <td style="padding: 8px 0;">
+                <span style="display: inline-block; padding: 4px 12px; background-color: ${severityColor}; color: white; border-radius: 4px; font-weight: bold;">
+                  ${safeSeverityLevel}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Incident Date:</td>
+              <td style="padding: 8px 0;">${incidentDate}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">Submitted By:</td>
+              <td style="padding: 8px 0;">${safeSubmittedBy}</td>
+            </tr>
+          </table>
+        </div>
+        
+        <p style="margin-top: 20px;">Please log in to the dashboard to review the full report details.</p>
+        
+        <p style="margin-top: 30px; color: #666;">Thank you,<br>MyProMovers Team</p>
+      </div>
+    `;
+
     console.log("Sending performance report notification:", {
       title: data.title,
       workerName: data.workerName,
@@ -118,56 +171,23 @@ const handler = async (req: Request): Promise<Response> => {
       userId: user.id
     });
 
-    const severityColor = getSeverityColor(data.severityLevel);
-
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
-      to: ["Daniel@mypromoversdc.com"],
-      subject: `New Performance/Misconduct Report: ${safeTitle}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">New Performance/Misconduct Report Submitted</h1>
-          
-          <p>A new performance/misconduct report has been submitted for your review.</p>
-          
-          <div style="margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #555; width: 140px;">Title:</td>
-                <td style="padding: 8px 0;">${safeTitle}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #555;">Worker Name:</td>
-                <td style="padding: 8px 0;">${safeWorkerName}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #555;">Category:</td>
-                <td style="padding: 8px 0;">${safeIncidentCategory}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #555;">Severity Level:</td>
-                <td style="padding: 8px 0;">
-                  <span style="display: inline-block; padding: 4px 12px; background-color: ${severityColor}; color: white; border-radius: 4px; font-weight: bold;">
-                    ${safeSeverityLevel}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #555;">Incident Date:</td>
-                <td style="padding: 8px 0;">${incidentDate}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #555;">Submitted By:</td>
-                <td style="padding: 8px 0;">${safeSubmittedBy}</td>
-              </tr>
-            </table>
-          </div>
-          
-          <p style="margin-top: 20px;">Please log in to the dashboard to review the full report details.</p>
-          
-          <p style="margin-top: 30px; color: #666;">Thank you,<br>MyProMovers Team</p>
-        </div>
-      `,
+      from: fromEmail,
+      to: toEmails,
+      subject,
+      html: htmlContent,
+    });
+
+    // Log the email
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      body_html: htmlContent,
+      email_type: 'performance_report',
+      reference_type: 'performance_report',
+      status: 'sent',
+      resend_id: (emailResponse as any)?.data?.id || (emailResponse as any)?.id,
     });
 
     console.log("Email sent successfully:", emailResponse);
@@ -178,6 +198,17 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-performance-report-notification function:", error);
+    
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      email_type: 'performance_report',
+      reference_type: 'performance_report',
+      status: 'failed',
+      error_message: error?.message || 'Unknown error',
+    });
+
     return new Response(
       JSON.stringify({ error: "Failed to send notification" }),
       {
