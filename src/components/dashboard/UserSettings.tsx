@@ -20,6 +20,8 @@ import { handleError } from "@/lib/errorHandler";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { useMapboxToken } from "@/hooks/useMapboxToken";
 
 interface UserSettingsProps {
   userId: string;
@@ -148,6 +150,7 @@ interface DriversLicense {
 
 const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   ({ userId, language, showBalance = false, showHourlyRate = false, onClose }, ref) => {
+  const { token: mapboxToken } = useMapboxToken();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -706,11 +709,12 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
             {showHourlyRate && (
               <div className="space-y-2">
                 <Label htmlFor="address">{t.address}</Label>
-                <Input
+                <AddressAutocomplete
                   id="address"
                   value={profile.address}
-                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  onChange={(value) => setProfile({ ...profile, address: value })}
                   placeholder="Enter your current physical address"
+                  accessToken={mapboxToken}
                 />
               </div>
             )}

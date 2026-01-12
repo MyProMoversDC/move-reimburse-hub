@@ -15,6 +15,8 @@ import { format } from "date-fns";
 import { handleError } from "@/lib/errorHandler";
 import { violenceIncidentTranslations, ViolenceIncidentLanguage } from "@/lib/violenceIncidentTranslations";
 import { Upload, X, AlertTriangle, Info } from "lucide-react";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { useMapboxToken } from "@/hooks/useMapboxToken";
 
 interface ViolenceIncidentFormProps {
   userId: string;
@@ -39,6 +41,7 @@ interface FormData {
 }
 
 const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: ViolenceIncidentFormProps) => {
+  const { token: mapboxToken } = useMapboxToken();
   const [loading, setLoading] = useState(false);
   const [moverName, setMoverName] = useState("");
   const [moverPhone, setMoverPhone] = useState("");
@@ -48,6 +51,7 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
   const [emergencyServicesCalled, setEmergencyServicesCalled] = useState<boolean>(false);
   const [severityLevel, setSeverityLevel] = useState<SeverityLevel>("medium");
   const [files, setFiles] = useState<File[]>([]);
+  const [incidentAddress, setIncidentAddress] = useState("");
 
   const t = violenceIncidentTranslations[language];
 
@@ -94,6 +98,11 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
       return;
     }
 
+    if (!incidentAddress?.trim()) {
+      toast.error("Please enter the incident address");
+      return;
+    }
+
     if (!data.resolutionRequest?.trim()) {
       toast.error("Please describe the resolution you are looking for");
       return;
@@ -111,7 +120,7 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
           incident_date: data.incidentDate,
           incident_time: data.incidentTime,
           job_id: data.jobId || "",
-          incident_address: data.incidentAddress,
+          incident_address: incidentAddress || data.incidentAddress,
           client_name: data.clientName || "",
           incident_types: incidentTypes,
           incident_description: data.incidentDescription,
@@ -154,6 +163,7 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
       toast.success(t.reportSubmitted);
       reset();
       setIncidentTypes([]);
+      setIncidentAddress("");
       setPropertyDamaged(false);
       setPoliceContacted(false);
       setEmergencyServicesCalled(false);
@@ -224,10 +234,12 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="incidentAddress">{t.incidentAddress} *</Label>
-            <Input
+            <AddressAutocomplete
               id="incidentAddress"
-              {...register("incidentAddress", { required: true })}
+              value={incidentAddress}
+              onChange={setIncidentAddress}
               placeholder="Full address of incident"
+              accessToken={mapboxToken}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X, User, Phone, AlertCircle } from "lucide-react";
 import { z } from "zod";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { useMapboxToken } from "@/hooks/useMapboxToken";
 
 interface EmployeeGeneralTabProps {
   userId: string;
@@ -123,6 +124,7 @@ const formatPhoneNumber = (value: string): string => {
 const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGeneralTabProps) => {
   const { language } = useLanguage();
   const t = translations[language];
+  const { token: mapboxToken } = useMapboxToken();
 
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     name: "",
@@ -434,12 +436,12 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
             {/* Address */}
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="address">{t.address}</Label>
-              <Textarea
+              <AddressAutocomplete
                 id="address"
                 value={contactInfo.address}
-                onChange={(e) => setContactInfo({ ...contactInfo, address: e.target.value })}
-                rows={3}
+                onChange={(value) => setContactInfo({ ...contactInfo, address: value })}
                 placeholder="Full address"
+                accessToken={mapboxToken}
               />
             </div>
           </div>
@@ -514,11 +516,11 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
             {/* Address */}
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="emergencyAddress">{t.address}</Label>
-              <Textarea
+              <AddressAutocomplete
                 id="emergencyAddress"
                 value={emergencyContact.address}
-                onChange={(e) => setEmergencyContact({ ...emergencyContact, address: e.target.value })}
-                rows={3}
+                onChange={(value) => setEmergencyContact({ ...emergencyContact, address: value })}
+                accessToken={mapboxToken}
               />
             </div>
           </div>
