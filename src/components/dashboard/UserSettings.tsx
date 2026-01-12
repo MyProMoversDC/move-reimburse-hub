@@ -61,6 +61,10 @@ const translations = {
     frontSide: "Front Side",
     backSide: "Back Side",
     noImageUploaded: "No image uploaded",
+    documents: "Documents",
+    medicalCard: "Medical Card",
+    uploadMedicalCard: "Upload Medical Card",
+    noDocumentUploaded: "No document uploaded",
   },
   es: {
     settings: "Configuración",
@@ -93,6 +97,10 @@ const translations = {
     frontSide: "Lado Frontal",
     backSide: "Lado Trasero",
     noImageUploaded: "Sin imagen subida",
+    documents: "Documentos",
+    medicalCard: "Tarjeta Médica",
+    uploadMedicalCard: "Subir Tarjeta Médica",
+    noDocumentUploaded: "Sin documento subido",
   },
   ru: {
     settings: "Настройки",
@@ -125,6 +133,10 @@ const translations = {
     frontSide: "Лицевая Сторона",
     backSide: "Обратная Сторона",
     noImageUploaded: "Изображение не загружено",
+    documents: "Документы",
+    medicalCard: "Медицинская Карта",
+    uploadMedicalCard: "Загрузить Медицинскую Карту",
+    noDocumentUploaded: "Документ не загружен",
   },
 };
 interface DriversLicense {
@@ -158,10 +170,13 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   });
   const [licenseImages, setLicenseImages] = useState<{ front: string; back: string }>({ front: "", back: "" });
   const [uploadingLicense, setUploadingLicense] = useState<"front" | "back" | null>(null);
+  const [medicalCardUrl, setMedicalCardUrl] = useState<string>("");
+  const [uploadingMedicalCard, setUploadingMedicalCard] = useState(false);
   const [balance, setBalance] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const licenseFrontInputRef = useRef<HTMLInputElement>(null);
   const licenseBackInputRef = useRef<HTMLInputElement>(null);
+  const medicalCardInputRef = useRef<HTMLInputElement>(null);
   const [licenseExpiresOpen, setLicenseExpiresOpen] = useState(false);
   const [physicalExpiresOpen, setPhysicalExpiresOpen] = useState(false);
 
@@ -183,11 +198,12 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data } = await supabase
         .from("user_driver_status")
-        .select("is_driver, license_url")
+        .select("is_driver, license_url, medical_card_url")
         .eq("user_id", userId)
         .maybeSingle();
       
       setIsDriver(data?.is_driver === true);
+      setMedicalCardUrl(data?.medical_card_url || "");
       
       // Parse license images if they exist (stored as JSON string)
       if (data?.license_url) {
@@ -294,6 +310,98 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
         .eq("user_id", userId);
 
       toast.success(language === 'ru' ? 'Изображение удалено!' : language === 'es' ? '¡Imagen eliminada!' : 'Image removed!');
+    } catch (error: unknown) {
+      toast.error(handleError(error));
+    }
+  };
+
+  const handleMedicalCardUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB");
+      return;
+    }
+
+    setUploadingMedicalCard(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/medical_card.${fileExt}`;
+
+      // Remove old image if exists
+      if (medicalCardUrl) {
+        const oldPath = medicalCardUrl.split('/medical-cards/').pop();
+        if (oldPath) {
+          await supabase.storage.from('medical-cards').remove([oldPath]);
+        }
+      }
+
+      // Upload new image
+      const { error: uploadError } = await supabase.storage
+        .from('medical-cards')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('medical-cards')
+        .getPublicUrl(fileName);
+
+      setMedicalCardUrl(publicUrl);
+
+      // Ensure user_driver_status record exists and update
+      const { data: existingStatus } = await supabase
+        .from("user_driver_status")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existingStatus) {
+        await supabase
+          .from("user_driver_status")
+          .update({ medical_card_url: publicUrl })
+          .eq("user_id", userId);
+      } else {
+        await supabase
+          .from("user_driver_status")
+          .insert({ user_id: userId, medical_card_url: publicUrl, driver_prompt_answered: false });
+      }
+
+      toast.success(language === 'ru' ? 'Медицинская карта загружена!' : language === 'es' ? '¡Tarjeta médica subida!' : 'Medical card uploaded!');
+    } catch (error: unknown) {
+      toast.error(handleError(error));
+    } finally {
+      setUploadingMedicalCard(false);
+      if (medicalCardInputRef.current) {
+        medicalCardInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveMedicalCard = async () => {
+    if (!medicalCardUrl) return;
+
+    try {
+      const filePath = medicalCardUrl.split('/medical-cards/').pop();
+      if (filePath) {
+        await supabase.storage.from('medical-cards').remove([filePath]);
+      }
+
+      setMedicalCardUrl("");
+
+      await supabase
+        .from("user_driver_status")
+        .update({ medical_card_url: null })
+        .eq("user_id", userId);
+
+      toast.success(language === 'ru' ? 'Медицинская карта удалена!' : language === 'es' ? '¡Tarjeta médica eliminada!' : 'Medical card removed!');
     } catch (error: unknown) {
       toast.error(handleError(error));
     }
@@ -800,6 +908,62 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                         </Button>
                       </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Documents Section - Always shown for movers */}
+            {showHourlyRate && (
+              <Card className="border-primary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    {t.documents}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Medical Card */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">{t.medicalCard}</Label>
+                    {medicalCardUrl ? (
+                      <div className="relative group">
+                        <img 
+                          src={medicalCardUrl} 
+                          alt="Medical Card" 
+                          className="w-full h-32 object-cover rounded-md border"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={handleRemoveMedicalCard}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-full h-32 border-2 border-dashed rounded-md flex items-center justify-center bg-muted/50">
+                        <span className="text-sm text-muted-foreground">{t.noDocumentUploaded}</span>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      ref={medicalCardInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleMedicalCardUpload}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => medicalCardInputRef.current?.click()}
+                      disabled={uploadingMedicalCard}
+                    >
+                      <Upload className="h-3 w-3 mr-2" />
+                      {uploadingMedicalCard ? t.uploading : t.uploadMedicalCard}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
