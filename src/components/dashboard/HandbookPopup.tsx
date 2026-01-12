@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -11,9 +10,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Download, Eye } from "lucide-react";
+import { FileText, Download, Eye, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { handbookTranslations, HandbookLanguage } from "@/lib/handbookTranslations";
+import { toast } from "sonner";
 
 interface Handbook {
   id: string;
@@ -90,22 +90,39 @@ const HandbookPopup = ({ userId, language, onAcknowledge }: HandbookPopupProps) 
           handbook_id: handbook.id,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error acknowledging handbook:", error);
+        toast.error(language === 'en' ? 'Failed to confirm. Please try again.' : 
+                    language === 'es' ? 'Error al confirmar. Por favor intente de nuevo.' :
+                    'Не удалось подтвердить. Попробуйте еще раз.');
+        return;
+      }
 
+      // Successfully acknowledged - close the dialog
       setOpen(false);
+      setHandbook(null);
+      setHasRead(false);
+      
+      toast.success(language === 'en' ? 'Handbook acknowledged successfully!' : 
+                    language === 'es' ? '¡Manual confirmado exitosamente!' :
+                    'Справочник успешно подтвержден!');
+      
       onAcknowledge?.();
     } catch (error) {
       console.error("Error acknowledging handbook:", error);
+      toast.error(language === 'en' ? 'An error occurred. Please try again.' : 
+                  language === 'es' ? 'Ocurrió un error. Por favor intente de nuevo.' :
+                  'Произошла ошибка. Попробуйте еще раз.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (!handbook) return null;
+  if (!handbook || !open) return null;
 
   return (
     <>
-      <AlertDialog open={open}>
+      <AlertDialog open={open} onOpenChange={() => {}}>
         <AlertDialogContent className="max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -151,12 +168,19 @@ const HandbookPopup = ({ userId, language, onAcknowledge }: HandbookPopupProps) 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction
+            <Button
               onClick={handleAcknowledge}
               disabled={!hasRead || submitting}
             >
-              {t.confirmRead}
-            </AlertDialogAction>
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {language === 'en' ? 'Confirming...' : language === 'es' ? 'Confirmando...' : 'Подтверждение...'}
+                </>
+              ) : (
+                t.confirmRead
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
