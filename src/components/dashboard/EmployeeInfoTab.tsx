@@ -313,6 +313,10 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
     physicalExpires: undefined,
   });
 
+  const [isDriver, setIsDriver] = useState(false);
+  const [originalIsDriver, setOriginalIsDriver] = useState(false);
+  const [licenseImages, setLicenseImages] = useState<{ front: string; back: string }>({ front: "", back: "" });
+
   const [customAttributes, setCustomAttributes] = useState<CustomAttributes>(defaultAttributes);
   const [originalData, setOriginalData] = useState<{
     employment: EmploymentInfo;
@@ -335,9 +339,10 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
       const employmentChanged = JSON.stringify(employmentInfo) !== JSON.stringify(originalData.employment);
       const licenseChanged = JSON.stringify(driversLicense) !== JSON.stringify(originalData.license);
       const attributesChanged = JSON.stringify(customAttributes) !== JSON.stringify(originalData.attributes);
-      setHasChanges(employmentChanged || licenseChanged || attributesChanged);
+      const driverChanged = isDriver !== originalIsDriver;
+      setHasChanges(employmentChanged || licenseChanged || attributesChanged || driverChanged);
     }
-  }, [employmentInfo, driversLicense, customAttributes, originalData]);
+  }, [employmentInfo, driversLicense, customAttributes, originalData, isDriver, originalIsDriver]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -372,6 +377,29 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
         .single();
 
       if (error) throw error;
+
+      // Fetch driver status
+      const { data: driverStatus } = await supabase
+        .from("user_driver_status")
+        .select("is_driver, license_url")
+        .eq("user_id", employeeId)
+        .maybeSingle();
+
+      const driverFlag = driverStatus?.is_driver === true;
+      setIsDriver(driverFlag);
+      setOriginalIsDriver(driverFlag);
+
+      // Parse license images
+      if (driverStatus?.license_url) {
+        try {
+          const images = JSON.parse(driverStatus.license_url);
+          setLicenseImages({ front: images.front || "", back: images.back || "" });
+        } catch {
+          setLicenseImages({ front: driverStatus.license_url, back: "" });
+        }
+      } else {
+        setLicenseImages({ front: "", back: "" });
+      }
 
       const employmentData: EmploymentInfo = {
         role: profile.job_role || "",
@@ -443,6 +471,27 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
         .eq("id", employeeId);
 
       if (error) throw error;
+
+      // Update driver status if changed
+      if (isDriver !== originalIsDriver) {
+        const { data: existingStatus } = await supabase
+          .from("user_driver_status")
+          .select("id")
+          .eq("user_id", employeeId)
+          .maybeSingle();
+
+        if (existingStatus) {
+          await supabase
+            .from("user_driver_status")
+            .update({ is_driver: isDriver, driver_prompt_answered: true })
+            .eq("user_id", employeeId);
+        } else {
+          await supabase
+            .from("user_driver_status")
+            .insert({ user_id: employeeId, is_driver: isDriver, driver_prompt_answered: true });
+        }
+        setOriginalIsDriver(isDriver);
+      }
 
       toast.success(t.saveSuccess);
       setOriginalData({
@@ -844,6 +893,45 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
                 </PopoverContent>
               </Popover>
             </div>
+
+            {/* Is Driver Checkbox */}
+            <div className="md:col-span-2 flex items-center space-x-2 pt-4 border-t">
+              <Checkbox
+                id="isDriver"
+                checked={isDriver}
+                onCheckedChange={(checked) => setIsDriver(!!checked)}
+              />
+              <Label htmlFor="isDriver" className="font-medium cursor-pointer">
+                {t.driver} - {language === 'ru' ? 'Назначить водителем' : language === 'es' ? 'Asignar como conductor' : 'Assign as Driver'}
+              </Label>
+            </div>
+
+            {/* License Images from Mover */}
+            {(licenseImages.front || licenseImages.back) && (
+              <div className="md:col-span-2 space-y-3 pt-4 border-t">
+                <Label className="text-sm font-medium">
+                  {language === 'ru' ? 'Загруженные изображения лицензии' : language === 'es' ? 'Imágenes de licencia subidas' : 'Uploaded License Images'}
+                </Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {licenseImages.front && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        {language === 'ru' ? 'Лицевая сторона' : language === 'es' ? 'Lado frontal' : 'Front Side'}
+                      </Label>
+                      <img src={licenseImages.front} alt="License Front" className="w-full h-32 object-cover rounded-md border" />
+                    </div>
+                  )}
+                  {licenseImages.back && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        {language === 'ru' ? 'Обратная сторона' : language === 'es' ? 'Lado trasero' : 'Back Side'}
+                      </Label>
+                      <img src={licenseImages.back} alt="License Back" className="w-full h-32 object-cover rounded-md border" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
