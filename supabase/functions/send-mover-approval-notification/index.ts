@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -32,6 +33,10 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const fromEmail = "MyProMovers <notifications@mypromoversreimbursements.com>";
+  let toEmails: string[] = [];
+  let subject = 'Approval Notification';
 
   try {
     const authHeader = req.headers.get('Authorization');
@@ -72,8 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
     const data = validationResult.data;
     const safeName = sanitizeHtml(data.moverName);
     const safeRef = sanitizeHtml(data.referenceNumber);
+    toEmails = [data.moverEmail];
 
-    let subject = "";
     let bodyContent = "";
 
     if (data.type === "reimbursement") {
@@ -108,19 +113,34 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        ${bodyContent}
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="color: #666; font-size: 12px;">This is an automated message from MyProMovers.</p>
+      </div>
+    `;
+
     console.log("Sending approval notification to:", data.moverEmail);
 
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers <notifications@mypromoversreimbursements.com>",
-      to: [data.moverEmail],
+      from: fromEmail,
+      to: toEmails,
       subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          ${bodyContent}
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="color: #666; font-size: 12px;">This is an automated message from MyProMovers.</p>
-        </div>
-      `,
+      html: htmlContent,
+    });
+
+    // Log the email
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      body_html: htmlContent,
+      email_type: `${data.type}_${data.action}`,
+      reference_id: data.referenceNumber,
+      reference_type: data.type,
+      status: 'sent',
+      resend_id: (emailResponse as any)?.data?.id || (emailResponse as any)?.id,
     });
 
     console.log("Email sent successfully:", emailResponse);
@@ -131,6 +151,16 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending notification:", error);
+    
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      email_type: 'approval_notification',
+      status: 'failed',
+      error_message: error?.message || 'Unknown error',
+    });
+
     return new Response(JSON.stringify({ error: "Failed to send notification" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },

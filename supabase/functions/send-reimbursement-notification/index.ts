@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -40,6 +41,9 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const fromEmail = "MyProMovers Reimbursements <reimbursements@mypromoversreimbursements.com>";
+  const toEmails = ["mark@mypromoversdc.com", "Tony@mypromoversdc.com", "Daniel@mypromoversdc.com"];
 
   try {
     // Authorization check
@@ -102,6 +106,62 @@ const handler = async (req: Request): Promise<Response> => {
     const safeCustomerName = sanitizeHtml(data.customerName);
     const safeZelleInfo = sanitizeHtml(data.zelleInfo);
 
+    const subject = `New Reimbursement Request #${safeReimbursementNumber} - ${safeMoverFullName}`;
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">New Reimbursement Request</h1>
+        <p><strong>Reimbursement #:</strong> ${safeReimbursementNumber}</p>
+        <hr style="border: 1px solid #eee; margin: 20px 0;">
+        
+        <h2 style="color: #555;">Details</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Mover Name:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeMoverFullName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Job #:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeJobNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Truck #:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeTruckNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Customer Name:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeCustomerName}</td>
+          </tr>
+        </table>
+        
+        <h3 style="color: #555; margin-top: 20px;">Expenses</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Gas:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.gasExpenses.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Road/Tolls:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.roadExpenses.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Hotel:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.hotelExpenses.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Other:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.otherExpenses.toFixed(2)}</td>
+          </tr>
+          <tr style="background-color: #f5f5f5;">
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Total:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>$${data.totalExpenses.toFixed(2)}</strong></td>
+          </tr>
+        </table>
+        
+        <p style="margin-top: 20px;"><strong>Zelle Payment Info:</strong> ${safeZelleInfo}</p>
+        <p><strong>Attachments:</strong> ${data.attachmentCount} file(s)</p>
+      </div>
+    `;
+
     console.log("Sending reimbursement notification:", {
       reimbursementNumber: data.reimbursementNumber,
       moverFullName: data.moverFullName,
@@ -110,63 +170,23 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers Reimbursements <reimbursements@mypromoversreimbursements.com>",
-      to: ["mark@mypromoversdc.com", "Tony@mypromoversdc.com", "Daniel@mypromoversdc.com"],
-      subject: `New Reimbursement Request #${safeReimbursementNumber} - ${safeMoverFullName}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">New Reimbursement Request</h1>
-          <p><strong>Reimbursement #:</strong> ${safeReimbursementNumber}</p>
-          <hr style="border: 1px solid #eee; margin: 20px 0;">
-          
-          <h2 style="color: #555;">Details</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Mover Name:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeMoverFullName}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Job #:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeJobNumber}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Truck #:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeTruckNumber}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Customer Name:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${safeCustomerName}</td>
-            </tr>
-          </table>
-          
-          <h3 style="color: #555; margin-top: 20px;">Expenses</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Gas:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.gasExpenses.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Road/Tolls:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.roadExpenses.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Hotel:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.hotelExpenses.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Other:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">$${data.otherExpenses.toFixed(2)}</td>
-            </tr>
-            <tr style="background-color: #f5f5f5;">
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Total:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>$${data.totalExpenses.toFixed(2)}</strong></td>
-            </tr>
-          </table>
-          
-          <p style="margin-top: 20px;"><strong>Zelle Payment Info:</strong> ${safeZelleInfo}</p>
-          <p><strong>Attachments:</strong> ${data.attachmentCount} file(s)</p>
-        </div>
-      `,
+      from: fromEmail,
+      to: toEmails,
+      subject,
+      html: htmlContent,
+    });
+
+    // Log the email
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      body_html: htmlContent,
+      email_type: 'reimbursement_submission',
+      reference_id: data.reimbursementNumber,
+      reference_type: 'reimbursement',
+      status: 'sent',
+      resend_id: (emailResponse as any)?.data?.id || (emailResponse as any)?.id,
     });
 
     console.log("Notification email sent:", emailResponse);
@@ -177,6 +197,18 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending notification:", error);
+    
+    // Log failed email
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject: 'Reimbursement Notification (Failed)',
+      email_type: 'reimbursement_submission',
+      reference_type: 'reimbursement',
+      status: 'failed',
+      error_message: error?.message || 'Unknown error',
+    });
+
     return new Response(JSON.stringify({ error: "Failed to send notification" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },

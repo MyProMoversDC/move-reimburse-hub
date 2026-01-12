@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -33,6 +34,9 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const fromEmail = "MyProMovers <reimbursements@mypromoversreimbursements.com>";
+  const subject = "Important Notice from MyProMovers Management";
 
   try {
     // Authorization check
@@ -97,32 +101,47 @@ const handler = async (req: Request): Promise<Response> => {
       const safeName = sanitizeHtml(recipient.name);
       const safeMessage = sanitizeHtml(data.additionalMessage).replace(/\n/g, '<br>');
 
-      return resend.emails.send({
-        from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
-        to: [recipient.email],
-        subject: "Important Notice from MyProMovers Management",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
-              <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">
-                Dear <strong>${safeName}</strong>,
-              </p>
-              
-              <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">
-                I am reaching out to you on behalf of the MyProMovers management with a following statement:
-              </p>
-              
-              <div style="margin: 20px 0; padding: 16px; background-color: #ffffff; border-left: 4px solid #3b82f6; border-radius: 4px;">
-                <p style="margin: 0; font-size: 16px; line-height: 1.6;">
-                  ${safeMessage}
-                </p>
-              </div>
-            </div>
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+            <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">
+              Dear <strong>${safeName}</strong>,
+            </p>
             
-            <p style="margin-top: 30px; color: #666;">Best regards,<br>MyProMovers Management</p>
+            <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6;">
+              I am reaching out to you on behalf of the MyProMovers management with a following statement:
+            </p>
+            
+            <div style="margin: 20px 0; padding: 16px; background-color: #ffffff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+              <p style="margin: 0; font-size: 16px; line-height: 1.6;">
+                ${safeMessage}
+              </p>
+            </div>
           </div>
-        `,
+          
+          <p style="margin-top: 30px; color: #666;">Best regards,<br>MyProMovers Management</p>
+        </div>
+      `;
+
+      const result = await resend.emails.send({
+        from: fromEmail,
+        to: [recipient.email],
+        subject,
+        html: htmlContent,
       });
+
+      // Log each email
+      await logEmail({
+        from_email: fromEmail,
+        to_emails: [recipient.email],
+        subject,
+        body_html: htmlContent,
+        email_type: 'admin_mover_email',
+        status: 'sent',
+        resend_id: (result as any)?.data?.id || (result as any)?.id,
+      });
+
+      return result;
     });
 
     const results = await Promise.all(emailPromises);
@@ -134,6 +153,16 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error in send-mover-email function:", error);
+    
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: [],
+      subject,
+      email_type: 'admin_mover_email',
+      status: 'failed',
+      error_message: error?.message || 'Unknown error',
+    });
+
     return new Response(
       JSON.stringify({ error: "Failed to send email" }),
       {

@@ -196,6 +196,54 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          body_html: string | null
+          body_text: string | null
+          created_at: string
+          email_type: string
+          error_message: string | null
+          from_email: string
+          id: string
+          reference_id: string | null
+          reference_type: string | null
+          resend_id: string | null
+          status: string
+          subject: string
+          to_emails: string[]
+        }
+        Insert: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          from_email: string
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resend_id?: string | null
+          status?: string
+          subject: string
+          to_emails: string[]
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          from_email?: string
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resend_id?: string | null
+          status?: string
+          subject?: string
+          to_emails?: string[]
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           address: string | null

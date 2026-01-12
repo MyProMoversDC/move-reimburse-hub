@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { z } from "https://esm.sh/zod@3.22.4";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -30,6 +31,10 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const fromEmail = "MyProMovers <reimbursements@mypromoversreimbursements.com>";
+  const toEmails = ["mark@mypromoversdc.com", "Daniel@mypromoversdc.com"];
+  let subject = 'Reimbursement Confirmation';
 
   try {
     // Authorization check
@@ -100,20 +105,36 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const safeReimbursementNumber = sanitizeHtml(data.reimbursementNumber);
+    subject = `Reimbursement Request #${safeReimbursementNumber} Approved`;
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">Reimbursement Approved</h1>
+        <p>Admin has approved reimbursement request <strong>#${safeReimbursementNumber}</strong></p>
+        <p>Please process the payment and update the status in the accountant portal.</p>
+      </div>
+    `;
 
     console.log("Sending confirmation email for reimbursement:", data.reimbursementNumber, "by admin:", user.id);
 
     const emailResponse = await resend.emails.send({
-      from: "MyProMovers <reimbursements@mypromoversreimbursements.com>",
-      to: ["mark@mypromoversdc.com", "Daniel@mypromoversdc.com"],
-      subject: `Reimbursement Request #${safeReimbursementNumber} Approved`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Reimbursement Approved</h1>
-          <p>Admin has approved reimbursement request <strong>#${safeReimbursementNumber}</strong></p>
-          <p>Please process the payment and update the status in the accountant portal.</p>
-        </div>
-      `,
+      from: fromEmail,
+      to: toEmails,
+      subject,
+      html: htmlContent,
+    });
+
+    // Log the email
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      body_html: htmlContent,
+      email_type: 'reimbursement_confirmation',
+      reference_id: data.reimbursementNumber,
+      reference_type: 'reimbursement',
+      status: 'sent',
+      resend_id: (emailResponse as any)?.data?.id || (emailResponse as any)?.id,
     });
 
     console.log("Confirmation email sent:", emailResponse);
@@ -124,6 +145,17 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending confirmation:", error);
+    
+    await logEmail({
+      from_email: fromEmail,
+      to_emails: toEmails,
+      subject,
+      email_type: 'reimbursement_confirmation',
+      reference_type: 'reimbursement',
+      status: 'failed',
+      error_message: error?.message || 'Unknown error',
+    });
+
     return new Response(JSON.stringify({ error: "Failed to send notification" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
