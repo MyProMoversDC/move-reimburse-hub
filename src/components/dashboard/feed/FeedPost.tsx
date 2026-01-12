@@ -106,6 +106,7 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
   const [views, setViews] = useState<PostView[]>([]);
   const [showViewers, setShowViewers] = useState(false);
   const [hasRecordedView, setHasRecordedView] = useState(false);
+  const [authorProfile, setAuthorProfile] = useState<{ first_name: string; last_name: string; avatar_url: string | null } | null>(null);
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -122,6 +123,15 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
   }, [post.id]);
 
   const fetchPostData = async () => {
+    // Fetch author profile
+    const { data: authorData } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, avatar_url")
+      .eq("id", post.created_by)
+      .maybeSingle();
+    
+    if (authorData) setAuthorProfile(authorData);
+
     // Fetch attachments
     const { data: attachmentsData } = await supabase
       .from("feed_post_attachments")
@@ -265,10 +275,15 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary text-primary-foreground">A</AvatarFallback>
+              <AvatarImage src={authorProfile?.avatar_url || undefined} alt="Author" />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {authorProfile ? `${authorProfile.first_name?.[0] || ''}${authorProfile.last_name?.[0] || ''}` : 'A'}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold">{t.postedBy}</p>
+              <p className="font-semibold">
+                {authorProfile ? `${authorProfile.first_name} ${authorProfile.last_name}` : t.postedBy}
+              </p>
               <p className="text-xs text-muted-foreground">
                 {format(new Date(post.created_at), "MMM d, yyyy 'at' h:mm a")}
               </p>

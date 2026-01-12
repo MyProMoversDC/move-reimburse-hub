@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
@@ -16,6 +17,7 @@ interface User {
   first_name: string;
   last_name: string;
   roles: string[];
+  avatar_url?: string | null;
 }
 
 interface NewChatDialogProps {
@@ -59,7 +61,21 @@ const NewChatDialog = ({
 
       if (error) throw error;
 
-      setUsers(data || []);
+      // Fetch avatar URLs from profiles
+      const userIds = (data || []).map((u: any) => u.id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, avatar_url')
+        .in('id', userIds);
+      
+      const avatarMap = new Map((profiles || []).map((p: any) => [p.id, p.avatar_url]));
+      
+      const usersWithAvatars = (data || []).map((u: any) => ({
+        ...u,
+        avatar_url: avatarMap.get(u.id) || null,
+      }));
+
+      setUsers(usersWithAvatars);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -278,6 +294,12 @@ const NewChatDialog = ({
                         {isGroupChat && (
                           <Checkbox checked={isSelected} />
                         )}
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.avatar_url || undefined} alt={`${user.first_name} ${user.last_name}`} />
+                          <AvatarFallback className="text-xs">
+                            {user.first_name?.[0]}{user.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1">
                           <p className="font-medium">{user.first_name} {user.last_name}</p>
                           <p className="text-xs text-muted-foreground">{getRoleBadge(user.roles)}</p>
