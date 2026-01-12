@@ -13,7 +13,8 @@ import {
   Shield,
   MessageCircle,
   BookOpen,
-  Newspaper
+  Newspaper,
+  Mail
 } from "lucide-react";
 import {
   Sidebar,
@@ -64,6 +65,7 @@ const menuItems = [
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "handbook", label: "Handbook Management", icon: BookOpen },
+  { id: "email-logs", label: "Email Logs", icon: Mail },
   { id: "chat", label: "Chat", icon: MessageSquare },
 ];
 

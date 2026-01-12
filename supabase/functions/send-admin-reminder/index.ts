@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -86,6 +87,9 @@ const handler = async (req: Request): Promise<Response> => {
       ).join("");
     }
 
+    const fromEmail = "MyProMovers <notifications@resend.dev>";
+    const toEmails = ADMIN_EMAILS;
+    const subject = `Reminder: ${totalPending} Items Awaiting Review (72+ hours)`;
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #333;">Reminder: Pending Items Awaiting Review</h1>
@@ -106,24 +110,54 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Send email to all admin recipients
-    const emailResponse = await resend.emails.send({
-      from: "MyProMovers <notifications@resend.dev>",
-      to: ADMIN_EMAILS,
-      subject: `Reminder: ${totalPending} Items Awaiting Review (72+ hours)`,
-      html: emailHtml,
-    });
+    try {
+      // Send email to all admin recipients
+      const emailResponse = await resend.emails.send({
+        from: fromEmail,
+        to: toEmails,
+        subject: subject,
+        html: emailHtml,
+      });
 
-    console.log("Reminder email sent successfully:", emailResponse);
+      console.log("Reminder email sent successfully:", emailResponse);
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        itemsCount: totalPending,
-        emailResponse 
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      // Log the email
+      await logEmail({
+        email_type: "admin_reminder",
+        from_email: fromEmail,
+        to_emails: toEmails,
+        subject,
+        body_html: emailHtml,
+        status: "sent",
+        resend_id: (emailResponse as any).id,
+        reference_type: "system",
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          itemsCount: totalPending,
+          emailResponse 
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (emailError: any) {
+      console.error("Error sending email:", emailError);
+
+      // Log the failed email
+      await logEmail({
+        email_type: "admin_reminder",
+        from_email: fromEmail,
+        to_emails: toEmails,
+        subject,
+        body_html: emailHtml,
+        status: "failed",
+        error_message: emailError.message,
+        reference_type: "system",
+      });
+
+      throw emailError;
+    }
   } catch (error: any) {
     console.error("Error in send-admin-reminder function:", error);
     return new Response(
