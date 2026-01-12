@@ -36,7 +36,7 @@ import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations
 import { chatTranslations } from "@/lib/chatTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import HandbookPopup from "./HandbookPopup";
-import DriverPrompt from "./DriverPrompt";
+import DriverLicenseDisclaimer from "./DriverLicenseDisclaimer";
 import AddressDisclaimer from "./AddressDisclaimer";
 
 interface MoverDashboardProps {
@@ -321,7 +321,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const MobileLayout = () => (
     <div className="space-y-6">
       <HandbookPopup userId={userId} language={language} />
-      <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+      <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
       <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
       
       <div className="flex justify-end gap-2">
@@ -389,7 +389,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         <SidebarInset className="flex-1">
           <div className="p-6">
             <HandbookPopup userId={userId} language={language} />
-            <DriverPrompt userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />
+            <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             
             <div className="flex justify-between items-center mb-6">

@@ -15,7 +15,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { Settings, Save, Camera, X, Car, Calendar as CalendarIcon } from "lucide-react";
+import { Settings, Save, Camera, X, Car, Calendar as CalendarIcon, Upload, Trash2 } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
@@ -56,6 +56,11 @@ const translations = {
     licenseExpires: "Driver License Expires",
     physicalExpires: "Physical Expiration Date",
     selectDate: "Select date",
+    licenseImages: "Driver's License Images",
+    uploadLicenseImage: "Upload License Image",
+    frontSide: "Front Side",
+    backSide: "Back Side",
+    noImageUploaded: "No image uploaded",
   },
   es: {
     settings: "Configuración",
@@ -83,6 +88,11 @@ const translations = {
     licenseExpires: "Vencimiento de Licencia",
     physicalExpires: "Fecha de Expiración Física",
     selectDate: "Seleccionar fecha",
+    licenseImages: "Imágenes de Licencia de Conducir",
+    uploadLicenseImage: "Subir Imagen de Licencia",
+    frontSide: "Lado Frontal",
+    backSide: "Lado Trasero",
+    noImageUploaded: "Sin imagen subida",
   },
   ru: {
     settings: "Настройки",
@@ -110,6 +120,11 @@ const translations = {
     licenseExpires: "Срок Действия Прав",
     physicalExpires: "Дата Истечения Медосмотра",
     selectDate: "Выберите дату",
+    licenseImages: "Изображения Водительского Удостоверения",
+    uploadLicenseImage: "Загрузить Изображение Удостоверения",
+    frontSide: "Лицевая Сторона",
+    backSide: "Обратная Сторона",
+    noImageUploaded: "Изображение не загружено",
   },
 };
 interface DriversLicense {
@@ -141,8 +156,12 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     expires: undefined,
     physicalExpires: undefined,
   });
+  const [licenseImages, setLicenseImages] = useState<{ front: string; back: string }>({ front: "", back: "" });
+  const [uploadingLicense, setUploadingLicense] = useState<"front" | "back" | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const licenseFrontInputRef = useRef<HTMLInputElement>(null);
+  const licenseBackInputRef = useRef<HTMLInputElement>(null);
   const [licenseExpiresOpen, setLicenseExpiresOpen] = useState(false);
   const [physicalExpiresOpen, setPhysicalExpiresOpen] = useState(false);
 
@@ -164,13 +183,119 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data } = await supabase
         .from("user_driver_status")
-        .select("is_driver")
+        .select("is_driver, license_url")
         .eq("user_id", userId)
         .maybeSingle();
       
       setIsDriver(data?.is_driver === true);
+      
+      // Parse license images if they exist (stored as JSON string)
+      if (data?.license_url) {
+        try {
+          const images = JSON.parse(data.license_url);
+          setLicenseImages({ front: images.front || "", back: images.back || "" });
+        } catch {
+          // If it's not JSON, it might be a single URL (legacy)
+          setLicenseImages({ front: data.license_url, back: "" });
+        }
+      }
     } catch (error) {
       console.error("Error fetching driver status:", error);
+    }
+  };
+
+  const handleLicenseImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, side: "front" | "back") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be less than 10MB");
+      return;
+    }
+
+    setUploadingLicense(side);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/license_${side}.${fileExt}`;
+
+      // Remove old image if exists
+      const oldUrl = side === "front" ? licenseImages.front : licenseImages.back;
+      if (oldUrl) {
+        const oldPath = oldUrl.split('/driver-licenses/').pop();
+        if (oldPath) {
+          await supabase.storage.from('driver-licenses').remove([oldPath]);
+        }
+      }
+
+      // Upload new image
+      const { error: uploadError } = await supabase.storage
+        .from('driver-licenses')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('driver-licenses')
+        .getPublicUrl(fileName);
+
+      // Update local state
+      const newImages = { ...licenseImages, [side]: publicUrl };
+      setLicenseImages(newImages);
+
+      // Update user_driver_status with both images as JSON
+      await supabase
+        .from("user_driver_status")
+        .update({
+          license_url: JSON.stringify(newImages),
+          license_uploaded_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      toast.success(language === 'ru' ? 'Изображение загружено!' : language === 'es' ? '¡Imagen subida!' : 'Image uploaded!');
+    } catch (error: unknown) {
+      toast.error(handleError(error));
+    } finally {
+      setUploadingLicense(null);
+      if (side === "front" && licenseFrontInputRef.current) {
+        licenseFrontInputRef.current.value = '';
+      }
+      if (side === "back" && licenseBackInputRef.current) {
+        licenseBackInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveLicenseImage = async (side: "front" | "back") => {
+    const imageUrl = side === "front" ? licenseImages.front : licenseImages.back;
+    if (!imageUrl) return;
+
+    try {
+      const filePath = imageUrl.split('/driver-licenses/').pop();
+      if (filePath) {
+        await supabase.storage.from('driver-licenses').remove([filePath]);
+      }
+
+      const newImages = { ...licenseImages, [side]: "" };
+      setLicenseImages(newImages);
+
+      // Update user_driver_status
+      const hasAnyImage = newImages.front || newImages.back;
+      await supabase
+        .from("user_driver_status")
+        .update({
+          license_url: hasAnyImage ? JSON.stringify(newImages) : null,
+        })
+        .eq("user_id", userId);
+
+      toast.success(language === 'ru' ? 'Изображение удалено!' : language === 'es' ? '¡Imagen eliminada!' : 'Image removed!');
+    } catch (error: unknown) {
+      toast.error(handleError(error));
     }
   };
 
@@ -583,6 +708,98 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                         />
                       </PopoverContent>
                     </Popover>
+                  </div>
+
+                  {/* License Images Upload Section */}
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-sm font-medium">{t.licenseImages}</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Front Side */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">{t.frontSide}</Label>
+                        {licenseImages.front ? (
+                          <div className="relative group">
+                            <img 
+                              src={licenseImages.front} 
+                              alt="License Front" 
+                              className="w-full h-24 object-cover rounded-md border"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleRemoveLicenseImage("front")}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="w-full h-24 border-2 border-dashed rounded-md flex items-center justify-center bg-muted/50">
+                            <span className="text-xs text-muted-foreground">{t.noImageUploaded}</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          ref={licenseFrontInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleLicenseImageUpload(e, "front")}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => licenseFrontInputRef.current?.click()}
+                          disabled={uploadingLicense === "front"}
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          {uploadingLicense === "front" ? "..." : t.uploadLicenseImage}
+                        </Button>
+                      </div>
+
+                      {/* Back Side */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">{t.backSide}</Label>
+                        {licenseImages.back ? (
+                          <div className="relative group">
+                            <img 
+                              src={licenseImages.back} 
+                              alt="License Back" 
+                              className="w-full h-24 object-cover rounded-md border"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleRemoveLicenseImage("back")}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="w-full h-24 border-2 border-dashed rounded-md flex items-center justify-center bg-muted/50">
+                            <span className="text-xs text-muted-foreground">{t.noImageUploaded}</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          ref={licenseBackInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleLicenseImageUpload(e, "back")}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => licenseBackInputRef.current?.click()}
+                          disabled={uploadingLicense === "back"}
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          {uploadingLicense === "back" ? "..." : t.uploadLicenseImage}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
