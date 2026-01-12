@@ -18,6 +18,8 @@ import { reviewBonusTranslations, ReviewBonusLanguage } from "@/lib/reviewBonusT
 import { formatDateEST, formatDateTimeEST } from "@/lib/dateUtils";
 import { AlertCircle, AlertTriangle } from "lucide-react";
 import AppealForm from "./AppealForm";
+import { MoverTranslateButton } from "./MoverTranslateButton";
+import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 
 interface ReviewBonus {
   id: string;
@@ -62,6 +64,48 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
   const [appealHistory, setAppealHistory] = useState<any[]>([]);
   const [appealAttachmentsByHistory, setAppealAttachmentsByHistory] = useState<Record<string, any[]>>({});
   const [initialDeclineReason, setInitialDeclineReason] = useState<{reason: string; date: string} | null>(null);
+  
+  // Translation states
+  const [translatedDeclineReason, setTranslatedDeclineReason] = useState<string | null>(null);
+  const [declineTranslatedToLang, setDeclineTranslatedToLang] = useState<'es' | 'ru' | null>(null);
+  const [translatedHistoryReasons, setTranslatedHistoryReasons] = useState<Record<string, string>>({});
+  const [historyTranslatedToLang, setHistoryTranslatedToLang] = useState<Record<string, 'es' | 'ru'>>({});
+  const { translateTexts, isTranslating } = useTargetTranslation();
+
+  const handleTranslateDeclineReason = async (targetLang: 'es' | 'ru') => {
+    if (!selectedReview?.decline_reason) return;
+    const results = await translateTexts([selectedReview.decline_reason], targetLang);
+    if (results[0]) {
+      setTranslatedDeclineReason(results[0]);
+      setDeclineTranslatedToLang(targetLang);
+    }
+  };
+
+  const handleShowOriginalDeclineReason = () => {
+    setTranslatedDeclineReason(null);
+    setDeclineTranslatedToLang(null);
+  };
+
+  const handleTranslateHistoryReason = async (histId: string, reason: string, targetLang: 'es' | 'ru') => {
+    const results = await translateTexts([reason], targetLang);
+    if (results[0]) {
+      setTranslatedHistoryReasons(prev => ({ ...prev, [histId]: results[0] }));
+      setHistoryTranslatedToLang(prev => ({ ...prev, [histId]: targetLang }));
+    }
+  };
+
+  const handleShowOriginalHistoryReason = (histId: string) => {
+    setTranslatedHistoryReasons(prev => {
+      const updated = { ...prev };
+      delete updated[histId];
+      return updated;
+    });
+    setHistoryTranslatedToLang(prev => {
+      const updated = { ...prev };
+      delete updated[histId];
+      return updated;
+    });
+  };
 
   useEffect(() => {
     fetchReviews();
@@ -294,9 +338,25 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
               )}
 
               {selectedReview.decline_reason && appealHistory.length === 0 && (
-                <div className="bg-destructive/10 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm">{selectedReview.decline_reason}</p>
+                <div className="space-y-2">
+                  <div className="bg-destructive/10 p-4 rounded-lg">
+                    <p className="text-sm font-medium text-destructive">{t.declineReason}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm">
+                      {translatedDeclineReason || selectedReview.decline_reason}
+                    </p>
+                    {declineTranslatedToLang && (
+                      <p className="text-xs italic mt-1 text-muted-foreground">
+                        Translated to {declineTranslatedToLang === 'es' ? 'Español' : 'Русский'}
+                      </p>
+                    )}
+                  </div>
+                  <MoverTranslateButton
+                    onTranslate={handleTranslateDeclineReason}
+                    onShowOriginal={handleShowOriginalDeclineReason}
+                    isTranslating={isTranslating}
+                    isTranslated={!!translatedDeclineReason}
+                    translatedToLang={declineTranslatedToLang}
+                  />
                 </div>
               )}
 
@@ -306,9 +366,25 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                   <h4 className="font-semibold text-lg">{t.appealHistory}</h4>
                   
                   {/* Initial Decline Reason - shown at the top of appeal history */}
-                  <div className="bg-red-100 border border-red-300 p-4 rounded-lg space-y-2">
-                    <p className="font-medium text-red-800">{t.initialDeclineReason}</p>
-                    <p className="text-sm text-red-700">{selectedReview.decline_reason}</p>
+                  <div className="space-y-2">
+                    <div className="bg-red-100 border border-red-300 p-4 rounded-lg space-y-2">
+                      <p className="font-medium text-red-800">{t.initialDeclineReason}</p>
+                      <p className="text-sm text-red-700">
+                        {translatedDeclineReason || selectedReview.decline_reason}
+                      </p>
+                      {declineTranslatedToLang && (
+                        <p className="text-xs italic text-red-600">
+                          Translated to {declineTranslatedToLang === 'es' ? 'Español' : 'Русский'}
+                        </p>
+                      )}
+                    </div>
+                    <MoverTranslateButton
+                      onTranslate={handleTranslateDeclineReason}
+                      onShowOriginal={handleShowOriginalDeclineReason}
+                      isTranslating={isTranslating}
+                      isTranslated={!!translatedDeclineReason}
+                      translatedToLang={declineTranslatedToLang}
+                    />
                   </div>
                   
                   {appealHistory.map((hist) => (
@@ -328,14 +404,31 @@ const ReviewBonusHistory = ({ userId, refreshKey, language }: ReviewBonusHistory
                       </div>
 
                       {hist.decline_reason && (
-                        <div className="bg-red-50 border border-red-200 p-3 rounded">
-                          <p className="text-sm font-medium text-red-700">{t.declineReason}:</p>
-                          <p className="text-sm text-red-600">{hist.decline_reason}</p>
-                          {hist.declined_at && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {t.declinedOn}: {formatDateTimeEST(hist.declined_at)} EST
+                        <div className="space-y-2">
+                          <div className="bg-red-50 border border-red-200 p-3 rounded">
+                            <p className="text-sm font-medium text-red-700">{t.declineReason}:</p>
+                            <p className="text-sm text-red-600">
+                              {translatedHistoryReasons[hist.id] || hist.decline_reason}
                             </p>
-                          )}
+                            {historyTranslatedToLang[hist.id] && (
+                              <p className="text-xs italic text-red-500 mt-1">
+                                Translated to {historyTranslatedToLang[hist.id] === 'es' ? 'Español' : 'Русский'}
+                              </p>
+                            )}
+                            {hist.declined_at && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {t.declinedOn}: {formatDateTimeEST(hist.declined_at)} EST
+                              </p>
+                            )}
+                          </div>
+                          <MoverTranslateButton
+                            onTranslate={(lang) => handleTranslateHistoryReason(hist.id, hist.decline_reason, lang)}
+                            onShowOriginal={() => handleShowOriginalHistoryReason(hist.id)}
+                            isTranslating={isTranslating}
+                            isTranslated={!!translatedHistoryReasons[hist.id]}
+                            translatedToLang={historyTranslatedToLang[hist.id] || null}
+                            size="sm"
+                          />
                         </div>
                       )}
 
