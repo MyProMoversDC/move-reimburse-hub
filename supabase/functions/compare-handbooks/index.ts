@@ -32,28 +32,35 @@ serve(async (req) => {
     let prompt = "";
     
     if (previousHandbookUrl) {
-      prompt = `You are a document comparison assistant. Compare the previous company handbook with the new version and identify ONLY the key changes, additions, and removals.
+      prompt = `You are a document comparison assistant. Compare the previous company handbook with the new version and identify ALL specific changes with exact before/after comparisons.
 
 Previous Handbook URL: ${previousHandbookUrl}
 New Handbook URL: ${newHandbookUrl}
 
-Please provide a clear, concise summary of the changes in the following format:
+CRITICAL: Provide EXACT text comparisons showing what changed. For each change, use this format:
 
-## Summary of Changes
+## Detailed Changes Summary
 
 ### New Additions
-- List any new policies, rules, or sections added
+For each new policy/section added, quote the exact new text:
+- **[Section Name]**: "[Exact new text that was added]"
 
-### Modified Content  
-- List any policies or rules that were changed, explaining the old vs new
+### Modified Content
+For EACH modification, show the exact before and after:
+- **[Policy/Section Name]**:
+  - 📋 **Previous version**: "[Exact original text]"
+  - ✅ **New version**: "[Exact updated text]"
+  - 💡 **Impact**: [Brief explanation of what this change means for employees]
 
 ### Removed Content
-- List any policies or rules that were removed
+For each removal, quote what was removed:
+- **[Section Name]**: "[Exact text that was removed]"
 
-### Important Notes for Team Members
-- Highlight the most important changes that all team members should be aware of
+### Key Takeaways for Team Members
+- Summarize the most important changes employees must be aware of
+- Note any deadlines or compliance requirements
 
-Keep the summary professional and easy to understand. Focus on practical implications for the team.`;
+Be thorough and specific. Quote exact text whenever possible to show precise changes.`;
     } else {
       prompt = `You are a document summarizer. This is a new company handbook being shared with the team for the first time.
 

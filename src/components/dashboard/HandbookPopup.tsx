@@ -188,8 +188,13 @@ const HandbookPopup = ({ userId, language, onAcknowledge }: HandbookPopupProps) 
       <Dialog open={showChanges} onOpenChange={setShowChanges}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t.changesDetected}</DialogTitle>
+            <DialogTitle>{t.aiSummaryChanges}</DialogTitle>
           </DialogHeader>
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              {t.aiDisclaimer}
+            </p>
+          </div>
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <div className="whitespace-pre-wrap">
               {handbook.ai_change_summary}
