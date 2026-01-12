@@ -27,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Trash2, Edit, DollarSign, Save } from "lucide-react";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
@@ -41,6 +42,7 @@ interface Mover {
   email: string;
   phone: string;
   hourly_rate: number;
+  avatar_url: string | null;
 }
 
 interface MoverBalance {
@@ -121,7 +123,7 @@ const MoversList = ({ language }: MoversListProps) => {
       // Fetch profiles for all movers
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, username, first_name, last_name, email, phone, hourly_rate")
+        .select("id, username, first_name, last_name, email, phone, hourly_rate, avatar_url")
         .in("id", moverIds)
         .order("first_name");
 
@@ -244,7 +246,15 @@ const MoversList = ({ language }: MoversListProps) => {
                   return (
                     <TableRow key={mover.id}>
                       <TableCell className="font-medium">
-                        {mover.first_name} {mover.last_name}
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={mover.avatar_url || undefined} alt={`${mover.first_name} ${mover.last_name}`} />
+                            <AvatarFallback className="text-xs">
+                              {mover.first_name?.[0]}{mover.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{mover.first_name} {mover.last_name}</span>
+                        </div>
                       </TableCell>
                       <TableCell>{mover.username}</TableCell>
                       <TableCell>{mover.email}</TableCell>

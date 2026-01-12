@@ -36,6 +36,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage as useLang } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { getSignedUrl } from "@/lib/storageUtils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
   id: string;
@@ -44,6 +45,7 @@ interface Profile {
   email: string;
   phone: string;
   username: string;
+  avatar_url: string | null;
   license_expires: string | null;
   physical_expires: string | null;
 }
@@ -288,7 +290,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, email, phone, username, license_expires, physical_expires")
+        .select("id, first_name, last_name, email, phone, username, avatar_url, license_expires, physical_expires")
         .order("first_name");
 
       if (error) throw error;
@@ -505,8 +507,13 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="relative h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
+                          <div className="relative">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={user.avatar_url || undefined} alt={`${user.first_name} ${user.last_name}`} />
+                              <AvatarFallback className="bg-primary/10 text-primary">
+                                {user.first_name?.[0]}{user.last_name?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
                             {showAlert && (
                               <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-destructive border-2 border-background" />
                             )}
@@ -539,9 +546,12 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
-                    </div>
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={selectedUser.avatar_url || undefined} alt={`${selectedUser.first_name} ${selectedUser.last_name}`} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                        {selectedUser.first_name?.[0]}{selectedUser.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <CardTitle>
                         {selectedUser.first_name} {selectedUser.last_name}
