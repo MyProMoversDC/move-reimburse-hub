@@ -318,63 +318,91 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   };
 
   // Mobile Layout
-  const MobileLayout = () => (
-    <div className="space-y-6">
-      <HandbookPopup userId={userId} language={language} />
-      <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
-      <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
-      
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-1" />
-          {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
-        </Button>
-        <MoverNotificationBell userId={userId} language={language} />
-        <MoverSettings userId={userId} language={language} ref={settingsButtonRef} onClose={handleSettingsClose} />
-        <LanguageSelector language={language} onLanguageChange={setLanguage} />
-      </div>
+  const MobileLayout = () => {
+    const showFormContent = activeTab !== "feed" && (
+      showReimbursementForm || showReviewForm || showMissingPaymentForm || 
+      showViolenceForm || showFeedbackForm || activeTab === "misconduct" || activeTab === "chat"
+    );
 
-      {/* Form Selection Dropdown */}
-      <Card className="p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="w-full justify-between">
-              <span className="flex items-center">
-                <Plus className="h-4 w-4 mr-2" />
-                {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
-              </span>
-              <ChevronDown className="h-4 w-4 ml-2" />
+    const handleBackToFeed = () => {
+      setActiveTab("feed");
+      setShowReimbursementForm(false);
+      setShowReviewForm(false);
+      setShowMissingPaymentForm(false);
+      setShowViolenceForm(false);
+      setShowFeedbackForm(false);
+    };
+
+    return (
+      <div className="space-y-6">
+        <HandbookPopup userId={userId} language={language} />
+        <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
+        <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
+        
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-1" />
+            {language === 'ru' ? 'Выход' : language === 'es' ? 'Salir' : 'Exit'}
+          </Button>
+          <MoverNotificationBell userId={userId} language={language} />
+          <MoverSettings userId={userId} language={language} ref={settingsButtonRef} onClose={handleSettingsClose} />
+          <LanguageSelector language={language} onLanguageChange={setLanguage} />
+        </div>
+
+        {/* Show Form Content or Feed */}
+        {showFormContent ? (
+          <div className="space-y-4">
+            <Button variant="outline" size="sm" onClick={handleBackToFeed}>
+              {language === 'ru' ? '← Назад к ленте' : language === 'es' ? '← Volver al feed' : '← Back to Feed'}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
-            <DropdownMenuItem onClick={() => handleFormSelect('reimbursement')} className="py-3">
-              <DollarSign className="h-4 w-4 mr-2" />
-              {t.submitReimbursement}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleFormSelect('review')} className="py-3">
-              <Star className="h-4 w-4 mr-2" />
-              {rt.submitReview}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleFormSelect('missing-payment')} className="py-3">
-              <DollarSign className="h-4 w-4 mr-2" />
-              {mt.submitMissingPayment}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleFormSelect('violence')} className="py-3">
-              <Shield className="h-4 w-4 mr-2" />
-              {vt.submitReport}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleFormSelect('feedback')} className="py-3">
-              <Lightbulb className="h-4 w-4 mr-2" />
-              {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </Card>
+            {renderContent()}
+          </div>
+        ) : (
+          <>
+            {/* Form Selection Dropdown */}
+            <Card className="p-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="w-full justify-between">
+                    <span className="flex items-center">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {language === 'ru' ? 'Выбрать форму' : language === 'es' ? 'Seleccionar formulario' : 'Select Form to Submit'}
+                    </span>
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[calc(100vw-3rem)] bg-background border shadow-lg z-50">
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('reimbursement'); }} className="py-3">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    {t.submitReimbursement}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('review'); }} className="py-3">
+                    <Star className="h-4 w-4 mr-2" />
+                    {rt.submitReview}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('missing-payment'); }} className="py-3">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    {mt.submitMissingPayment}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('violence'); }} className="py-3">
+                    <Shield className="h-4 w-4 mr-2" />
+                    {vt.submitReport}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('feedback'); }} className="py-3">
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </Card>
 
-      {/* Feed Section - Below Form Selector */}
-      <FeedList userId={userId} isAdmin={false} language={language} />
-    </div>
-  );
+            {/* Feed Section - Below Form Selector */}
+            <FeedList userId={userId} isAdmin={false} language={language} />
+          </>
+        )}
+      </div>
+    );
+  };
 
   // Desktop Layout with Sidebar
   const DesktopLayout = () => (
