@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Image, FileText, Video, MoreVertical, Pencil, Trash2, Eye, Users } from "lucide-react";
+import { Image, FileText, Video, MoreVertical, Pencil, Trash2, Eye, Users, CheckCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +72,7 @@ interface FeedPostProps {
   prefetchedAttachments?: Attachment[];
   prefetchedPoll?: Poll | null;
   prefetchedAuthor?: AuthorProfile | null;
+  prefetchedAcknowledged?: boolean;
 }
 
 const translations = {
@@ -85,6 +86,8 @@ const translations = {
     viewers: "Viewers",
     close: "Close",
     translatedTo: "Translated to",
+    iUnderstand: "I Understand",
+    acknowledged: "Acknowledged",
   },
   es: {
     postedBy: "Publicado por Admin",
@@ -96,6 +99,8 @@ const translations = {
     viewers: "Espectadores",
     close: "Cerrar",
     translatedTo: "Traducido a",
+    iUnderstand: "Entendido",
+    acknowledged: "Reconocido",
   },
   ru: {
     postedBy: "Опубликовано Админом",
@@ -107,6 +112,8 @@ const translations = {
     viewers: "Просмотревшие",
     close: "Закрыть",
     translatedTo: "Переведено на",
+    iUnderstand: "Понятно",
+    acknowledged: "Подтверждено",
   },
 };
 
@@ -120,6 +127,7 @@ const FeedPost = ({
   prefetchedAttachments,
   prefetchedPoll,
   prefetchedAuthor,
+  prefetchedAcknowledged,
 }: FeedPostProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>(prefetchedAttachments || []);
   const [poll, setPoll] = useState<Poll | null>(prefetchedPoll || null);
@@ -127,6 +135,8 @@ const FeedPost = ({
   const [showViewers, setShowViewers] = useState(false);
   const [hasRecordedView, setHasRecordedView] = useState(false);
   const [authorProfile, setAuthorProfile] = useState<AuthorProfile | null>(prefetchedAuthor || null);
+  const [hasAcknowledged, setHasAcknowledged] = useState<boolean>(prefetchedAcknowledged || false);
+  const [isAcknowledging, setIsAcknowledging] = useState(false);
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -146,8 +156,39 @@ const FeedPost = ({
     if (isAdmin) {
       fetchViews();
     }
+    // Check acknowledgment status if not prefetched
+    if (prefetchedAcknowledged === undefined && !isAdmin) {
+      checkAcknowledgment();
+    }
     recordView();
   }, [post.id]);
+
+  const checkAcknowledgment = async () => {
+    const { data } = await supabase
+      .from("feed_post_acknowledgments")
+      .select("id")
+      .eq("post_id", post.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    setHasAcknowledged(!!data);
+  };
+
+  const handleAcknowledge = async () => {
+    if (hasAcknowledged || isAcknowledging) return;
+    setIsAcknowledging(true);
+    try {
+      const { error } = await supabase
+        .from("feed_post_acknowledgments")
+        .insert({ post_id: post.id, user_id: userId });
+      if (!error) {
+        setHasAcknowledged(true);
+      }
+    } catch (error) {
+      console.error("Error acknowledging post:", error);
+    } finally {
+      setIsAcknowledging(false);
+    }
+  };
 
   const fetchMissingData = async () => {
     // Fetch author profile if not prefetched
@@ -400,8 +441,32 @@ const FeedPost = ({
         )}
       </CardContent>
 
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 flex-col items-start gap-3">
         <FeedReactions postId={post.id} userId={userId} />
+        
+        {/* Acknowledgment button for movers */}
+        {!isAdmin && (
+          <div className="w-full pt-2 border-t">
+            {hasAcknowledged ? (
+              <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                {t.acknowledged}
+              </Badge>
+            ) : (
+              <Button
+                onClick={handleAcknowledge}
+                disabled={isAcknowledging}
+                className="w-full sm:w-auto"
+                variant="default"
+              >
+                {isAcknowledging ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                ) : null}
+                {t.iUnderstand}
+              </Button>
+            )}
+          </div>
+        )}
       </CardFooter>
 
       {/* Viewers Dialog (Admin only) */}

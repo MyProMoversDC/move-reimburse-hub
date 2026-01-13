@@ -280,6 +280,35 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_post_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_post_acknowledgments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_post_attachments: {
         Row: {
           created_at: string

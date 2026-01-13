@@ -100,6 +100,7 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
   const [attachmentsMap, setAttachmentsMap] = useState<Record<string, Attachment[]>>({});
   const [pollsMap, setPollsMap] = useState<Record<string, Poll>>({});
   const [authorsMap, setAuthorsMap] = useState<Record<string, AuthorProfile>>({});
+  const [acknowledgedMap, setAcknowledgedMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editPost, setEditPost] = useState<Post | null>(null);
@@ -147,6 +148,21 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
         .select("id, first_name, last_name, avatar_url")
         .in("id", authorIds),
     ]);
+
+    // Fetch user acknowledgments for movers (non-admin) separately
+    if (!isAdmin) {
+      const { data: acknowledgmentsData } = await supabase
+        .from("feed_post_acknowledgments")
+        .select("post_id")
+        .eq("user_id", userId)
+        .in("post_id", postIds);
+
+      const ackMap: Record<string, boolean> = {};
+      acknowledgmentsData?.forEach((ack) => {
+        ackMap[ack.post_id] = true;
+      });
+      setAcknowledgedMap(ackMap);
+    }
 
     // Build attachments map
     const attMap: Record<string, Attachment[]> = {};
@@ -259,6 +275,7 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
                 prefetchedAttachments={postAttachments}
                 prefetchedPoll={formattedPoll}
                 prefetchedAuthor={postAuthor || null}
+                prefetchedAcknowledged={!isAdmin ? acknowledgedMap[post.id] || false : undefined}
               />
             );
           })}
