@@ -12,8 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Image, Video, FileText, BarChart2, X, Plus, Loader2 } from "lucide-react";
+import { Image, Video, FileText, BarChart2, X, Plus, Loader2, Clock, Send, Eye } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import PostPreview from "./PostPreview";
 
 interface ExistingAttachment {
   id: string;
@@ -62,12 +68,21 @@ const translations = {
     existingAttachments: "Current Attachments",
     newAttachments: "Add New Attachments",
     cancel: "Cancel",
-    post: "Post",
+    post: "Post Now",
     save: "Save Changes",
     uploading: "Uploading...",
     postSuccess: "Post created successfully",
+    scheduledSuccess: "Post scheduled successfully",
     updateSuccess: "Post updated successfully",
     error: "Something went wrong",
+    publishing: "Publishing",
+    scheduling: "Scheduling",
+    postNow: "Post immediately",
+    schedulePost: "Schedule for later",
+    selectDate: "Select date",
+    selectTime: "Select time",
+    preview: "Preview",
+    schedule: "Schedule",
   },
   es: {
     createPost: "Crear Publicación",
@@ -84,12 +99,21 @@ const translations = {
     existingAttachments: "Adjuntos Actuales",
     newAttachments: "Agregar Nuevos Adjuntos",
     cancel: "Cancelar",
-    post: "Publicar",
+    post: "Publicar Ahora",
     save: "Guardar Cambios",
     uploading: "Subiendo...",
     postSuccess: "Publicación creada exitosamente",
+    scheduledSuccess: "Publicación programada exitosamente",
     updateSuccess: "Publicación actualizada exitosamente",
     error: "Algo salió mal",
+    publishing: "Publicando",
+    scheduling: "Programando",
+    postNow: "Publicar inmediatamente",
+    schedulePost: "Programar para después",
+    selectDate: "Seleccionar fecha",
+    selectTime: "Seleccionar hora",
+    preview: "Vista Previa",
+    schedule: "Programar",
   },
   ru: {
     createPost: "Создать Пост",
@@ -106,12 +130,21 @@ const translations = {
     existingAttachments: "Текущие Вложения",
     newAttachments: "Добавить Новые Вложения",
     cancel: "Отмена",
-    post: "Опубликовать",
+    post: "Опубликовать Сейчас",
     save: "Сохранить Изменения",
     uploading: "Загрузка...",
     postSuccess: "Пост успешно создан",
+    scheduledSuccess: "Пост успешно запланирован",
     updateSuccess: "Пост успешно обновлен",
     error: "Что-то пошло не так",
+    publishing: "Публикация",
+    scheduling: "Планирование",
+    postNow: "Опубликовать сразу",
+    schedulePost: "Запланировать на позже",
+    selectDate: "Выбрать дату",
+    selectTime: "Выбрать время",
+    preview: "Предпросмотр",
+    schedule: "Запланировать",
   },
 };
 
@@ -126,6 +159,14 @@ const CreatePostDialog = ({ open, onOpenChange, userId, onSuccess, editPost, lan
   const [existingPollId, setExistingPollId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Scheduling state
+  const [publishMode, setPublishMode] = useState<"now" | "schedule">("now");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [scheduledTime, setScheduledTime] = useState("12:00");
+  
+  // Preview state
+  const [showPreview, setShowPreview] = useState(false);
 
   const t = translations[language];
   const isEditing = !!editPost;
@@ -154,6 +195,10 @@ const CreatePostDialog = ({ open, onOpenChange, userId, onSuccess, editPost, lan
       setPollQuestion("");
       setPollOptions(["", ""]);
       setExistingPollId(null);
+      setPublishMode("now");
+      setScheduledDate(undefined);
+      setScheduledTime("12:00");
+      setShowPreview(false);
     }
   }, [open, editPost]);
 
@@ -292,10 +337,26 @@ const CreatePostDialog = ({ open, onOpenChange, userId, onSuccess, editPost, lan
           await supabase.from("feed_post_polls").delete().eq("id", existingPollId);
         }
       } else {
-        // Create new post
+        // Create new post with scheduling support
+        let scheduledAt: string | null = null;
+        let isPublished = true;
+        
+        if (publishMode === "schedule" && scheduledDate) {
+          const [hours, minutes] = scheduledTime.split(":").map(Number);
+          const scheduledDateTime = new Date(scheduledDate);
+          scheduledDateTime.setHours(hours, minutes, 0, 0);
+          scheduledAt = scheduledDateTime.toISOString();
+          isPublished = false;
+        }
+        
         const { data: postData, error: postError } = await supabase
           .from("feed_posts")
-          .insert({ content: content.trim(), created_by: userId })
+          .insert({ 
+            content: content.trim(), 
+            created_by: userId,
+            scheduled_at: scheduledAt,
+            is_published: isPublished,
+          })
           .select()
           .single();
 
@@ -349,7 +410,10 @@ const CreatePostDialog = ({ open, onOpenChange, userId, onSuccess, editPost, lan
         }
       }
 
-      toast.success(isEditing ? t.updateSuccess : t.postSuccess);
+      const successMessage = isEditing 
+        ? t.updateSuccess 
+        : (publishMode === "schedule" ? t.scheduledSuccess : t.postSuccess);
+      toast.success(successMessage);
       onSuccess();
       handleClose();
     } catch (error) {
@@ -369,6 +433,10 @@ const CreatePostDialog = ({ open, onOpenChange, userId, onSuccess, editPost, lan
     setPollQuestion("");
     setPollOptions(["", ""]);
     setExistingPollId(null);
+    setPublishMode("now");
+    setScheduledDate(undefined);
+    setScheduledTime("12:00");
+    setShowPreview(false);
     onOpenChange(false);
   };
 
@@ -538,15 +606,100 @@ const CreatePostDialog = ({ open, onOpenChange, userId, onSuccess, editPost, lan
               </div>
             )}
           </div>
+
+          {/* Scheduling Options - Only for new posts */}
+          {!isEditing && (
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+              <Label className="flex items-center gap-2 font-semibold">
+                <Clock className="h-4 w-4" />
+                {t.publishing}
+              </Label>
+              <RadioGroup value={publishMode} onValueChange={(v) => setPublishMode(v as "now" | "schedule")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="now" id="now" />
+                  <Label htmlFor="now" className="font-normal cursor-pointer flex items-center gap-2">
+                    <Send className="h-4 w-4" />
+                    {t.postNow}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="schedule" id="schedule" />
+                  <Label htmlFor="schedule" className="font-normal cursor-pointer flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {t.schedulePost}
+                  </Label>
+                </div>
+              </RadioGroup>
+              
+              {publishMode === "schedule" && (
+                <div className="flex flex-col sm:flex-row gap-3 mt-3">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "justify-start text-left font-normal flex-1",
+                          !scheduledDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Clock className="mr-2 h-4 w-4" />
+                        {scheduledDate ? format(scheduledDate, "PPP") : t.selectDate}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={scheduledDate}
+                        onSelect={setScheduledDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                    className="w-full sm:w-32"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Preview Toggle */}
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <Label className="flex items-center gap-2 cursor-pointer">
+              <Eye className="h-4 w-4" />
+              {t.preview}
+            </Label>
+            <Switch checked={showPreview} onCheckedChange={setShowPreview} />
+          </div>
+
+          {/* Post Preview */}
+          {showPreview && (
+            <PostPreview
+              content={content}
+              files={files}
+              existingAttachments={existingAttachments}
+              showPoll={showPoll}
+              pollQuestion={pollQuestion}
+              pollOptions={pollOptions}
+              language={language}
+            />
+          )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={handleClose} disabled={loading}>
             {t.cancel}
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={loading || (publishMode === "schedule" && !scheduledDate)}
+          >
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {isEditing ? t.save : t.post}
+            {isEditing ? t.save : (publishMode === "schedule" ? t.schedule : t.post)}
           </Button>
         </DialogFooter>
       </DialogContent>

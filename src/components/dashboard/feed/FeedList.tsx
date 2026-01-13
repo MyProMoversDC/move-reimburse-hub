@@ -114,10 +114,11 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
   const fetchPosts = async () => {
     setLoading(true);
     
-    // Fetch posts first
+    // Fetch only published posts for users
     const { data: postsData } = await supabase
       .from("feed_posts")
       .select("*")
+      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (!postsData || postsData.length === 0) {
