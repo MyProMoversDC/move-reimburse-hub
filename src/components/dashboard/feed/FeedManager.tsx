@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus, Eye, Edit, Trash2, FileText, Image, Video, FileIcon, BarChart3, Monitor, Clock, CheckCircle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, FileText, Image, Video, FileIcon, BarChart3, Monitor, Clock, CheckCircle, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import CreatePostDialog from "./CreatePostDialog";
@@ -37,11 +37,22 @@ interface PostView {
   viewed_at: string;
 }
 
+interface PostAcknowledgment {
+  id: string;
+  user_id: string;
+  acknowledged_at: string;
+  profile?: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
 export const FeedManager = ({ userId }: FeedManagerProps) => {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewsDialogOpen, setViewsDialogOpen] = useState(false);
+  const [acknowledgmentsDialogOpen, setAcknowledgmentsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
@@ -59,7 +70,8 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
             feed_post_poll_options(*)
           ),
           feed_post_views(count),
-          feed_post_reactions(count)
+          feed_post_reactions(count),
+          feed_post_acknowledgments(count)
         `)
         .order("created_at", { ascending: false });
 
@@ -141,10 +153,45 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
     enabled: !!selectedPost && viewsDialogOpen,
   });
 
+  const fetchPostAcknowledgments = async (postId: string): Promise<PostAcknowledgment[]> => {
+    const { data: acknowledgments, error } = await supabase
+      .from("feed_post_acknowledgments")
+      .select("id, user_id, acknowledged_at")
+      .eq("post_id", postId)
+      .order("acknowledged_at", { ascending: false });
+
+    if (error) throw error;
+
+    const userIds = acknowledgments?.map(a => a.user_id) || [];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", userIds);
+
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+    
+    return (acknowledgments || []).map(ack => ({
+      ...ack,
+      profile: profileMap.get(ack.user_id)
+    }));
+  };
+
+  const { data: postAcknowledgments, refetch: refetchAcknowledgments } = useQuery({
+    queryKey: ["post-acknowledgments", selectedPost?.id],
+    queryFn: () => fetchPostAcknowledgments(selectedPost?.id),
+    enabled: !!selectedPost && acknowledgmentsDialogOpen,
+  });
+
   const handleViewViews = (post: any) => {
     setSelectedPost(post);
     setViewsDialogOpen(true);
     refetchViews();
+  };
+
+  const handleViewAcknowledgments = (post: any) => {
+    setSelectedPost(post);
+    setAcknowledgmentsDialogOpen(true);
+    refetchAcknowledgments();
   };
 
   const handleEdit = (post: any) => {
@@ -160,6 +207,10 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
   const handlePreview = (post: any) => {
     setSelectedPost(post);
     setPreviewDialogOpen(true);
+  };
+
+  const getAcknowledgmentCount = (post: any) => {
+    return post.feed_post_acknowledgments?.[0]?.count || 0;
   };
 
   const getAttachmentIcon = (fileType: string) => {
@@ -237,9 +288,13 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
                     <Button variant="ghost" size="sm" onClick={() => handlePreview(post)} title="Preview as user">
                       <Monitor className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleViewViews(post)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleViewViews(post)} title="Views">
                       <Eye className="h-4 w-4 mr-1" />
                       <span className="text-xs">{getViewCount(post)}/{allUsers}</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleViewAcknowledgments(post)} title="Acknowledgments">
+                      <UserCheck className="h-4 w-4 mr-1" />
+                      <span className="text-xs">{getAcknowledgmentCount(post)}/{allUsers}</span>
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(post)}>
                       <Edit className="h-4 w-4" />
@@ -267,6 +322,7 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
                 </div>
                 <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                   <span>{getViewCount(post)} views</span>
+                  <span>{getAcknowledgmentCount(post)} confirmed</span>
                   <span>{getReactionCount(post)} reactions</span>
                 </div>
               </CardContent>
@@ -314,6 +370,39 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {format(new Date(view.viewed_at), "MMM d, h:mm a")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Acknowledgments Dialog */}
+      <Dialog open={acknowledgmentsDialogOpen} onOpenChange={setAcknowledgmentsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-green-500" />
+              Post Confirmations ({postAcknowledgments?.length || 0}/{allUsers})
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            {postAcknowledgments?.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No confirmations yet</p>
+            ) : (
+              <div className="space-y-2">
+                {postAcknowledgments?.map((ack) => (
+                  <div key={ack.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>
+                        {ack.profile?.first_name} {ack.profile?.last_name}
+                      </span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(ack.acknowledged_at), "MMM d, h:mm a")}
                     </span>
                   </div>
                 ))}
