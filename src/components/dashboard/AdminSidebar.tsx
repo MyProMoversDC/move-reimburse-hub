@@ -118,6 +118,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
             <SidebarMenu>
               {menuItems.map((item) => {
                 const count = getBadgeCount(item.id);
+                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents"].includes(item.id);
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
@@ -130,14 +131,20 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                         {item.id === "chat" && hasUnreadMessages && (
                           <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
                         )}
+                        {showRedDot && isCollapsed && (
+                          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+                        )}
                       </div>
                       {!isCollapsed && (
                         <span className="flex-1">{item.label}</span>
                       )}
-                      {!isCollapsed && count > 0 && (
+                      {!isCollapsed && count > 0 && !showRedDot && (
                         <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
                           {count}
                         </span>
+                      )}
+                      {!isCollapsed && showRedDot && (
+                        <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
                       )}
                       {!isCollapsed && item.id === "chat" && hasUnreadMessages && count === 0 && (
                         <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />

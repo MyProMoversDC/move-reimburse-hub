@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 import DateRangeFilter from "./DateRangeFilter";
@@ -134,7 +135,8 @@ const AdminViolenceIncidentList = ({ userRole }: AdminViolenceIncidentListProps)
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
+              <TableHead>Submitted At</TableHead>
+              <TableHead>Incident Date</TableHead>
               <TableHead>Mover</TableHead>
               <TableHead>Job ID</TableHead>
               <TableHead>Client</TableHead>
@@ -146,33 +148,39 @@ const AdminViolenceIncidentList = ({ userRole }: AdminViolenceIncidentListProps)
           <TableBody>
             {incidents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No violence incident reports found.
                 </TableCell>
               </TableRow>
             ) : (
-              incidents.map((incident) => (
-                <TableRow key={incident.id}>
-                  <TableCell>
-                    {format(new Date(incident.incident_date), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell className="font-medium">{incident.mover_name}</TableCell>
-                  <TableCell>{incident.job_id}</TableCell>
-                  <TableCell>{incident.client_name}</TableCell>
-                  <TableCell>{getSeverityBadge(incident.severity_level)}</TableCell>
-                  <TableCell>{getStatusIndicator(incident)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedIncident(incident)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              incidents.map((incident) => {
+                const submittedAtEST = toZonedTime(new Date(incident.created_at), "America/New_York");
+                return (
+                  <TableRow key={incident.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {format(submittedAtEST, "MMM d, yyyy h:mm a")} EST
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(incident.incident_date), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="font-medium">{incident.mover_name}</TableCell>
+                    <TableCell>{incident.job_id}</TableCell>
+                    <TableCell>{incident.client_name}</TableCell>
+                    <TableCell>{getSeverityBadge(incident.severity_level)}</TableCell>
+                    <TableCell>{getStatusIndicator(incident)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedIncident(incident)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
