@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Plus, Eye, Edit, Trash2, FileText, Image, Video, FileIcon, BarChart3, Monitor } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, FileText, Image, Video, FileIcon, BarChart3, Monitor, Clock, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import CreatePostDialog from "./CreatePostDialog";
@@ -211,13 +211,24 @@ export const FeedManager = ({ userId }: FeedManagerProps) => {
           </Card>
         ) : (
           posts?.map((post) => (
-            <Card key={post.id}>
+            <Card key={post.id} className={!post.is_published ? "border-dashed border-2 border-primary/50" : ""}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(post.created_at), "MMM d, yyyy 'at' h:mm a")}
-                    </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {post.is_published ? (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Published
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="flex items-center gap-1 border-primary text-primary">
+                          <Clock className="h-3 w-3" />
+                          Scheduled: {format(new Date(post.scheduled_at), "MMM d, yyyy 'at' h:mm a")}
+                        </Badge>
+                      )}
+                      <span>Created: {format(new Date(post.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
+                    </div>
                     {post.content && (
                       <p className="mt-2 whitespace-pre-wrap">{post.content.substring(0, 200)}{post.content.length > 200 ? "..." : ""}</p>
                     )}
