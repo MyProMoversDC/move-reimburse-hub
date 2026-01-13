@@ -16,6 +16,32 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
+interface Attachment {
+  id: string;
+  post_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+}
+
+interface Poll {
+  id: string;
+  post_id: string;
+  question: string;
+  feed_post_poll_options: {
+    id: string;
+    option_text: string;
+    sort_order: number;
+  }[];
+}
+
+interface AuthorProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+}
+
 interface Post {
   id: string;
   content: string;
@@ -71,6 +97,9 @@ const translations = {
 
 const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [attachmentsMap, setAttachmentsMap] = useState<Record<string, Attachment[]>>({});
+  const [pollsMap, setPollsMap] = useState<Record<string, Poll>>({});
+  const [authorsMap, setAuthorsMap] = useState<Record<string, AuthorProfile>>({});
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editPost, setEditPost] = useState<Post | null>(null);
@@ -84,12 +113,62 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
 
   const fetchPosts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Fetch posts first
+    const { data: postsData } = await supabase
       .from("feed_posts")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (data) setPosts(data);
+    if (!postsData || postsData.length === 0) {
+      setPosts([]);
+      setLoading(false);
+      return;
+    }
+
+    setPosts(postsData);
+    
+    const postIds = postsData.map(p => p.id);
+    const authorIds = [...new Set(postsData.map(p => p.created_by))];
+
+    // Fetch all related data in parallel
+    const [attachmentsRes, pollsRes, authorsRes] = await Promise.all([
+      supabase
+        .from("feed_post_attachments")
+        .select("*")
+        .in("post_id", postIds),
+      supabase
+        .from("feed_post_polls")
+        .select("*, feed_post_poll_options(*)")
+        .in("post_id", postIds),
+      supabase
+        .from("profiles")
+        .select("id, first_name, last_name, avatar_url")
+        .in("id", authorIds),
+    ]);
+
+    // Build attachments map
+    const attMap: Record<string, Attachment[]> = {};
+    attachmentsRes.data?.forEach(att => {
+      if (!attMap[att.post_id]) attMap[att.post_id] = [];
+      attMap[att.post_id].push(att);
+    });
+    setAttachmentsMap(attMap);
+
+    // Build polls map
+    const pMap: Record<string, Poll> = {};
+    pollsRes.data?.forEach(poll => {
+      pMap[poll.post_id] = poll;
+    });
+    setPollsMap(pMap);
+
+    // Build authors map
+    const aMap: Record<string, AuthorProfile> = {};
+    authorsRes.data?.forEach(author => {
+      aMap[author.id] = author;
+    });
+    setAuthorsMap(aMap);
+
     setLoading(false);
   };
 
@@ -155,17 +234,33 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => (
-            <FeedPost
-              key={post.id}
-              post={post}
-              isAdmin={isAdmin}
-              userId={userId}
-              onEdit={handleEdit}
-              onDelete={(id) => setDeletePostId(id)}
-              language={language}
-            />
-          ))}
+          {posts.map((post) => {
+            const postAttachments = attachmentsMap[post.id] || [];
+            const postPoll = pollsMap[post.id];
+            const postAuthor = authorsMap[post.created_by];
+            
+            // Transform poll data to match FeedPost expected format
+            const formattedPoll = postPoll ? {
+              id: postPoll.id,
+              question: postPoll.question,
+              options: postPoll.feed_post_poll_options?.sort((a, b) => a.sort_order - b.sort_order) || [],
+            } : null;
+            
+            return (
+              <FeedPost
+                key={post.id}
+                post={post}
+                isAdmin={isAdmin}
+                userId={userId}
+                onEdit={handleEdit}
+                onDelete={(id) => setDeletePostId(id)}
+                language={language}
+                prefetchedAttachments={postAttachments}
+                prefetchedPoll={formattedPoll}
+                prefetchedAuthor={postAuthor || null}
+              />
+            );
+          })}
         </div>
       )}
 
