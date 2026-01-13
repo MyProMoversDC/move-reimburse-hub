@@ -40,6 +40,12 @@ interface Poll {
   }[];
 }
 
+interface AuthorProfile {
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+}
+
 interface PostView {
   user_id: string;
   viewed_at: string;
@@ -62,6 +68,10 @@ interface FeedPostProps {
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   language: 'en' | 'es' | 'ru';
+  // Prefetched data for performance
+  prefetchedAttachments?: Attachment[];
+  prefetchedPoll?: Poll | null;
+  prefetchedAuthor?: AuthorProfile | null;
 }
 
 const translations = {
@@ -100,13 +110,23 @@ const translations = {
   },
 };
 
-const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPostProps) => {
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [poll, setPoll] = useState<Poll | null>(null);
+const FeedPost = ({ 
+  post, 
+  isAdmin, 
+  userId, 
+  onEdit, 
+  onDelete, 
+  language,
+  prefetchedAttachments,
+  prefetchedPoll,
+  prefetchedAuthor,
+}: FeedPostProps) => {
+  const [attachments, setAttachments] = useState<Attachment[]>(prefetchedAttachments || []);
+  const [poll, setPoll] = useState<Poll | null>(prefetchedPoll || null);
   const [views, setViews] = useState<PostView[]>([]);
   const [showViewers, setShowViewers] = useState(false);
   const [hasRecordedView, setHasRecordedView] = useState(false);
-  const [authorProfile, setAuthorProfile] = useState<{ first_name: string; last_name: string; avatar_url: string | null } | null>(null);
+  const [authorProfile, setAuthorProfile] = useState<AuthorProfile | null>(prefetchedAuthor || null);
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -118,65 +138,74 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
   const t = translations[language];
 
   useEffect(() => {
-    fetchPostData();
+    // Only fetch data that wasn't prefetched
+    if (!prefetchedAttachments || !prefetchedPoll || !prefetchedAuthor) {
+      fetchMissingData();
+    }
+    // Always fetch views for admin (lightweight operation)
+    if (isAdmin) {
+      fetchViews();
+    }
     recordView();
   }, [post.id]);
 
-  const fetchPostData = async () => {
-    // Fetch author profile
-    const { data: authorData } = await supabase
-      .from("profiles")
-      .select("first_name, last_name, avatar_url")
-      .eq("id", post.created_by)
-      .maybeSingle();
-    
-    if (authorData) setAuthorProfile(authorData);
-
-    // Fetch attachments
-    const { data: attachmentsData } = await supabase
-      .from("feed_post_attachments")
-      .select("*")
-      .eq("post_id", post.id);
-    
-    if (attachmentsData) setAttachments(attachmentsData);
-
-    // Fetch poll
-    const { data: pollData } = await supabase
-      .from("feed_post_polls")
-      .select("*, feed_post_poll_options(*)")
-      .eq("post_id", post.id)
-      .maybeSingle();
-    
-    if (pollData) {
-      setPoll({
-        id: pollData.id,
-        question: pollData.question,
-        options: pollData.feed_post_poll_options.sort((a: any, b: any) => a.sort_order - b.sort_order),
-      });
+  const fetchMissingData = async () => {
+    // Fetch author profile if not prefetched
+    if (!prefetchedAuthor) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, avatar_url")
+        .eq("id", post.created_by)
+        .maybeSingle();
+      if (data) setAuthorProfile(data);
     }
 
-    // Fetch views (for admin)
-    if (isAdmin) {
-      const { data: viewsData } = await supabase
-        .from("feed_post_views")
-        .select("user_id, viewed_at")
+    // Fetch attachments if not prefetched
+    if (!prefetchedAttachments) {
+      const { data } = await supabase
+        .from("feed_post_attachments")
+        .select("*")
         .eq("post_id", post.id);
-      
-      if (viewsData) {
-        // Fetch profiles for viewers
-        const userIds = viewsData.map(v => v.user_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, first_name, last_name")
-          .in("id", userIds);
-        
-        const viewsWithProfiles = viewsData.map(view => ({
-          ...view,
-          profile: profiles?.find(p => p.id === view.user_id),
-        }));
-        
-        setViews(viewsWithProfiles);
+      if (data) setAttachments(data);
+    }
+
+    // Fetch poll if not prefetched
+    if (prefetchedPoll === undefined) {
+      const { data } = await supabase
+        .from("feed_post_polls")
+        .select("*, feed_post_poll_options(*)")
+        .eq("post_id", post.id)
+        .maybeSingle();
+      if (data) {
+        setPoll({
+          id: data.id,
+          question: data.question,
+          options: data.feed_post_poll_options.sort((a: any, b: any) => a.sort_order - b.sort_order),
+        });
       }
+    }
+  };
+
+  const fetchViews = async () => {
+    const { data: viewsData } = await supabase
+      .from("feed_post_views")
+      .select("user_id, viewed_at")
+      .eq("post_id", post.id);
+    
+    if (viewsData && viewsData.length > 0) {
+      // Fetch profiles for viewers
+      const userIds = viewsData.map(v => v.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name")
+        .in("id", userIds);
+      
+      const viewsWithProfiles = viewsData.map(view => ({
+        ...view,
+        profile: profiles?.find(p => p.id === view.user_id),
+      }));
+      
+      setViews(viewsWithProfiles);
     }
   };
 
@@ -251,7 +280,9 @@ const FeedPost = ({ post, isAdmin, userId, onEdit, onDelete, language }: FeedPos
           key={attachment.id}
           src={attachment.file_url}
           controls
-          className="rounded-lg max-h-96 w-full"
+          preload="none"
+          poster=""
+          className="rounded-lg max-h-96 w-full bg-muted"
         />
       );
     }
