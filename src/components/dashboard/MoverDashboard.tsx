@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -26,6 +26,7 @@ import { MoverFeedbackHistory } from "./MoverFeedbackHistory";
 import ChatContainer from "./chat/ChatContainer";
 import FeedList from "./feed/FeedList";
 import MoverSettings from "./MoverSettings";
+import MoverTodoList from "./MoverTodoList";
 import { MoverNotificationBell } from "./MoverNotificationBell";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -36,6 +37,8 @@ import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations
 import { chatTranslations } from "@/lib/chatTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import HandbookPopup from "./HandbookPopup";
+import ConsentDocumentPopup from "./ConsentDocumentPopup";
+import AnnualAddressDisclaimer from "./AnnualAddressDisclaimer";
 import DriverLicenseDisclaimer from "./DriverLicenseDisclaimer";
 import AddressDisclaimer from "./AddressDisclaimer";
 
@@ -59,6 +62,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Login flow states
+  const [consentCompleted, setConsentCompleted] = useState(false);
+  const [handbookCompleted, setHandbookCompleted] = useState(false);
+  const [showHandbook, setShowHandbook] = useState(false);
 
   const handleNavigateToSettings = () => {
     settingsButtonRef.current?.click();
@@ -158,6 +166,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     switch (activeTab) {
       case "feed":
         return <FeedList userId={userId} isAdmin={false} language={language} />;
+      
+      case "todo":
+        return <MoverTodoList userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />;
       
       case "reimbursements":
         return (
@@ -335,7 +346,32 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
     return (
       <div className="space-y-6">
-        <HandbookPopup userId={userId} language={language} />
+        {/* Consent Document Popup - First Step */}
+        <ConsentDocumentPopup 
+          userId={userId} 
+          language={language} 
+          onComplete={() => {
+            setConsentCompleted(true);
+            setShowHandbook(true);
+          }}
+        />
+        
+        {/* Handbook Popup - Second Step (only shown after consent is completed) */}
+        {consentCompleted && showHandbook && (
+          <HandbookPopup 
+            userId={userId} 
+            language={language} 
+            onAcknowledge={() => {
+              setHandbookCompleted(true);
+              setShowHandbook(false);
+              setActiveTab("feed");
+            }}
+          />
+        )}
+        
+        {/* Annual Address Disclaimer - Dec 31st */}
+        <AnnualAddressDisclaimer userId={userId} language={language} />
+        
         <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
         <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
         
@@ -348,6 +384,20 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <MoverSettings userId={userId} language={language} ref={settingsButtonRef} onClose={handleSettingsClose} />
           <LanguageSelector language={language} onLanguageChange={setLanguage} />
         </div>
+
+        {/* To-Do List Button for Mobile */}
+        <Card className="p-4">
+          <Button 
+            variant="outline" 
+            className="w-full justify-between"
+            onClick={() => setActiveTab("todo")}
+          >
+            <span className="flex items-center">
+              <ClipboardList className="h-4 w-4 mr-2" />
+              {language === 'ru' ? 'Список задач' : language === 'es' ? 'Lista de Tareas' : 'To-Do List'}
+            </span>
+          </Button>
+        </Card>
 
         {/* Show Form Content or Feed */}
         {showFormContent ? (
@@ -413,6 +463,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           onTabChange={setActiveTab}
           hasUnreadMessages={hasUnreadMessages}
           language={language}
+          userId={userId}
         />
         <SidebarInset className="flex-1">
           <div className="p-6">

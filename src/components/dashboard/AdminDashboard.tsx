@@ -17,6 +17,8 @@ import AdminTodoList from "./AdminTodoList";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import HandbookManager from "./HandbookManager";
+import ConsentDocumentManager from "./ConsentDocumentManager";
+import UserActivityLog from "./UserActivityLog";
 import { AdminFeedbackList } from "./AdminFeedbackList";
 import { AdminAIAssistant } from "./AdminAIAssistant";
 import { FeedManager } from "./feed/FeedManager";
@@ -374,6 +376,20 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Email Logs</h2>
             <AdminEmailLogs />
+          </div>
+        );
+      case "consent-documents":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Consent Documents</h2>
+            <ConsentDocumentManager />
+          </div>
+        );
+      case "user-activity":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">User Activity Log</h2>
+            <UserActivityLog />
           </div>
         );
       case "chat":

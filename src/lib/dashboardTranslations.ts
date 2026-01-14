@@ -42,7 +42,7 @@ export const dashboardTranslations = {
     
     // Statuses
     pending: "Pending",
-    statusConfirmed: "Confirmed",
+    statusConfirmed: "Approved",
     paid: "Paid",
     declined: "Declined",
     
@@ -138,7 +138,7 @@ export const dashboardTranslations = {
     
     // Statuses
     pending: "Pendiente",
-    statusConfirmed: "Confirmado",
+    statusConfirmed: "Aprobado",
     paid: "Pagado",
     declined: "Rechazado",
     
@@ -234,7 +234,7 @@ export const dashboardTranslations = {
     
     // Statuses
     pending: "В Ожидании",
-    statusConfirmed: "Подтверждено",
+    statusConfirmed: "Одобрено",
     paid: "Оплачено",
     declined: "Отклонено",
     

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mail, Search, Eye, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Mail, Search, Eye, RefreshCw, CheckCircle, XCircle, Inbox, Send } from "lucide-react";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
@@ -30,6 +31,7 @@ const AdminEmailLogs = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<EmailLog | null>(null);
+  const [activeTab, setActiveTab] = useState("outbound");
 
   useEffect(() => {
     fetchLogs();
@@ -64,6 +66,8 @@ const AdminEmailLogs = () => {
       review_submission: "bg-purple-500",
       performance_report: "bg-orange-500",
       admin_mover_email: "bg-teal-500",
+      mover_approval_notification: "bg-green-600",
+      mover_decline_notification: "bg-red-600",
     };
     return (
       <Badge className={`${typeColors[type] || "bg-gray-500"} text-white text-xs`}>
@@ -72,11 +76,78 @@ const AdminEmailLogs = () => {
     );
   };
 
-  const filteredLogs = logs.filter(
-    (log) =>
-      log.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.to_emails.some((e) => e.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      log.email_type.toLowerCase().includes(searchTerm.toLowerCase())
+  // Separate inbound and outbound emails
+  // Outbound: emails sent FROM the system (notifications@mypromoversreimbursements.com)
+  // Inbound: replies or emails TO the system addresses
+  const outboundEmails = logs.filter(
+    (log) => log.from_email.includes("notifications@") || log.from_email.includes("mypromovers")
+  );
+  const inboundEmails = logs.filter(
+    (log) => !log.from_email.includes("notifications@") && !log.from_email.includes("mypromovers")
+  );
+
+  const filterLogs = (emailList: EmailLog[]) =>
+    emailList.filter(
+      (log) =>
+        log.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.to_emails.some((e) => e.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        log.email_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.from_email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  const renderEmailTable = (emails: EmailLog[]) => (
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[140px]">Date (EST)</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>{activeTab === "outbound" ? "To" : "From"}</TableHead>
+            <TableHead>Subject</TableHead>
+            <TableHead className="w-[80px]">Status</TableHead>
+            <TableHead className="w-[60px]">View</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                Loading emails...
+              </TableCell>
+            </TableRow>
+          ) : emails.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                No email logs found
+              </TableCell>
+            </TableRow>
+          ) : (
+            emails.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell className="text-xs">{formatToEST(log.created_at)}</TableCell>
+                <TableCell>{getEmailTypeBadge(log.email_type)}</TableCell>
+                <TableCell className="text-sm max-w-[200px] truncate">
+                  {activeTab === "outbound" ? log.to_emails.join(", ") : log.from_email}
+                </TableCell>
+                <TableCell className="text-sm max-w-[250px] truncate">{log.subject}</TableCell>
+                <TableCell>
+                  {log.status === "sent" ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedEmail(log)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 
   return (
@@ -98,65 +169,33 @@ const AdminEmailLogs = () => {
           <div className="flex items-center gap-2 mb-4">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by subject, recipient, or type..."
+              placeholder="Search by subject, recipient, sender, or type..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
             />
           </div>
 
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[140px]">Date (EST)</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>To</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead className="w-[80px]">Status</TableHead>
-                  <TableHead className="w-[60px]">View</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Loading emails...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredLogs.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No email logs found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-xs">{formatToEST(log.created_at)}</TableCell>
-                      <TableCell>{getEmailTypeBadge(log.email_type)}</TableCell>
-                      <TableCell className="text-sm max-w-[200px] truncate">
-                        {log.to_emails.join(", ")}
-                      </TableCell>
-                      <TableCell className="text-sm max-w-[250px] truncate">{log.subject}</TableCell>
-                      <TableCell>
-                        {log.status === "sent" ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedEmail(log)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="outbound" className="flex items-center gap-2">
+                <Send className="h-4 w-4" />
+                Outbound ({outboundEmails.length})
+              </TabsTrigger>
+              <TabsTrigger value="inbound" className="flex items-center gap-2">
+                <Inbox className="h-4 w-4" />
+                Inbound ({inboundEmails.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="outbound">
+              {renderEmailTable(filterLogs(outboundEmails))}
+            </TabsContent>
+
+            <TabsContent value="inbound">
+              {renderEmailTable(filterLogs(inboundEmails))}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
