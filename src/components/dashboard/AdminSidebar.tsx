@@ -65,7 +65,9 @@ const menuItems = [
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "handbook", label: "Handbook Management", icon: BookOpen },
+  { id: "consent-documents", label: "Consent Documents", icon: FileText },
   { id: "email-logs", label: "Email Logs", icon: Mail },
+  { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
   { id: "chat", label: "Chat", icon: MessageSquare },
 ];
 
