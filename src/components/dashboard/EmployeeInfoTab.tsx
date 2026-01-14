@@ -398,15 +398,25 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
       const driverFlag = driverStatus?.is_driver === true;
       setIsDriver(driverFlag);
       setOriginalIsDriver(driverFlag);
-      setMedicalCardUrl(driverStatus?.medical_card_url || "");
 
-      // Parse license images
+      // Get signed URL for medical card
+      if (driverStatus?.medical_card_url) {
+        const signedUrl = await getSignedUrl("medical-cards", driverStatus.medical_card_url);
+        setMedicalCardUrl(signedUrl || "");
+      } else {
+        setMedicalCardUrl("");
+      }
+
+      // Parse license images and get signed URLs
       if (driverStatus?.license_url) {
         try {
           const images = JSON.parse(driverStatus.license_url);
-          setLicenseImages({ front: images.front || "", back: images.back || "" });
+          const frontSignedUrl = images.front ? await getSignedUrl("driver-licenses", images.front) : "";
+          const backSignedUrl = images.back ? await getSignedUrl("driver-licenses", images.back) : "";
+          setLicenseImages({ front: frontSignedUrl || "", back: backSignedUrl || "" });
         } catch {
-          setLicenseImages({ front: driverStatus.license_url, back: "" });
+          const signedUrl = await getSignedUrl("driver-licenses", driverStatus.license_url);
+          setLicenseImages({ front: signedUrl || "", back: "" });
         }
       } else {
         setLicenseImages({ front: "", back: "" });

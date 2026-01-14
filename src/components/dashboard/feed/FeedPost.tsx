@@ -86,7 +86,7 @@ const translations = {
     viewers: "Viewers",
     close: "Close",
     translatedTo: "Translated to",
-    iUnderstand: "I Understand",
+    iUnderstand: "I have read and understand",
     acknowledged: "Acknowledged",
   },
   es: {
@@ -99,7 +99,7 @@ const translations = {
     viewers: "Espectadores",
     close: "Cerrar",
     translatedTo: "Traducido a",
-    iUnderstand: "Entendido",
+    iUnderstand: "He leído y entiendo",
     acknowledged: "Reconocido",
   },
   ru: {
@@ -112,7 +112,7 @@ const translations = {
     viewers: "Просмотревшие",
     close: "Закрыть",
     translatedTo: "Переведено на",
-    iUnderstand: "Понятно",
+    iUnderstand: "Я прочитал и понимаю",
     acknowledged: "Подтверждено",
   },
 };

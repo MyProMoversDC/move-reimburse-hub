@@ -8,6 +8,9 @@ const BUCKET_CONFIG: Record<string, string> = {
   'appeal-attachments': 'appeal-attachments/',
   'violence-incident-attachments': 'violence-incident-attachments/',
   'chat-attachments': 'chat-attachments/',
+  'driver-licenses': 'driver-licenses/',
+  'medical-cards': 'medical-cards/',
+  'profile-avatars': 'profile-avatars/',
 };
 
 /**

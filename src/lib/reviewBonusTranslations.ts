@@ -10,7 +10,6 @@ When completing this form, the foreman must include:
 – Invoice number
 – Full legal names of all movers who worked the job
 – URL of the review
-– URL for the review
 
 Each mover listed will receive 1 bonus hour if the review is valid and all required information is provided. If the form is not submitted, the review will not be counted. If the review is later removed by the customer or taken down by Google, the bonus will be voided.`,
     jobDate: "Job Date",
@@ -74,7 +73,6 @@ Al completar este formulario, el capataz debe incluir:
 – Número de factura
 – Nombres legales completos de todos los movers que trabajaron en el trabajo
 – URL de la reseña
-– URL de la reseña
 
 Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la información requerida es proporcionada. Si el formulario no se envía, la reseña no será contada. Si la reseña es eliminada posteriormente por el cliente o removida por Google, el bono será anulado.`,
     jobDate: "Fecha del Trabajo",
@@ -137,7 +135,6 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
 – Полное имя клиента (точно как в рабочем заказе или BOL)
 – Номер счета
 – Полные юридические имена всех грузчиков, работавших на заказе
-– URL отзыва
 – URL отзыва
 
 Каждый указанный грузчик получит 1 бонусный час, если отзыв действителен и предоставлена вся необходимая информация. Если форма не отправлена, отзыв не будет учтен. Если отзыв будет позже удален клиентом или снят Google, бонус будет аннулирован.`,
