@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      address_history: {
+        Row: {
+          address: string
+          changed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          changed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          changed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      annual_address_confirmations: {
+        Row: {
+          address_changed: boolean
+          address_confirmed: string
+          confirmed_at: string
+          confirmed_year: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          address_changed?: boolean
+          address_confirmed: string
+          confirmed_at?: string
+          confirmed_year: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          address_changed?: boolean
+          address_confirmed?: string
+          confirmed_at?: string
+          confirmed_year?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_message_attachments: {
         Row: {
           created_at: string
@@ -86,6 +134,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      consent_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          consent_document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          consent_document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          consent_document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_acknowledgments_consent_document_id_fkey"
+            columns: ["consent_document_id"]
+            isOneToOne: false
+            referencedRelation: "consent_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consent_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          is_active: boolean
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          is_active?: boolean
+          uploaded_by: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_active?: boolean
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: []
       }
       conversation_participants: {
         Row: {
@@ -195,6 +305,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_document_reviews: {
+        Row: {
+          created_at: string
+          decline_reason: string | null
+          document_type: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decline_reason?: string | null
+          document_type: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decline_reason?: string | null
+          document_type?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       email_logs: {
         Row: {
@@ -1385,6 +1528,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_logs: {
+        Row: {
+          activity_description: string
+          activity_type: string
+          created_at: string
+          id: string
+          reference_id: string | null
+          reference_type: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_description: string
+          activity_type: string
+          created_at?: string
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_description?: string
+          activity_type?: string
+          created_at?: string
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_driver_status: {
         Row: {
           created_at: string
@@ -1393,6 +1566,8 @@ export type Database = {
           is_driver: boolean | null
           license_uploaded_at: string | null
           license_url: string | null
+          medical_card_expiration_date: string | null
+          medical_card_issue_date: string | null
           medical_card_url: string | null
           updated_at: string
           user_id: string
@@ -1404,6 +1579,8 @@ export type Database = {
           is_driver?: boolean | null
           license_uploaded_at?: string | null
           license_url?: string | null
+          medical_card_expiration_date?: string | null
+          medical_card_issue_date?: string | null
           medical_card_url?: string | null
           updated_at?: string
           user_id: string
@@ -1415,6 +1592,8 @@ export type Database = {
           is_driver?: boolean | null
           license_uploaded_at?: string | null
           license_url?: string | null
+          medical_card_expiration_date?: string | null
+          medical_card_issue_date?: string | null
           medical_card_url?: string | null
           updated_at?: string
           user_id?: string
