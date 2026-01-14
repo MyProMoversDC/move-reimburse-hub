@@ -110,26 +110,10 @@ const AddBonusDialog = ({ userId, language, onBonusAdded }: AddBonusDialogProps)
 
   const fetchMovers = async () => {
     try {
-      // Get all users with mover role
-      const { data: moverRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "mover");
-
-      if (rolesError) throw rolesError;
-
-      const moverIds = moverRoles?.map((r) => r.user_id) || [];
-
-      if (moverIds.length === 0) {
-        setMovers([]);
-        return;
-      }
-
-      // Fetch profiles for all movers
+      // Get all signed-up users (anyone can be selected for bonus)
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, hourly_rate")
-        .in("id", moverIds)
         .order("first_name");
 
       if (profilesError) throw profilesError;
