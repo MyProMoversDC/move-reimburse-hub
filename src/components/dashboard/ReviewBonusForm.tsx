@@ -258,12 +258,16 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Form Description */}
+        {/* Form Description - Translated */}
         <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500 shadow-md">
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Submit this form after a customer leaves a review for your service. Include all crew members who participated in the job. Each approved review qualifies crew members for a potential bonus. Note: Each invoice number and review URL can only be submitted once.
+              {language === 'en' 
+                ? "Submit this form after a customer leaves a review for your service. Include all crew members who participated in the job. Each approved review qualifies crew members for a potential bonus. Note: Each invoice number and review URL can only be submitted once."
+                : language === 'es'
+                ? "Envíe este formulario después de que un cliente deje una reseña por su servicio. Incluya a todos los miembros del equipo que participaron en el trabajo. Cada reseña aprobada califica a los miembros del equipo para un bono potencial. Nota: Cada número de factura y URL de reseña solo se puede enviar una vez."
+                : "Отправьте эту форму после того, как клиент оставит отзыв о вашей услуге. Укажите всех членов бригады, участвовавших в работе. Каждый одобренный отзыв дает право членам бригады на потенциальный бонус. Примечание: Каждый номер счета и URL отзыва можно отправить только один раз."}
             </p>
           </div>
         </div>
