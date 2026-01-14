@@ -36,8 +36,8 @@ interface EmploymentInfo {
 interface DriversLicense {
   number: string;
   licenseClass: string;
+  dateOfIssue: Date | undefined;
   expires: Date | undefined;
-  physicalExpires: Date | undefined;
 }
 
 interface CustomAttributes {
@@ -76,6 +76,7 @@ const translations = {
     profilePhoto: "Profile Photo",
     licenseNumber: "Driver's License Number",
     licenseClass: "License Class",
+    dateOfIssue: "Date of Issue",
     licenseExpires: "Driver License Expires",
     physicalExpires: "Physical Expiration Date",
     save: "Save Changes",
@@ -144,6 +145,7 @@ const translations = {
     profilePhoto: "Foto de Perfil",
     licenseNumber: "Número de Licencia de Conducir",
     licenseClass: "Clase de Licencia",
+    dateOfIssue: "Fecha de Emisión",
     licenseExpires: "Vencimiento de Licencia",
     physicalExpires: "Fecha de Expiración Física",
     save: "Guardar Cambios",
@@ -212,6 +214,7 @@ const translations = {
     profilePhoto: "Фото Профиля",
     licenseNumber: "Номер Водительского Удостоверения",
     licenseClass: "Класс Прав",
+    dateOfIssue: "Дата Выдачи",
     licenseExpires: "Срок Действия Прав",
     physicalExpires: "Дата Истечения Медосмотра",
     save: "Сохранить Изменения",
@@ -318,9 +321,11 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
   const [driversLicense, setDriversLicense] = useState<DriversLicense>({
     number: "",
     licenseClass: "",
+    dateOfIssue: undefined,
     expires: undefined,
-    physicalExpires: undefined,
   });
+  const [medicalCardIssueDate, setMedicalCardIssueDate] = useState<Date | undefined>(undefined);
+  const [medicalCardExpirationDate, setMedicalCardExpirationDate] = useState<Date | undefined>(undefined);
 
   const [isDriver, setIsDriver] = useState(false);
   const [originalIsDriver, setOriginalIsDriver] = useState(false);
@@ -388,10 +393,10 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
 
       if (error) throw error;
 
-      // Fetch driver status
+      // Fetch driver status including medical card dates
       const { data: driverStatus } = await supabase
         .from("user_driver_status")
-        .select("is_driver, license_url, medical_card_url")
+        .select("is_driver, license_url, medical_card_url, medical_card_issue_date, medical_card_expiration_date")
         .eq("user_id", employeeId)
         .maybeSingle();
 
@@ -406,6 +411,10 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
       } else {
         setMedicalCardUrl("");
       }
+
+      // Set medical card dates
+      setMedicalCardIssueDate(driverStatus?.medical_card_issue_date ? new Date(driverStatus.medical_card_issue_date) : undefined);
+      setMedicalCardExpirationDate(driverStatus?.medical_card_expiration_date ? new Date(driverStatus.medical_card_expiration_date) : undefined);
 
       // Parse license images and get signed URLs
       if (driverStatus?.license_url) {
@@ -435,8 +444,8 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
       const licenseData: DriversLicense = {
         number: profile.license_number || "",
         licenseClass: profile.license_class || "",
+        dateOfIssue: profile.physical_expires ? new Date(profile.physical_expires) : undefined,
         expires: profile.license_expires ? new Date(profile.license_expires) : undefined,
-        physicalExpires: profile.physical_expires ? new Date(profile.physical_expires) : undefined,
       };
 
       const rawAttributes = profile.custom_attributes as Record<string, boolean> | null;
@@ -486,7 +495,7 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
           license_number: driversLicense.number || null,
           license_class: driversLicense.licenseClass || null,
           license_expires: driversLicense.expires ? format(driversLicense.expires, "yyyy-MM-dd") : null,
-          physical_expires: driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "yyyy-MM-dd") : null,
+          physical_expires: driversLicense.dateOfIssue ? format(driversLicense.dateOfIssue, "yyyy-MM-dd") : null,
           custom_attributes: attributesJson,
         })
         .eq("id", employeeId);
@@ -618,8 +627,7 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
   // Check for license expiration alerts
   const licenseExpiredAlert = isExpired(driversLicense.expires);
   const licenseExpiringSoonAlert = !licenseExpiredAlert && isExpiringWithin90Days(driversLicense.expires);
-  const physicalExpiredAlert = isExpired(driversLicense.physicalExpires);
-  const physicalExpiringSoonAlert = !physicalExpiredAlert && isExpiringWithin90Days(driversLicense.physicalExpires);
+  // Note: Date of Issue doesn't need expiration alerts since it's not an expiring date
 
   return (
     <div className="space-y-6 pb-20">
@@ -632,18 +640,6 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
           </AlertTitle>
           <AlertDescription>
             {licenseExpiredAlert ? t.expiredOn : t.expiresOn}: {driversLicense.expires ? format(driversLicense.expires, "MM/dd/yyyy") : ""}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {(physicalExpiredAlert || physicalExpiringSoonAlert) && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>
-            {physicalExpiredAlert ? t.physicalExpired : t.physicalExpiringSoon}
-          </AlertTitle>
-          <AlertDescription>
-            {physicalExpiredAlert ? t.expiredOn : t.expiresOn}: {driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "MM/dd/yyyy") : ""}
           </AlertDescription>
         </Alert>
       )}
@@ -861,6 +857,33 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
               />
             </div>
 
+            {/* Date of Issue */}
+            <div className="space-y-2">
+              <Label>{t.dateOfIssue}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !driversLicense.dateOfIssue && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {driversLicense.dateOfIssue ? format(driversLicense.dateOfIssue, "PPP") : t.pickDate}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={driversLicense.dateOfIssue}
+                    onSelect={(date) => setDriversLicense({ ...driversLicense, dateOfIssue: date })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
             {/* License Expires */}
             <div className="space-y-2">
               <Label>{t.licenseExpires}</Label>
@@ -887,34 +910,6 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
                 </PopoverContent>
               </Popover>
             </div>
-
-            {/* Physical Expires */}
-            <div className="space-y-2">
-              <Label>{t.physicalExpires}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !driversLicense.physicalExpires && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "PPP") : t.pickDate}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={driversLicense.physicalExpires}
-                    onSelect={(date) => setDriversLicense({ ...driversLicense, physicalExpires: date })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Is Driver Checkbox */}
             <div className="md:col-span-2 flex items-center space-x-2 pt-4 border-t">
               <Checkbox

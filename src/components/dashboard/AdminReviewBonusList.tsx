@@ -103,7 +103,7 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
       case "pending":
         return <Badge variant="secondary">Pending</Badge>;
       case "confirmed":
-        return <Badge className="bg-green-500">Confirmed</Badge>;
+        return <Badge className="bg-green-500">Approved</Badge>;
       case "declined":
         // Check appeal count to determine which declined status to show
         if (appealCount === 1) {
@@ -462,9 +462,15 @@ const AdminReviewBonusList = ({ language, startDate, endDate }: AdminReviewBonus
               </div>
 
               {selectedReview.review_url && (
-                <div>
+                <div className="overflow-hidden">
                   <p className="text-sm text-muted-foreground">Review URL</p>
-                  <a href={selectedReview.review_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a 
+                    href={selectedReview.review_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-primary hover:underline break-all whitespace-pre-wrap"
+                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                  >
                     {selectedReview.review_url}
                   </a>
                 </div>

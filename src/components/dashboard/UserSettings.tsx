@@ -55,8 +55,8 @@ const translations = {
     driversLicenseInfo: "Driver's License Information",
     licenseNumber: "Driver's License Number",
     licenseClass: "License Class",
+    dateOfIssue: "Date of Issue",
     licenseExpires: "Driver License Expires",
-    physicalExpires: "Physical Expiration Date",
     selectDate: "Select date",
     licenseImages: "Driver's License Images",
     uploadLicenseImage: "Upload License Image",
@@ -67,6 +67,8 @@ const translations = {
     medicalCard: "Medical Card",
     uploadMedicalCard: "Upload Medical Card",
     noDocumentUploaded: "No document uploaded",
+    medicalCardIssueDate: "Issue Date",
+    medicalCardExpirationDate: "Expiration Date",
   },
   es: {
     settings: "Configuración",
@@ -91,8 +93,8 @@ const translations = {
     driversLicenseInfo: "Información de Licencia de Conducir",
     licenseNumber: "Número de Licencia de Conducir",
     licenseClass: "Clase de Licencia",
+    dateOfIssue: "Fecha de Emisión",
     licenseExpires: "Vencimiento de Licencia",
-    physicalExpires: "Fecha de Expiración Física",
     selectDate: "Seleccionar fecha",
     licenseImages: "Imágenes de Licencia de Conducir",
     uploadLicenseImage: "Subir Imagen de Licencia",
@@ -103,6 +105,8 @@ const translations = {
     medicalCard: "Tarjeta Médica",
     uploadMedicalCard: "Subir Tarjeta Médica",
     noDocumentUploaded: "Sin documento subido",
+    medicalCardIssueDate: "Fecha de Emisión",
+    medicalCardExpirationDate: "Fecha de Vencimiento",
   },
   ru: {
     settings: "Настройки",
@@ -127,8 +131,8 @@ const translations = {
     driversLicenseInfo: "Информация о Водительских Правах",
     licenseNumber: "Номер Водительского Удостоверения",
     licenseClass: "Класс Прав",
+    dateOfIssue: "Дата Выдачи",
     licenseExpires: "Срок Действия Прав",
-    physicalExpires: "Дата Истечения Медосмотра",
     selectDate: "Выберите дату",
     licenseImages: "Изображения Водительского Удостоверения",
     uploadLicenseImage: "Загрузить Изображение Удостоверения",
@@ -139,13 +143,15 @@ const translations = {
     medicalCard: "Медицинская Карта",
     uploadMedicalCard: "Загрузить Медицинскую Карту",
     noDocumentUploaded: "Документ не загружен",
+    medicalCardIssueDate: "Дата Выдачи",
+    medicalCardExpirationDate: "Дата Истечения",
   },
 };
 interface DriversLicense {
   number: string;
   licenseClass: string;
+  dateOfIssue: Date | undefined;
   expires: Date | undefined;
-  physicalExpires: Date | undefined;
 }
 
 const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
@@ -168,9 +174,11 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const [driversLicense, setDriversLicense] = useState<DriversLicense>({
     number: "",
     licenseClass: "",
+    dateOfIssue: undefined,
     expires: undefined,
-    physicalExpires: undefined,
   });
+  const [medicalCardIssueDate, setMedicalCardIssueDate] = useState<Date | undefined>(undefined);
+  const [medicalCardExpirationDate, setMedicalCardExpirationDate] = useState<Date | undefined>(undefined);
   const [licenseImages, setLicenseImages] = useState<{ front: string; back: string }>({ front: "", back: "" });
   const [uploadingLicense, setUploadingLicense] = useState<"front" | "back" | null>(null);
   const [medicalCardUrl, setMedicalCardUrl] = useState<string>("");
@@ -180,8 +188,10 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const licenseFrontInputRef = useRef<HTMLInputElement>(null);
   const licenseBackInputRef = useRef<HTMLInputElement>(null);
   const medicalCardInputRef = useRef<HTMLInputElement>(null);
+  const [dateOfIssueOpen, setDateOfIssueOpen] = useState(false);
   const [licenseExpiresOpen, setLicenseExpiresOpen] = useState(false);
-  const [physicalExpiresOpen, setPhysicalExpiresOpen] = useState(false);
+  const [medicalCardIssueDateOpen, setMedicalCardIssueDateOpen] = useState(false);
+  const [medicalCardExpirationDateOpen, setMedicalCardExpirationDateOpen] = useState(false);
 
   const t = translations[language];
 
@@ -201,12 +211,14 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data } = await supabase
         .from("user_driver_status")
-        .select("is_driver, license_url, medical_card_url")
+        .select("is_driver, license_url, medical_card_url, medical_card_issue_date, medical_card_expiration_date")
         .eq("user_id", userId)
         .maybeSingle();
       
       setIsDriver(data?.is_driver === true);
       setMedicalCardUrl(data?.medical_card_url || "");
+      setMedicalCardIssueDate(data?.medical_card_issue_date ? new Date(data.medical_card_issue_date) : undefined);
+      setMedicalCardExpirationDate(data?.medical_card_expiration_date ? new Date(data.medical_card_expiration_date) : undefined);
       
       // Parse license images if they exist (stored as JSON string)
       if (data?.license_url) {
@@ -433,8 +445,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
         setDriversLicense({
           number: data.license_number || "",
           licenseClass: data.license_class || "",
+          dateOfIssue: data.physical_expires ? new Date(data.physical_expires) : undefined,
           expires: data.license_expires ? new Date(data.license_expires) : undefined,
-          physicalExpires: data.physical_expires ? new Date(data.physical_expires) : undefined,
         });
       }
     } catch (error: unknown) {
@@ -566,8 +578,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
       if (isDriver && showHourlyRate) {
         updateData.license_number = driversLicense.number || null;
         updateData.license_class = driversLicense.licenseClass || null;
+        updateData.physical_expires = driversLicense.dateOfIssue ? format(driversLicense.dateOfIssue, "yyyy-MM-dd") : null;
         updateData.license_expires = driversLicense.expires ? format(driversLicense.expires, "yyyy-MM-dd") : null;
-        updateData.physical_expires = driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "yyyy-MM-dd") : null;
       }
 
       const { error } = await supabase
@@ -576,6 +588,36 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
         .eq("id", userId);
 
       if (error) throw error;
+
+      // Save medical card dates to user_driver_status if they have values
+      if (showHourlyRate && (medicalCardIssueDate || medicalCardExpirationDate)) {
+        const { data: existingStatus } = await supabase
+          .from("user_driver_status")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const medicalCardUpdate = {
+          medical_card_issue_date: medicalCardIssueDate ? format(medicalCardIssueDate, "yyyy-MM-dd") : null,
+          medical_card_expiration_date: medicalCardExpirationDate ? format(medicalCardExpirationDate, "yyyy-MM-dd") : null,
+        };
+
+        if (existingStatus) {
+          await supabase
+            .from("user_driver_status")
+            .update(medicalCardUpdate)
+            .eq("user_id", userId);
+        } else {
+          await supabase
+            .from("user_driver_status")
+            .insert({ 
+              user_id: userId, 
+              driver_prompt_answered: false,
+              ...medicalCardUpdate 
+            });
+        }
+      }
+
       toast.success(t.savedSuccessfully);
       setOpen(false);
     } catch (error: unknown) {
@@ -765,6 +807,35 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                   </div>
 
                   <div className="space-y-2">
+                    <Label>{t.dateOfIssue}</Label>
+                    <Popover open={dateOfIssueOpen} onOpenChange={setDateOfIssueOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !driversLicense.dateOfIssue && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {driversLicense.dateOfIssue ? format(driversLicense.dateOfIssue, "PPP") : t.selectDate}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={driversLicense.dateOfIssue}
+                          onSelect={(date) => {
+                            setDriversLicense({ ...driversLicense, dateOfIssue: date });
+                            setDateOfIssueOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>{t.licenseExpires}</Label>
                     <Popover open={licenseExpiresOpen} onOpenChange={setLicenseExpiresOpen}>
                       <PopoverTrigger asChild>
@@ -793,34 +864,6 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                     </Popover>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>{t.physicalExpires}</Label>
-                    <Popover open={physicalExpiresOpen} onOpenChange={setPhysicalExpiresOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !driversLicense.physicalExpires && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {driversLicense.physicalExpires ? format(driversLicense.physicalExpires, "PPP") : t.selectDate}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={driversLicense.physicalExpires}
-                          onSelect={(date) => {
-                            setDriversLicense({ ...driversLicense, physicalExpires: date });
-                            setPhysicalExpiresOpen(false);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
 
                   {/* License Images Upload Section */}
                   <div className="space-y-3 pt-4 border-t">
@@ -968,6 +1011,66 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                       <Upload className="h-3 w-3 mr-2" />
                       {uploadingMedicalCard ? t.uploading : t.uploadMedicalCard}
                     </Button>
+                  </div>
+
+                  {/* Medical Card Issue Date */}
+                  <div className="space-y-2">
+                    <Label>{t.medicalCardIssueDate}</Label>
+                    <Popover open={medicalCardIssueDateOpen} onOpenChange={setMedicalCardIssueDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !medicalCardIssueDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {medicalCardIssueDate ? format(medicalCardIssueDate, "PPP") : t.selectDate}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={medicalCardIssueDate}
+                          onSelect={(date) => {
+                            setMedicalCardIssueDate(date);
+                            setMedicalCardIssueDateOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Medical Card Expiration Date */}
+                  <div className="space-y-2">
+                    <Label>{t.medicalCardExpirationDate}</Label>
+                    <Popover open={medicalCardExpirationDateOpen} onOpenChange={setMedicalCardExpirationDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !medicalCardExpirationDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {medicalCardExpirationDate ? format(medicalCardExpirationDate, "PPP") : t.selectDate}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={medicalCardExpirationDate}
+                          onSelect={(date) => {
+                            setMedicalCardExpirationDate(date);
+                            setMedicalCardExpirationDateOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </CardContent>
               </Card>
