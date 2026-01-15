@@ -315,22 +315,24 @@ const MissingPaymentForm = ({ userId, onSuccess, onCancel, language }: MissingPa
           {language === 'en' ? "Max 10MB each, JPEG/PNG/GIF/WebP/PDF" : language === 'es' ? "Máx 10MB cada uno, JPEG/PNG/GIF/WebP/PDF" : "Макс 10МБ каждый, JPEG/PNG/GIF/WebP/PDF"}
         </p>
         <div className="flex items-center gap-2">
-          <Input
-            id="missingPaymentAttachments"
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById("missingPaymentAttachments")?.click()}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {language === 'en' ? "Select Files" : language === 'es' ? "Seleccionar archivos" : "Выбрать файлы"}
-          </Button>
+          <div className="relative">
+            <input
+              id="missingPaymentAttachments"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+              multiple
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="pointer-events-none"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {language === 'en' ? "Select Files" : language === 'es' ? "Seleccionar archivos" : "Выбрать файлы"}
+            </Button>
+          </div>
           <span className="text-sm text-muted-foreground">
             {attachmentFiles.length} {language === 'en' ? "file(s) selected" : language === 'es' ? "archivo(s) seleccionado(s)" : "файл(ов) выбрано"}
           </span>

@@ -319,22 +319,24 @@ const AppealForm = ({ type, itemId, itemNumber, declineReason, onSuccess, onClos
           <Label htmlFor="appealAttachments">Supporting Documents (Optional)</Label>
           <p className="text-sm text-muted-foreground">Max 10MB each, JPEG/PNG/GIF/WebP/PDF</p>
           <div className="flex items-center gap-2">
-            <Input
-              id="appealAttachments"
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById("appealAttachments")?.click()}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Select Files
-            </Button>
+            <div className="relative">
+              <input
+                id="appealAttachments"
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                multiple
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="pointer-events-none"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Select Files
+              </Button>
+            </div>
             <span className="text-sm text-muted-foreground">
               {files.length} file(s) selected
             </span>

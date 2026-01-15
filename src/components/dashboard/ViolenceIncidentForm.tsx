@@ -415,19 +415,19 @@ const ViolenceIncidentForm = ({ userId, onSuccess, onCancel, language }: Violenc
               {t.uploadPhotosVideos} {t.uploadOptional}
             </Label>
             <div className="flex items-center gap-4">
-              <label className="cursor-pointer">
-                <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg hover:bg-muted transition-colors">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm">Choose Files</span>
-                </div>
+              <div className="relative">
                 <input
                   type="file"
                   multiple
                   accept="image/*,video/*"
                   onChange={handleFileChange}
-                  className="hidden"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-              </label>
+                <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg hover:bg-muted transition-colors pointer-events-none">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm">Choose Files</span>
+                </div>
+              </div>
             </div>
             {files.length > 0 && (
               <div className="space-y-2 mt-2">
