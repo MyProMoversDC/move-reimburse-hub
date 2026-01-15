@@ -27,8 +27,10 @@ import {
   Download,
   Eye,
   ClipboardList,
-  Info
+  Info,
+  History
 } from "lucide-react";
+import AddressHistoryView from "./AddressHistoryView";
 import UserSettings from "./UserSettings";
 import EmployeeGeneralTab from "./EmployeeGeneralTab";
 import EmployeeInfoTab from "./EmployeeInfoTab";
@@ -129,6 +131,7 @@ const hrTranslations = {
     comingSoon: "Coming Soon",
     licenseExpiringSoon: "Driver's license expires within 90 days",
     physicalExpiringSoon: "Physical exam expires within 90 days",
+    addressHistory: "Address History",
   },
   es: {
     title: "Gabinete de RRHH",
@@ -172,6 +175,7 @@ const hrTranslations = {
     comingSoon: "Próximamente",
     licenseExpiringSoon: "La licencia de conducir vence en 90 días",
     physicalExpiringSoon: "El examen físico vence en 90 días",
+    addressHistory: "Historial de Direcciones",
   },
   ru: {
     title: "Кабинет HR",
@@ -215,6 +219,7 @@ const hrTranslations = {
     comingSoon: "Скоро",
     licenseExpiringSoon: "Водительские права истекают в течение 90 дней",
     physicalExpiringSoon: "Медосмотр истекает в течение 90 дней",
+    addressHistory: "История Адресов",
   },
 };
 
@@ -573,22 +578,26 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="general">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="general" className="flex items-center gap-2">
                       <ClipboardList className="h-4 w-4" />
-                      {t.general}
+                      <span className="hidden sm:inline">{t.general}</span>
                     </TabsTrigger>
                     <TabsTrigger value="employee-info" className="flex items-center gap-2">
                       <Info className="h-4 w-4" />
-                      {t.employeeInfo}
+                      <span className="hidden sm:inline">{t.employeeInfo}</span>
                     </TabsTrigger>
                     <TabsTrigger value="documents" className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      {t.documents}
+                      <span className="hidden sm:inline">{t.documents}</span>
                     </TabsTrigger>
                     <TabsTrigger value="incidents" className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4" />
-                      {t.incidents}
+                      <span className="hidden sm:inline">{t.incidents}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="address-history" className="flex items-center gap-2">
+                      <History className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t.addressHistory}</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -788,6 +797,13 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                         </Table>
                       )}
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="address-history" className="mt-4">
+                    <AddressHistoryView
+                      employeeId={selectedUser.id}
+                      employeeName={`${selectedUser.first_name} ${selectedUser.last_name}`}
+                    />
                   </TabsContent>
                 </Tabs>
               </CardContent>
