@@ -468,6 +468,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         <SidebarInset className="flex-1">
           <div className="p-6">
             <HandbookPopup userId={userId} language={language} />
+            <AnnualAddressDisclaimer userId={userId} language={language} />
             <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             
