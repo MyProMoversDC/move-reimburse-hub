@@ -62,6 +62,7 @@ const menuItems = [
   { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle },
   { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
+  { id: "alcohol-tests", label: "Alcohol Test Reports", icon: Shield },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "handbook", label: "Handbook Management", icon: BookOpen },

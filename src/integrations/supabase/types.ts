@@ -35,6 +35,96 @@ export type Database = {
         }
         Relationships: []
       }
+      alcohol_test_reports: {
+        Row: {
+          actions_taken: string[]
+          additional_notes: string | null
+          bac_reading_first: number
+          bac_reading_second: number | null
+          created_at: string
+          final_result: string
+          id: string
+          photo_file_name: string
+          photo_url: string
+          second_test_required: boolean
+          sop_acknowledged: boolean
+          test_date: string
+          test_location: string
+          test_time: string
+          test_timing: string
+          test_type: string
+          test_type_other_explanation: string | null
+          tester_confirmed_administered: boolean
+          tester_id: string
+          tester_job_title: string
+          tester_name: string
+          waiting_period_observed: boolean
+          worker_classification: string
+          worker_confirmed_no_consumption: boolean
+          worker_id: string
+          worker_name: string
+          worker_role: string
+        }
+        Insert: {
+          actions_taken: string[]
+          additional_notes?: string | null
+          bac_reading_first: number
+          bac_reading_second?: number | null
+          created_at?: string
+          final_result: string
+          id?: string
+          photo_file_name: string
+          photo_url: string
+          second_test_required?: boolean
+          sop_acknowledged?: boolean
+          test_date: string
+          test_location: string
+          test_time: string
+          test_timing: string
+          test_type: string
+          test_type_other_explanation?: string | null
+          tester_confirmed_administered?: boolean
+          tester_id: string
+          tester_job_title: string
+          tester_name: string
+          waiting_period_observed?: boolean
+          worker_classification: string
+          worker_confirmed_no_consumption?: boolean
+          worker_id: string
+          worker_name: string
+          worker_role: string
+        }
+        Update: {
+          actions_taken?: string[]
+          additional_notes?: string | null
+          bac_reading_first?: number
+          bac_reading_second?: number | null
+          created_at?: string
+          final_result?: string
+          id?: string
+          photo_file_name?: string
+          photo_url?: string
+          second_test_required?: boolean
+          sop_acknowledged?: boolean
+          test_date?: string
+          test_location?: string
+          test_time?: string
+          test_timing?: string
+          test_type?: string
+          test_type_other_explanation?: string | null
+          tester_confirmed_administered?: boolean
+          tester_id?: string
+          tester_job_title?: string
+          tester_name?: string
+          waiting_period_observed?: boolean
+          worker_classification?: string
+          worker_confirmed_no_consumption?: boolean
+          worker_id?: string
+          worker_name?: string
+          worker_role?: string
+        }
+        Relationships: []
+      }
       annual_address_confirmations: {
         Row: {
           address_changed: boolean
