@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle, FileText } from "lucide-react";
+import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle, FileText, XCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/lib/storageUtils";
+import DeclineDocumentDialog from "./DeclineDocumentDialog";
 
 interface EmployeeInfoTabProps {
   userId: string;
@@ -344,6 +345,12 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [avatarDisplayUrl, setAvatarDisplayUrl] = useState<string>("");
+  
+  // Document decline state
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [declineDocType, setDeclineDocType] = useState<"drivers_license" | "medical_card">("drivers_license");
+  const [decliningDocument, setDecliningDocument] = useState(false);
+  const [moverEmail, setMoverEmail] = useState<string>("");
 
   useEffect(() => {
     fetchEmployeeData();
@@ -387,11 +394,14 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
     try {
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("job_role, employee_number, branch, employment_type, hire_date, termination_date, avatar_url, license_number, license_class, license_expires, physical_expires, custom_attributes, first_name, last_name")
+        .select("job_role, employee_number, branch, employment_type, hire_date, termination_date, avatar_url, license_number, license_class, license_expires, physical_expires, custom_attributes, first_name, last_name, email")
         .eq("id", employeeId)
         .single();
 
       if (error) throw error;
+      
+      // Store email for decline notifications
+      setMoverEmail(profile.email || "");
 
       // Fetch driver status including medical card dates
       const { data: driverStatus } = await supabase
@@ -465,6 +475,79 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
     } catch (error) {
       console.error("Error fetching employee data:", error);
     }
+  };
+
+  const handleDeclineDocument = async (reason: string) => {
+    setDecliningDocument(true);
+    try {
+      // Insert or update the driver_document_reviews record
+      const { data: existingReview } = await supabase
+        .from("driver_document_reviews")
+        .select("id")
+        .eq("user_id", employeeId)
+        .eq("document_type", declineDocType)
+        .maybeSingle();
+
+      if (existingReview) {
+        await supabase
+          .from("driver_document_reviews")
+          .update({
+            status: "declined",
+            decline_reason: reason,
+            reviewed_at: new Date().toISOString(),
+            reviewed_by: userId,
+          })
+          .eq("id", existingReview.id);
+      } else {
+        await supabase
+          .from("driver_document_reviews")
+          .insert({
+            user_id: employeeId,
+            document_type: declineDocType,
+            status: "declined",
+            decline_reason: reason,
+            reviewed_at: new Date().toISOString(),
+            reviewed_by: userId,
+          });
+      }
+
+      // Send notification email and create mover notification
+      await supabase.functions.invoke("send-document-decline-notification", {
+        body: {
+          userId: employeeId,
+          documentType: declineDocType,
+          declineReason: reason,
+          moverEmail: moverEmail,
+          moverName: employeeName,
+          language: language,
+        },
+      });
+
+      toast.success(
+        language === "ru" 
+          ? "Документ отклонен и уведомление отправлено" 
+          : language === "es" 
+            ? "Documento rechazado y notificación enviada" 
+            : "Document declined and notification sent"
+      );
+      setDeclineDialogOpen(false);
+    } catch (error) {
+      console.error("Error declining document:", error);
+      toast.error(
+        language === "ru" 
+          ? "Ошибка при отклонении документа" 
+          : language === "es" 
+            ? "Error al rechazar el documento" 
+            : "Failed to decline document"
+      );
+    } finally {
+      setDecliningDocument(false);
+    }
+  };
+
+  const openDeclineDialog = (docType: "drivers_license" | "medical_card") => {
+    setDeclineDocType(docType);
+    setDeclineDialogOpen(true);
   };
 
   const validateForm = (): boolean => {
@@ -925,16 +1008,27 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
             {/* License Images from Mover */}
             {(licenseImages.front || licenseImages.back) && (
               <div className="md:col-span-2 space-y-3 pt-4 border-t">
-                <Label className="text-sm font-medium">
-                  {language === 'ru' ? 'Загруженные изображения лицензии' : language === 'es' ? 'Imágenes de licencia subidas' : 'Uploaded License Images'}
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    {language === 'ru' ? 'Загруженные изображения лицензии' : language === 'es' ? 'Imágenes de licencia subidas' : 'Uploaded License Images'}
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => openDeclineDialog("drivers_license")}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    {language === 'ru' ? 'Отклонить' : language === 'es' ? 'Rechazar' : 'Decline'}
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   {licenseImages.front && (
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">
                         {language === 'ru' ? 'Лицевая сторона' : language === 'es' ? 'Lado frontal' : 'Front Side'}
                       </Label>
-                      <img src={licenseImages.front} alt="License Front" className="w-full h-32 object-cover rounded-md border" />
+                      <img src={licenseImages.front} alt="License Front" className="w-full h-32 object-cover rounded-md border cursor-pointer hover:opacity-90" onClick={() => window.open(licenseImages.front, '_blank')} />
                     </div>
                   )}
                   {licenseImages.back && (
@@ -942,7 +1036,7 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
                       <Label className="text-xs text-muted-foreground">
                         {language === 'ru' ? 'Обратная сторона' : language === 'es' ? 'Lado trasero' : 'Back Side'}
                       </Label>
-                      <img src={licenseImages.back} alt="License Back" className="w-full h-32 object-cover rounded-md border" />
+                      <img src={licenseImages.back} alt="License Back" className="w-full h-32 object-cover rounded-md border cursor-pointer hover:opacity-90" onClick={() => window.open(licenseImages.back, '_blank')} />
                     </div>
                   )}
                 </div>
@@ -963,7 +1057,18 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Label className="text-sm font-medium">{t.medicalCard}</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">{t.medicalCard}</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => openDeclineDialog("medical_card")}
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  {language === 'ru' ? 'Отклонить' : language === 'es' ? 'Rechazar' : 'Decline'}
+                </Button>
+              </div>
               <img 
                 src={medicalCardUrl} 
                 alt="Medical Card" 
@@ -1018,6 +1123,16 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
           </div>
         </div>
       )}
+
+      {/* Decline Document Dialog */}
+      <DeclineDocumentDialog
+        open={declineDialogOpen}
+        onOpenChange={setDeclineDialogOpen}
+        onConfirm={handleDeclineDocument}
+        documentType={declineDocType}
+        language={language}
+        isSubmitting={decliningDocument}
+      />
     </div>
   );
 };
