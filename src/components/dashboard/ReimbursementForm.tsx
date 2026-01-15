@@ -356,23 +356,24 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
 
       {/* Receipt Attachments */}
       <div className="space-y-2">
-        <Label htmlFor="attachments">Receipt Images * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
-        <Input
-          id="attachments"
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => document.getElementById("attachments")?.click()}
-          className="w-full"
-        >
-          {language === 'en' ? "Select Receipt Images" : language === 'es' ? "Seleccionar imágenes de recibos" : "Выбрать изображения квитанций"}
-        </Button>
+        <Label>Receipt Images * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
+        <div className="relative">
+          <input
+            id="attachments"
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            multiple
+            onChange={handleFileChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full pointer-events-none"
+          >
+            {language === 'en' ? "Select Receipt Images" : language === 'es' ? "Seleccionar imágenes de recibos" : "Выбрать изображения квитанций"}
+          </Button>
+        </div>
         
         {attachmentFiles.length > 0 && (
           <div className="space-y-2 mt-2">
