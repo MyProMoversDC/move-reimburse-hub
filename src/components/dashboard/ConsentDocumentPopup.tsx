@@ -30,6 +30,7 @@ interface ConsentDocumentPopupProps {
 const translations = {
   en: {
     title: "Terms and Conditions",
+    disclaimer: (name: string) => `Dear ${name}, your contract with ABC Movers has been terminated. Please study and sign a contract with XYZ Movers.`,
     message: "Please read and sign the following terms and conditions document before continuing.",
     iAgree: "I have read and agree to the terms and conditions",
     sign: "Sign Document",
@@ -37,6 +38,7 @@ const translations = {
   },
   es: {
     title: "Términos y Condiciones",
+    disclaimer: (name: string) => `Estimado/a ${name}, su contrato con ABC Movers ha sido terminado. Por favor estudie y firme un contrato con XYZ Movers.`,
     message: "Por favor lea y firme el siguiente documento de términos y condiciones antes de continuar.",
     iAgree: "He leído y acepto los términos y condiciones",
     sign: "Firmar Documento",
@@ -44,6 +46,7 @@ const translations = {
   },
   ru: {
     title: "Условия и Положения",
+    disclaimer: (name: string) => `Уважаемый/ая ${name}, ваш контракт с ABC Movers был расторгнут. Пожалуйста, ознакомьтесь и подпишите контракт с XYZ Movers.`,
     message: "Пожалуйста, прочитайте и подпишите следующий документ с условиями и положениями перед продолжением.",
     iAgree: "Я прочитал и согласен с условиями и положениями",
     sign: "Подписать Документ",
@@ -60,8 +63,22 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
   const [submitting, setSubmitting] = useState(false);
   const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [moverName, setMoverName] = useState<string>("");
 
   useEffect(() => {
+    const fetchMoverName = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("first_name")
+        .eq("id", userId)
+        .maybeSingle();
+      
+      if (data?.first_name) {
+        setMoverName(data.first_name);
+      }
+    };
+    
+    fetchMoverName();
     checkForUnacknowledgedConsent();
   }, [userId]);
 
@@ -176,7 +193,15 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
             <FileText className="h-5 w-5 text-primary" />
             {t.title}
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          
+          {/* Contract termination disclaimer */}
+          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mt-3">
+            <p className="text-amber-800 dark:text-amber-200 font-medium text-sm">
+              {t.disclaimer(moverName || "Mover")}
+            </p>
+          </div>
+          
+          <AlertDialogDescription className="mt-3">
             {t.message}
           </AlertDialogDescription>
         </AlertDialogHeader>
