@@ -12,6 +12,7 @@ import PerformanceReportsList from "./PerformanceReportsList";
 import AdminMisconductResponses from "./AdminMisconductResponses";
 import DeductiblesReport from "./DeductiblesReport";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
+import AdminAlcoholTestList from "./AdminAlcoholTestList";
 import AdminSidebar from "./AdminSidebar";
 import AdminTodoList from "./AdminTodoList";
 import ChatContainer from "./chat/ChatContainer";
@@ -355,6 +356,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
             <AdminViolenceIncidentList userRole="admin" />
+          </div>
+        );
+      case "alcohol-tests":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Alcohol Test Reports</h2>
+            <AdminAlcoholTestList language={language} />
           </div>
         );
       case "mover-feedback":

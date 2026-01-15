@@ -85,7 +85,7 @@ This is an automated alert. Please review and take appropriate action.
   } catch (error) {
     console.error("Error sending alcohol test alert:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { 
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
