@@ -26,7 +26,7 @@ import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle } from "lucide-react";
-import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
+import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -46,6 +46,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [exporting, setExporting] = useState(false);
   const [exportingReviews, setExportingReviews] = useState(false);
   const [runningAlcoholCheck, setRunningAlcoholCheck] = useState(false);
+  const [exportingMissingPayments, setExportingMissingPayments] = useState(false);
   const { language, setLanguage } = useLanguage();
   const [pendingCounts, setPendingCounts] = useState({
     reimbursements: 0,
@@ -228,6 +229,38 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     }
   };
 
+  const handleExportMissingPayments = async () => {
+    setExportingMissingPayments(true);
+    try {
+      let query = supabase
+        .from("missing_payments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (missingPaymentStartDate) {
+        query = query.gte("created_at", format(missingPaymentStartDate, "yyyy-MM-dd"));
+      }
+      if (missingPaymentEndDate) {
+        const endDatePlusOne = new Date(missingPaymentEndDate);
+        endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+        query = query.lt("created_at", format(endDatePlusOne, "yyyy-MM-dd"));
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      if (data) {
+        exportMissingPaymentsToExcel(data, "missing-payments");
+        toast.success(t.exportComplete);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setExportingMissingPayments(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -306,8 +339,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Missing Payment Submissions</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-xl md:text-2xl font-bold">Missing Payment Submissions</h2>
+                <Button onClick={handleExportMissingPayments} disabled={exportingMissingPayments} size="sm" className="self-start sm:self-auto">
+                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">{exportingMissingPayments ? t.exporting : t.exportToExcel}</span>
+                  <span className="sm:hidden">Export</span>
+                </Button>
               </div>
               <DateRangeFilter
                 startDate={missingPaymentStartDate}
