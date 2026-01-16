@@ -57,6 +57,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     moverFeedback: 0,
     performanceReports: 0,
     violenceIncidents: 0,
+    alcoholTests: 0,
   });
   
   // Date filters for reimbursements
@@ -119,16 +120,23 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
-      // Count unreviewed performance reports (no admin_actions or operations_manager_actions)
+      // Count unreviewed performance reports (reviewed_at is null)
       const { count: performanceReportsCount } = await supabase
         .from("performance_reports")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .is("reviewed_at", null);
 
       // Count unreviewed violence incidents (no admin_actions)
       const { count: violenceIncidentsCount } = await supabase
         .from("violence_incidents")
         .select("*", { count: "exact", head: true })
         .is("admin_actions", null);
+
+      // Count unreviewed alcohol test reports (reviewed_at is null)
+      const { count: alcoholTestsCount } = await supabase
+        .from("alcohol_test_reports")
+        .select("*", { count: "exact", head: true })
+        .is("reviewed_at", null);
 
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
@@ -139,6 +147,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         moverFeedback: moverFeedbackCount || 0,
         performanceReports: performanceReportsCount || 0,
         violenceIncidents: violenceIncidentsCount || 0,
+        alcoholTests: alcoholTestsCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);

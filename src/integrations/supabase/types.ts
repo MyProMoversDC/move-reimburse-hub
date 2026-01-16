@@ -46,6 +46,7 @@ export type Database = {
           id: string
           photo_file_name: string
           photo_url: string
+          reviewed_at: string | null
           second_test_required: boolean
           sop_acknowledged: boolean
           test_date: string
@@ -75,6 +76,7 @@ export type Database = {
           id?: string
           photo_file_name: string
           photo_url: string
+          reviewed_at?: string | null
           second_test_required?: boolean
           sop_acknowledged?: boolean
           test_date: string
@@ -104,6 +106,7 @@ export type Database = {
           id?: string
           photo_file_name?: string
           photo_url?: string
+          reviewed_at?: string | null
           second_test_required?: boolean
           sop_acknowledged?: boolean
           test_date?: string
@@ -1206,6 +1209,7 @@ export type Database = {
           incident_category: string
           incident_datetime: string
           incident_description: string
+          reviewed_at: string | null
           severity_level: string
           taken_actions: string | null
           title: string
@@ -1218,6 +1222,7 @@ export type Database = {
           incident_category: string
           incident_datetime: string
           incident_description: string
+          reviewed_at?: string | null
           severity_level: string
           taken_actions?: string | null
           title: string
@@ -1230,6 +1235,7 @@ export type Database = {
           incident_category?: string
           incident_datetime?: string
           incident_description?: string
+          reviewed_at?: string | null
           severity_level?: string
           taken_actions?: string | null
           title?: string
