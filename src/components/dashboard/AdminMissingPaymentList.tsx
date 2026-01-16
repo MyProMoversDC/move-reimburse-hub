@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { Check, X } from "lucide-react";
@@ -248,7 +249,10 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
                   Customer: {payment.customer_name} | Job: {payment.job_number}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Date: {format(new Date(payment.discrepancy_date), "MM/dd/yyyy")} | Amount: {payment.missing_amount}
+                  Discrepancy Date: {format(new Date(payment.discrepancy_date), "MM/dd/yyyy")} | Amount: {payment.missing_amount}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Submitted: {format(toZonedTime(new Date(payment.created_at), "America/New_York"), "MM/dd/yyyy hh:mm a")} EST
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   {getStatusBadge(payment.status)}
@@ -327,6 +331,10 @@ const AdminMissingPaymentList = ({ language, startDate, endDate }: AdminMissingP
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
                   {getStatusBadge(selectedPayment.status)}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Submitted At</p>
+                  <p className="font-medium">{format(toZonedTime(new Date(selectedPayment.created_at), "America/New_York"), "MM/dd/yyyy hh:mm a")} EST</p>
                 </div>
               </div>
 
