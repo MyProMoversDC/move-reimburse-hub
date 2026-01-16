@@ -39,6 +39,7 @@ const translations = {
     testDate: "Date of Test",
     testTime: "Time of Test",
     testLocation: "Location of Test",
+    testLocationOther: "Specify location",
     testType: "Type of Test",
     otherExplanation: "Please explain",
     section3Title: "Tester Information",
@@ -126,6 +127,7 @@ const translations = {
     testDate: "Fecha de la Prueba",
     testTime: "Hora de la Prueba",
     testLocation: "Ubicación de la Prueba",
+    testLocationOther: "Especificar ubicación",
     testType: "Tipo de Prueba",
     otherExplanation: "Por favor explique",
     section3Title: "Información del Evaluador",
@@ -213,6 +215,7 @@ const translations = {
     testDate: "Дата Теста",
     testTime: "Время Теста",
     testLocation: "Место Теста",
+    testLocationOther: "Укажите место",
     testType: "Тип Теста",
     otherExplanation: "Пожалуйста, объясните",
     section3Title: "Информация о Тестирующем",
@@ -290,6 +293,7 @@ const formSchema = z.object({
   testDate: z.string().min(1),
   testTime: z.string().min(1),
   testLocation: z.string().min(1),
+  testLocationOther: z.string().optional(),
   testType: z.string().min(1),
   testTypeOtherExplanation: z.string().optional(),
   testerJobTitle: z.string().min(1),
@@ -323,6 +327,7 @@ const AlcoholTestReportForm = ({ userId, language, onSuccess }: AlcoholTestRepor
       testDate: new Date().toISOString().split("T")[0],
       testTime: "",
       testLocation: "",
+      testLocationOther: "",
       testType: "",
       testTypeOtherExplanation: "",
       testerJobTitle: "",
@@ -343,6 +348,7 @@ const AlcoholTestReportForm = ({ userId, language, onSuccess }: AlcoholTestRepor
   });
 
   const watchTestType = form.watch("testType");
+  const watchTestLocation = form.watch("testLocation");
   const watchSecondTestRequired = form.watch("secondTestRequired");
 
   useEffect(() => {
@@ -416,13 +422,18 @@ const AlcoholTestReportForm = ({ userId, language, onSuccess }: AlcoholTestRepor
 
       const workerName = workers.find((w) => w.id === values.workerId)?.name || "";
 
+      // Determine final location value
+      const finalLocation = values.testLocation === "other" && values.testLocationOther
+        ? values.testLocationOther
+        : values.testLocation;
+
       // Insert report
       const { error: insertError } = await supabase
         .from("alcohol_test_reports")
         .insert({
           test_date: values.testDate,
           test_time: values.testTime,
-          test_location: values.testLocation,
+          test_location: finalLocation,
           test_type: values.testType,
           test_type_other_explanation: values.testType === "other" ? values.testTypeOtherExplanation : null,
           tester_id: userId,
@@ -600,29 +611,46 @@ const AlcoholTestReportForm = ({ userId, language, onSuccess }: AlcoholTestRepor
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="testLocation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.testLocation} *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="office">{t.locations.office}</SelectItem>
-                          <SelectItem value="warehouse">{t.locations.warehouse}</SelectItem>
-                          <SelectItem value="jobsite">{t.locations.jobsite}</SelectItem>
-                          <SelectItem value="other">{t.locations.other}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="testLocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.testLocation} *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="office">{t.locations.office}</SelectItem>
+                            <SelectItem value="warehouse">{t.locations.warehouse}</SelectItem>
+                            <SelectItem value="jobsite">{t.locations.jobsite}</SelectItem>
+                            <SelectItem value="other">{t.locations.other}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {watchTestLocation === "other" && (
+                    <FormField
+                      control={form.control}
+                      name="testLocationOther"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.testLocationOther} *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder={t.testLocationOther} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
+                </div>
                 <FormField
                   control={form.control}
                   name="testType"
