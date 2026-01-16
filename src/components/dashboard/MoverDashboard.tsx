@@ -41,6 +41,7 @@ import ConsentDocumentPopup from "./ConsentDocumentPopup";
 import AnnualAddressDisclaimer from "./AnnualAddressDisclaimer";
 import DriverLicenseDisclaimer from "./DriverLicenseDisclaimer";
 import AddressDisclaimer from "./AddressDisclaimer";
+import FeedPostPopup from "./FeedPostPopup";
 
 interface MoverDashboardProps {
   userId: string;
@@ -66,7 +67,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   // Login flow states
   const [consentCompleted, setConsentCompleted] = useState(false);
   const [handbookCompleted, setHandbookCompleted] = useState(false);
+  const [feedPostsCompleted, setFeedPostsCompleted] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
+  const [showFeedPosts, setShowFeedPosts] = useState(false);
 
   const handleNavigateToSettings = () => {
     settingsButtonRef.current?.click();
@@ -364,6 +367,19 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             onAcknowledge={() => {
               setHandbookCompleted(true);
               setShowHandbook(false);
+              setShowFeedPosts(true);
+            }}
+          />
+        )}
+
+        {/* Feed Posts Popup - Third Step (only shown after handbook is completed) */}
+        {handbookCompleted && showFeedPosts && (
+          <FeedPostPopup
+            userId={userId}
+            language={language}
+            onComplete={() => {
+              setFeedPostsCompleted(true);
+              setShowFeedPosts(false);
               setActiveTab("feed");
             }}
           />
@@ -467,7 +483,21 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         />
         <SidebarInset className="flex-1">
           <div className="p-6">
-            <HandbookPopup userId={userId} language={language} />
+            <HandbookPopup 
+              userId={userId} 
+              language={language}
+              onAcknowledge={() => setShowFeedPosts(true)}
+            />
+            {showFeedPosts && (
+              <FeedPostPopup
+                userId={userId}
+                language={language}
+                onComplete={() => {
+                  setFeedPostsCompleted(true);
+                  setShowFeedPosts(false);
+                }}
+              />
+            )}
             <AnnualAddressDisclaimer userId={userId} language={language} />
             <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
