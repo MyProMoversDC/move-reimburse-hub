@@ -78,7 +78,16 @@ const PerformanceReportDetails = ({ report, onClose }: PerformanceReportDetailsP
       }
     };
 
+    const markAsReviewed = async () => {
+      // Mark as reviewed when viewing
+      await supabase
+        .from("performance_reports")
+        .update({ reviewed_at: new Date().toISOString() })
+        .eq("id", report.id);
+    };
+
     fetchAttachments();
+    markAsReviewed();
   }, [report.id]);
 
   return (

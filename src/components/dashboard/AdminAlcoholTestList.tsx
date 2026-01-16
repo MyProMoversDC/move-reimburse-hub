@@ -38,6 +38,7 @@ interface AlcoholTestReport {
   photo_file_name: string;
   actions_taken: string[];
   additional_notes: string | null;
+  reviewed_at: string | null;
 }
 
 interface AdminAlcoholTestListProps {
@@ -342,6 +343,14 @@ const AdminAlcoholTestList = ({ language = "en" }: AdminAlcoholTestListProps) =>
     // Get signed URL for photo
     const signedUrl = await getSignedUrl("alcohol-test-photos", report.photo_url);
     setPhotoUrl(signedUrl);
+    
+    // Mark as reviewed if not already
+    if (!report.reviewed_at) {
+      await supabase
+        .from("alcohol_test_reports")
+        .update({ reviewed_at: new Date().toISOString() })
+        .eq("id", report.id);
+    }
   };
 
   const clearFilters = () => {

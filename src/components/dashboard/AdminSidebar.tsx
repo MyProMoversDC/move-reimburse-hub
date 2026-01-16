@@ -49,6 +49,7 @@ interface AdminSidebarProps {
     moverFeedback: number;
     performanceReports: number;
     violenceIncidents: number;
+    alcoholTests: number;
   };
   hasUnreadMessages?: boolean;
 }
@@ -96,7 +97,8 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "mover-feedback") return pendingCounts.moverFeedback;
     if (id === "performance-reports") return pendingCounts.performanceReports;
     if (id === "violence-incidents") return pendingCounts.violenceIncidents;
-    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents;
+    if (id === "alcohol-tests") return pendingCounts.alcoholTests;
+    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests;
     return 0;
   };
 
@@ -121,7 +123,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
             <SidebarMenu>
               {menuItems.map((item) => {
                 const count = getBadgeCount(item.id);
-                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents"].includes(item.id);
+                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents", "alcohol-tests"].includes(item.id);
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
