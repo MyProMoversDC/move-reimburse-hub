@@ -78,10 +78,12 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
   const isCollapsed = state === "collapsed";
   const t = translations[language];
   const [hasTodoItems, setHasTodoItems] = useState(false);
+  const [hasUnacknowledgedPosts, setHasUnacknowledgedPosts] = useState(false);
 
   useEffect(() => {
     if (userId) {
       checkTodoItems();
+      checkUnacknowledgedPosts();
     }
   }, [userId]);
 
@@ -121,8 +123,38 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     }
   };
 
+  const checkUnacknowledgedPosts = async () => {
+    if (!userId) return;
+
+    try {
+      // Get all published feed posts
+      const { data: posts } = await supabase
+        .from("feed_posts")
+        .select("id")
+        .eq("is_published", true);
+
+      if (!posts || posts.length === 0) {
+        setHasUnacknowledgedPosts(false);
+        return;
+      }
+
+      // Get user's acknowledged posts
+      const { data: acknowledgments } = await supabase
+        .from("feed_post_acknowledgments")
+        .select("post_id")
+        .eq("user_id", userId);
+
+      const acknowledgedPostIds = new Set(acknowledgments?.map(a => a.post_id) || []);
+      const hasUnread = posts.some(post => !acknowledgedPostIds.has(post.id));
+      
+      setHasUnacknowledgedPosts(hasUnread);
+    } catch (error) {
+      console.error("Error checking unacknowledged posts:", error);
+    }
+  };
+
   const menuItems = [
-    { id: "feed", label: t.feed, icon: Newspaper },
+    { id: "feed", label: t.feed, icon: Newspaper, hasBadge: hasUnacknowledgedPosts },
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },
