@@ -28,9 +28,11 @@ import {
   Eye,
   ClipboardList,
   Info,
-  History
+  History,
+  Wine
 } from "lucide-react";
 import AddressHistoryView from "./AddressHistoryView";
+import AdminAlcoholTestList from "./AdminAlcoholTestList";
 import UserSettings from "./UserSettings";
 import EmployeeGeneralTab from "./EmployeeGeneralTab";
 import EmployeeInfoTab from "./EmployeeInfoTab";
@@ -132,6 +134,7 @@ const hrTranslations = {
     licenseExpiringSoon: "Driver's license expires within 90 days",
     physicalExpiringSoon: "Physical exam expires within 90 days",
     addressHistory: "Address History",
+    alcoholTests: "Alcohol Tests",
   },
   es: {
     title: "Gabinete de RRHH",
@@ -176,6 +179,7 @@ const hrTranslations = {
     licenseExpiringSoon: "La licencia de conducir vence en 90 días",
     physicalExpiringSoon: "El examen físico vence en 90 días",
     addressHistory: "Historial de Direcciones",
+    alcoholTests: "Pruebas de Alcohol",
   },
   ru: {
     title: "Кабинет HR",
@@ -220,6 +224,7 @@ const hrTranslations = {
     licenseExpiringSoon: "Водительские права истекают в течение 90 дней",
     physicalExpiringSoon: "Медосмотр истекает в течение 90 дней",
     addressHistory: "История Адресов",
+    alcoholTests: "Тесты на Алкоголь",
   },
 };
 
@@ -578,7 +583,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="general">
-                  <TabsList className="grid w-full grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-6">
                     <TabsTrigger value="general" className="flex items-center gap-2">
                       <ClipboardList className="h-4 w-4" />
                       <span className="hidden sm:inline">{t.general}</span>
@@ -598,6 +603,10 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                     <TabsTrigger value="address-history" className="flex items-center gap-2">
                       <History className="h-4 w-4" />
                       <span className="hidden sm:inline">{t.addressHistory}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="alcohol-tests" className="flex items-center gap-2">
+                      <Wine className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t.alcoholTests}</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -804,6 +813,10 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
                       employeeId={selectedUser.id}
                       employeeName={`${selectedUser.first_name} ${selectedUser.last_name}`}
                     />
+                  </TabsContent>
+
+                  <TabsContent value="alcohol-tests" className="mt-4">
+                    <AdminAlcoholTestList language={language} />
                   </TabsContent>
                 </Tabs>
               </CardContent>

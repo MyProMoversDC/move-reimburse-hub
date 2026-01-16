@@ -25,7 +25,7 @@ import { AdminAIAssistant } from "./AdminAIAssistant";
 import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, PlayCircle } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -45,6 +45,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportingReviews, setExportingReviews] = useState(false);
+  const [runningAlcoholCheck, setRunningAlcoholCheck] = useState(false);
   const { language, setLanguage } = useLanguage();
   const [pendingCounts, setPendingCounts] = useState({
     reimbursements: 0,
@@ -207,6 +208,26 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     }
   };
 
+  const handleRunAlcoholCheck = async () => {
+    setRunningAlcoholCheck(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-missing-alcohol-tests", {});
+      
+      if (error) throw error;
+      
+      if (data.missingCount === 0) {
+        toast.success("All movers have alcohol test reports for the past week");
+      } else {
+        toast.success(`Alert sent: ${data.missingCount} mover(s) missing alcohol test reports`);
+      }
+    } catch (error: any) {
+      console.error("Error running alcohol check:", error);
+      toast.error(error.message || "Failed to run alcohol test check");
+    } finally {
+      setRunningAlcoholCheck(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -361,7 +382,17 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "alcohol-tests":
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Alcohol Test Reports</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Alcohol Test Reports</h2>
+              <Button 
+                onClick={handleRunAlcoholCheck} 
+                disabled={runningAlcoholCheck}
+                variant="outline"
+              >
+                <PlayCircle className="h-4 w-4 mr-2" />
+                {runningAlcoholCheck ? "Checking..." : "Run Weekly Check"}
+              </Button>
+            </div>
             <AdminAlcoholTestList language={language} />
           </div>
         );
