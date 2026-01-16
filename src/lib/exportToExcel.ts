@@ -138,3 +138,64 @@ export const exportReviewBonusesToExcel = (data: ReviewBonusData[], filename: st
 
   downloadCSV(csvContent, filename);
 };
+
+interface MissingPaymentData {
+  mover_full_name: string;
+  customer_name: string;
+  job_number: string;
+  discrepancy_date: string;
+  discrepancy_types: string[];
+  discrepancy_details: string;
+  missing_amount: string;
+  status: string;
+  created_at: string;
+  decline_reason: string | null;
+  appeal_note: string | null;
+}
+
+const discrepancyTypeLabels: Record<string, string> = {
+  missing_hours: "Missing Hours",
+  incorrect_hourly_rate: "Incorrect Hourly Rate",
+  missing_tip: "Missing Tip",
+  missing_bonus: "Missing Bonus",
+  other: "Other",
+};
+
+export const exportMissingPaymentsToExcel = (data: MissingPaymentData[], filename: string) => {
+  const headers = [
+    "Submitted At",
+    "Mover Name",
+    "Customer Name",
+    "Job/Invoice #",
+    "Discrepancy Date",
+    "Discrepancy Types",
+    "Missing Amount",
+    "Details",
+    "Status",
+    "Decline Reason",
+    "Appeal Note",
+  ];
+
+  const rows = data.map((item) => [
+    new Date(item.created_at).toLocaleDateString(),
+    item.mover_full_name,
+    item.customer_name,
+    item.job_number,
+    new Date(item.discrepancy_date).toLocaleDateString(),
+    item.discrepancy_types.map(t => discrepancyTypeLabels[t] || t).join("; "),
+    item.missing_amount,
+    item.discrepancy_details.replace(/"/g, '""'),
+    item.status.charAt(0).toUpperCase() + item.status.slice(1),
+    item.decline_reason?.replace(/"/g, '""') || "",
+    item.appeal_note?.replace(/"/g, '""') || "",
+  ]);
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) =>
+      row.map((cell) => `"${cell}"`).join(",")
+    ),
+  ].join("\n");
+
+  downloadCSV(csvContent, filename);
+};
