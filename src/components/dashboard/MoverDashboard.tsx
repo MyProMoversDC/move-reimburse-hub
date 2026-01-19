@@ -64,6 +64,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [foremanName, setForemanName] = useState("");
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   
+  // Unacknowledged feed posts count
+  const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
+  
   // Login flow states
   const [consentCompleted, setConsentCompleted] = useState(false);
   const [handbookCompleted, setHandbookCompleted] = useState(false);
@@ -121,7 +124,36 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
   useEffect(() => {
     fetchProfile();
+    fetchUnacknowledgedCount();
   }, [userId]);
+
+  const fetchUnacknowledgedCount = async () => {
+    try {
+      // Get all published feed posts
+      const { data: posts } = await supabase
+        .from("feed_posts")
+        .select("id")
+        .eq("is_published", true);
+
+      if (!posts || posts.length === 0) {
+        setUnacknowledgedCount(0);
+        return;
+      }
+
+      // Get user's acknowledged posts
+      const { data: acknowledgments } = await supabase
+        .from("feed_post_acknowledgments")
+        .select("post_id")
+        .eq("user_id", userId);
+
+      const acknowledgedPostIds = new Set(acknowledgments?.map(a => a.post_id) || []);
+      const unreadCount = posts.filter(post => !acknowledgedPostIds.has(post.id)).length;
+      
+      setUnacknowledgedCount(unreadCount);
+    } catch (error) {
+      console.error("Error fetching unacknowledged count:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     const { data } = await supabase
@@ -381,7 +413,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
               setFeedPostsCompleted(true);
               setShowFeedPosts(false);
               setActiveTab("feed");
+              fetchUnacknowledgedCount();
             }}
+            onAcknowledge={fetchUnacknowledgedCount}
           />
         )}
         
@@ -480,6 +514,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           hasUnreadMessages={hasUnreadMessages}
           language={language}
           userId={userId}
+          unacknowledgedCount={unacknowledgedCount}
         />
         <SidebarInset className="flex-1">
           <div className="p-6">
@@ -495,7 +530,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                 onComplete={() => {
                   setFeedPostsCompleted(true);
                   setShowFeedPosts(false);
+                  fetchUnacknowledgedCount();
                 }}
+                onAcknowledge={fetchUnacknowledgedCount}
               />
             )}
             <AnnualAddressDisclaimer userId={userId} language={language} />

@@ -32,6 +32,8 @@ interface MoverSidebarProps {
   hasUnreadMessages?: boolean;
   language: 'en' | 'es' | 'ru';
   userId?: string;
+  onRefreshUnacknowledged?: () => void;
+  unacknowledgedCount?: number;
 }
 
 const translations = {
@@ -73,17 +75,15 @@ const translations = {
   },
 };
 
-const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, language, userId }: MoverSidebarProps) => {
+const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, language, userId, unacknowledgedCount = 0 }: MoverSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const t = translations[language];
   const [hasTodoItems, setHasTodoItems] = useState(false);
-  const [hasUnacknowledgedPosts, setHasUnacknowledgedPosts] = useState(false);
 
   useEffect(() => {
     if (userId) {
       checkTodoItems();
-      checkUnacknowledgedPosts();
     }
   }, [userId]);
 
@@ -123,38 +123,8 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     }
   };
 
-  const checkUnacknowledgedPosts = async () => {
-    if (!userId) return;
-
-    try {
-      // Get all published feed posts
-      const { data: posts } = await supabase
-        .from("feed_posts")
-        .select("id")
-        .eq("is_published", true);
-
-      if (!posts || posts.length === 0) {
-        setHasUnacknowledgedPosts(false);
-        return;
-      }
-
-      // Get user's acknowledged posts
-      const { data: acknowledgments } = await supabase
-        .from("feed_post_acknowledgments")
-        .select("post_id")
-        .eq("user_id", userId);
-
-      const acknowledgedPostIds = new Set(acknowledgments?.map(a => a.post_id) || []);
-      const hasUnread = posts.some(post => !acknowledgedPostIds.has(post.id));
-      
-      setHasUnacknowledgedPosts(hasUnread);
-    } catch (error) {
-      console.error("Error checking unacknowledged posts:", error);
-    }
-  };
-
   const menuItems = [
-    { id: "feed", label: t.feed, icon: Newspaper, hasBadge: hasUnacknowledgedPosts },
+    { id: "feed", label: t.feed, icon: Newspaper, badgeCount: unacknowledgedCount },
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },
@@ -164,6 +134,34 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     { id: "feedback", label: t.feedback, icon: Lightbulb },
     { id: "chat", label: t.chat, icon: MessageSquare },
   ];
+
+  const renderBadge = (item: typeof menuItems[0], isCollapsed: boolean) => {
+    // Handle count badge for feed
+    if (item.badgeCount !== undefined && item.badgeCount > 0) {
+      if (isCollapsed) {
+        return (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1">
+            {item.badgeCount > 99 ? '99+' : item.badgeCount}
+          </span>
+        );
+      }
+      return (
+        <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium px-1.5">
+          {item.badgeCount > 99 ? '99+' : item.badgeCount}
+        </span>
+      );
+    }
+    
+    // Handle simple dot badge for todo and chat
+    if (item.hasBadge || (item.id === "chat" && hasUnreadMessages)) {
+      if (isCollapsed) {
+        return <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />;
+      }
+      return <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />;
+    }
+    
+    return null;
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -191,22 +189,12 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
                   >
                     <div className="relative">
                       <item.icon className="h-4 w-4" />
-                      {item.id === "chat" && hasUnreadMessages && (
-                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-                      )}
-                      {item.hasBadge && (
-                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-                      )}
+                      {isCollapsed && renderBadge(item, true)}
                     </div>
                     {!isCollapsed && (
                       <span className="flex-1">{item.label}</span>
                     )}
-                    {!isCollapsed && item.id === "chat" && hasUnreadMessages && (
-                      <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
-                    )}
-                    {!isCollapsed && item.hasBadge && (
-                      <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
-                    )}
+                    {!isCollapsed && renderBadge(item, false)}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
