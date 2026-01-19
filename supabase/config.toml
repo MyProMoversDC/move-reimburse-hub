@@ -44,3 +44,9 @@ verify_jwt = true
 
 [functions.compare-handbooks]
 verify_jwt = true
+
+[functions.send-consent-notification]
+verify_jwt = true
+
+[functions.check-missing-alcohol-tests]
+verify_jwt = false

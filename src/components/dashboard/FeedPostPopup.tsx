@@ -94,6 +94,7 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reviewLaterCounts, setReviewLaterCounts] = useState<Record<string, number>>({});
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -104,7 +105,21 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
 
   useEffect(() => {
     checkForUnreadPosts();
+    fetchReviewLaterCounts();
   }, [userId]);
+
+  const fetchReviewLaterCounts = async () => {
+    const { data } = await supabase
+      .from("feed_post_review_later_counts")
+      .select("post_id, count")
+      .eq("user_id", userId);
+    
+    const counts: Record<string, number> = {};
+    data?.forEach(item => {
+      counts[item.post_id] = item.count;
+    });
+    setReviewLaterCounts(counts);
+  };
 
   const checkForUnreadPosts = async () => {
     setLoading(true);
@@ -232,9 +247,26 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
       .from("feed_post_views")
       .upsert({ post_id: currentPost.id, user_id: userId }, { onConflict: "post_id,user_id" });
 
+    // Increment review later count
+    const currentCount = reviewLaterCounts[currentPost.id] || 0;
+    const newCount = currentCount + 1;
+    
+    await supabase
+      .from("feed_post_review_later_counts")
+      .upsert(
+        { user_id: userId, post_id: currentPost.id, count: newCount, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,post_id" }
+      );
+    
+    setReviewLaterCounts(prev => ({ ...prev, [currentPost.id]: newCount }));
+
     toast.info(t.reviewLaterNote);
     moveToNextPost();
   };
+
+  // Check if current post has been skipped 3+ times (must read)
+  const currentPost = unreadPosts[currentIndex];
+  const mustReadCurrentPost = currentPost ? (reviewLaterCounts[currentPost.id] || 0) >= 3 : false;
 
   const moveToNextPost = () => {
     // Clear translation state

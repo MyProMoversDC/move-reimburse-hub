@@ -30,6 +30,14 @@ interface Acknowledgment {
   };
 }
 
+interface MoverStatus {
+  id: string;
+  first_name: string;
+  last_name: string;
+  hasSigned: boolean;
+  signedAt?: string;
+}
+
 const ConsentDocumentManager = () => {
   const [documents, setDocuments] = useState<ConsentDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +46,7 @@ const ConsentDocumentManager = () => {
   const [showAcknowledgments, setShowAcknowledgments] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [acknowledgments, setAcknowledgments] = useState<Acknowledgment[]>([]);
+  const [moverStatuses, setMoverStatuses] = useState<MoverStatus[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -152,26 +161,53 @@ const ConsentDocumentManager = () => {
     setSelectedDocId(docId);
     setShowAcknowledgments(true);
 
+    // Get all movers (users with mover role)
+    const { data: moverRoles } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "mover");
+
+    const moverIds = moverRoles?.map(r => r.user_id) || [];
+
+    // Get mover profiles
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", moverIds);
+
+    // Get acknowledgments for this document
     const { data: acks } = await supabase
       .from("consent_acknowledgments")
       .select("user_id, acknowledged_at")
       .eq("consent_document_id", docId);
 
-    if (acks && acks.length > 0) {
-      const userIds = acks.map(a => a.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name")
-        .in("id", userIds);
+    const acknowledgedUserIds = new Set(acks?.map(a => a.user_id) || []);
 
-      const acksWithProfiles = acks.map(ack => ({
-        ...ack,
-        profile: profiles?.find(p => p.id === ack.user_id),
-      }));
-      setAcknowledgments(acksWithProfiles);
-    } else {
-      setAcknowledgments([]);
-    }
+    // Build the mover status list
+    const statuses: MoverStatus[] = (profiles || []).map(profile => {
+      const ack = acks?.find(a => a.user_id === profile.id);
+      return {
+        id: profile.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        hasSigned: acknowledgedUserIds.has(profile.id),
+        signedAt: ack?.acknowledged_at,
+      };
+    });
+
+    // Sort: unsigned first, then signed
+    statuses.sort((a, b) => {
+      if (a.hasSigned === b.hasSigned) {
+        return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+      }
+      return a.hasSigned ? 1 : -1;
+    });
+
+    setMoverStatuses(statuses);
+    setAcknowledgments(acks?.map(ack => ({
+      ...ack,
+      profile: profiles?.find(p => p.id === ack.user_id),
+    })) || []);
   };
 
   const formatToEST = (dateString: string) => {
@@ -302,31 +338,59 @@ const ConsentDocumentManager = () => {
 
       {/* Acknowledgments Dialog */}
       <Dialog open={showAcknowledgments} onOpenChange={setShowAcknowledgments}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Signed Users ({acknowledgments.length})
+              Mover Consent Status
             </DialogTitle>
           </DialogHeader>
+          
+          {/* Summary badges */}
+          <div className="flex gap-2 mb-4">
+            <Badge className="bg-green-500">
+              Signed: {moverStatuses.filter(m => m.hasSigned).length}
+            </Badge>
+            <Badge variant="destructive">
+              Pending: {moverStatuses.filter(m => !m.hasSigned).length}
+            </Badge>
+          </div>
+
           <div className="max-h-[400px] overflow-y-auto">
-            {acknowledgments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No signatures yet</p>
+            {moverStatuses.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No movers found</p>
             ) : (
               <div className="space-y-2">
-                {acknowledgments.map((ack) => (
+                {moverStatuses.map((mover) => (
                   <div
-                    key={ack.user_id}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-muted"
+                    key={mover.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      mover.hasSigned 
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                    }`}
                   >
-                    <span>
-                      {ack.profile
-                        ? `${ack.profile.first_name} ${ack.profile.last_name}`
-                        : "Unknown User"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatToEST(ack.acknowledged_at)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {mover.hasSigned ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <X className="h-4 w-4 text-red-600" />
+                      )}
+                      <span className="font-medium">
+                        {mover.first_name} {mover.last_name}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {mover.hasSigned && mover.signedAt ? (
+                        <span className="text-green-600 dark:text-green-400">
+                          Signed: {formatToEST(mover.signedAt)}
+                        </span>
+                      ) : (
+                        <span className="text-red-600 dark:text-red-400">
+                          Not signed
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

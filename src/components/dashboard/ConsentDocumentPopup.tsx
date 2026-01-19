@@ -164,6 +164,20 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         return;
       }
 
+      // Send notification email with the consent document attached
+      try {
+        await supabase.functions.invoke('send-consent-notification', {
+          body: {
+            userId,
+            documentUrl: document.file_url,
+            documentName: document.file_name,
+          },
+        });
+      } catch (emailError) {
+        console.error("Error sending consent notification email:", emailError);
+        // Don't fail the signing process if email fails
+      }
+
       setOpen(false);
       setDocument(null);
       setHasAgreed(false);
