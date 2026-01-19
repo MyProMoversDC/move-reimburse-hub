@@ -53,6 +53,7 @@ interface FeedPostPopupProps {
   userId: string;
   language: 'en' | 'es' | 'ru';
   onComplete: () => void;
+  onAcknowledge?: () => void;
 }
 
 const translations = {
@@ -85,7 +86,7 @@ const translations = {
   },
 };
 
-const FeedPostPopup = ({ userId, language, onComplete }: FeedPostPopupProps) => {
+const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPostPopupProps) => {
   const t = translations[language];
   
   const [open, setOpen] = useState(false);
@@ -210,6 +211,9 @@ const FeedPostPopup = ({ userId, language, onComplete }: FeedPostPopupProps) => 
                     'Не удалось подтвердить. Попробуйте еще раз.');
         return;
       }
+
+      // Notify parent about the acknowledgment for real-time count update
+      onAcknowledge?.();
 
       moveToNextPost();
     } catch (error) {
