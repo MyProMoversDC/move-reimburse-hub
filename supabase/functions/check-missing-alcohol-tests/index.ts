@@ -88,20 +88,26 @@ serve(async (req) => {
     // Get unique worker IDs that have reports
     const workersWithReports = new Set(reports?.map((r) => r.worker_id) || []);
 
-    // Find movers without reports
-    const moversWithoutReports = profiles?.filter(
-      (p) => !workersWithReports.has(p.id)
-    ) || [];
+    // Count how many movers have at least one test
+    const moversWithTests = profiles?.filter((p) => workersWithReports.has(p.id)) || [];
 
-    console.log(`Found ${moversWithoutReports.length} movers without alcohol test reports`);
+    console.log(`Found ${moversWithTests.length} movers with alcohol test reports`);
 
-    if (moversWithoutReports.length === 0) {
-      console.log("All movers have alcohol test reports for the week");
+    // Check if at least 1 mover had a test - if so, no alert needed
+    if (moversWithTests.length > 0) {
+      console.log("At least 1 mover had an alcohol test report for the week - no alert needed");
       return new Response(
-        JSON.stringify({ success: true, message: "All movers have reports" }),
+        JSON.stringify({ 
+          success: true, 
+          message: "At least 1 mover had a test - no alert needed",
+          moversWithTests: moversWithTests.length 
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // No movers had a test - send alert
+    console.log("No movers had an alcohol test report for the week - sending alert");
 
     // Format the week range for the email
     const weekRange = `${lastWeekMonday.toLocaleDateString("en-US", {
@@ -113,23 +119,18 @@ serve(async (req) => {
       year: "numeric",
     })}`;
 
-    // Build the email content
-    const moverList = moversWithoutReports
-      .map((m) => `• ${m.first_name} ${m.last_name}`)
-      .join("\n");
-
     const emailContent = `
-Missing Alcohol Test Reports Alert
+Missing Alcohol Test Alert
 
-The following movers did not have an alcohol test report submitted for the week of ${weekRange}:
+No alcohol test reports were submitted for ANY mover during the week of ${weekRange}.
 
-${moverList}
+Total movers in system: ${profiles?.length || 0}
 
-Total missing: ${moversWithoutReports.length} mover(s)
+At least 1 mover is required to have an alcohol test each week.
 
-Please ensure alcohol test reports are submitted weekly for all employees.
+Please ensure alcohol test compliance is maintained.
 
-This is an automated weekly compliance check.
+This is an automated weekly compliance check (runs every Tuesday at 8:00 AM EST).
     `.trim();
 
     const toEmail = "Daniel@mypromoversdc.com";
@@ -172,8 +173,9 @@ This is an automated weekly compliance check.
     return new Response(
       JSON.stringify({
         success: true,
-        missingCount: moversWithoutReports.length,
-        movers: moversWithoutReports.map((m) => `${m.first_name} ${m.last_name}`),
+        alertSent: true,
+        totalMovers: profiles?.length || 0,
+        message: "No movers had tests this week - alert sent to Daniel",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
