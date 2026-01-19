@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -435,18 +435,48 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           <LanguageSelector language={language} onLanguageChange={setLanguage} />
         </div>
 
-        {/* To-Do List Button for Mobile */}
+        {/* Feed and To-Do List Buttons for Mobile */}
         <Card className="p-4">
-          <Button 
-            variant="outline" 
-            className="w-full justify-between"
-            onClick={() => setActiveTab("todo")}
-          >
-            <span className="flex items-center">
-              <ClipboardList className="h-4 w-4 mr-2" />
-              {language === 'ru' ? 'Список задач' : language === 'es' ? 'Lista de Tareas' : 'To-Do List'}
-            </span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant={activeTab === "feed" ? "default" : "outline"}
+              className="flex-1 justify-between"
+              onClick={() => setActiveTab("feed")}
+            >
+              <span className="flex items-center">
+                <Newspaper className="h-4 w-4 mr-2" />
+                {language === 'ru' ? 'Лента' : language === 'es' ? 'Noticias' : 'Feed'}
+              </span>
+              {unacknowledgedCount > 0 && (
+                <span className="min-w-[20px] h-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium px-1.5">
+                  {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+                </span>
+              )}
+            </Button>
+            <Button 
+              variant={activeTab === "todo" ? "default" : "outline"}
+              className="flex-1 justify-between"
+              onClick={() => setActiveTab("todo")}
+            >
+              <span className="flex items-center">
+                <ClipboardList className="h-4 w-4 mr-2" />
+                {language === 'ru' ? 'Задачи' : language === 'es' ? 'Tareas' : 'To-Do'}
+              </span>
+            </Button>
+            <Button 
+              variant={activeTab === "chat" ? "default" : "outline"}
+              className="flex-1 justify-between"
+              onClick={() => setActiveTab("chat")}
+            >
+              <span className="flex items-center">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                {language === 'ru' ? 'Чат' : language === 'es' ? 'Chat' : 'Chat'}
+              </span>
+              {hasUnreadMessages && (
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+              )}
+            </Button>
+          </div>
         </Card>
 
         {/* Show Form Content or Feed */}
