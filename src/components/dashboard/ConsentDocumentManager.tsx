@@ -60,6 +60,8 @@ const ConsentDocumentManager = () => {
   const [moverStatuses, setMoverStatuses] = useState<MoverStatus[]>([]);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<ConsentDocument | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<ConsentDocument | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -354,8 +356,11 @@ const ConsentDocumentManager = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(doc.file_url, '_blank')}
-                            title="View document"
+                            onClick={() => {
+                              setPreviewDoc(doc);
+                              setShowPreview(true);
+                            }}
+                            title="Preview document"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -495,6 +500,41 @@ const ConsentDocumentManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Document Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Preview: {previewDoc?.file_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="h-[70vh] border rounded-lg overflow-hidden bg-muted/30">
+              {previewDoc?.file_url?.toLowerCase().endsWith('.pdf') ? (
+                <object
+                  data={previewDoc.file_url}
+                  type="application/pdf"
+                  className="w-full h-full"
+                >
+                  <iframe
+                    src={`${previewDoc.file_url}#toolbar=0`}
+                    className="w-full h-full"
+                    title="Document Preview"
+                  />
+                </object>
+              ) : (
+                <iframe
+                  src={previewDoc?.file_url}
+                  className="w-full h-full"
+                  title="Document Preview"
+                />
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
