@@ -199,62 +199,83 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
 
   if (loading || !document || !open) return null;
 
+  const isPdf = document.file_url?.toLowerCase().endsWith('.pdf');
+
   return (
     <AlertDialog open={open} onOpenChange={() => {}}>
-      <AlertDialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
+      <AlertDialogContent className="max-w-4xl w-[95vw] max-h-[95vh] h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-4 sm:p-6">
+        <AlertDialogHeader className="space-y-3">
+          <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <FileText className="h-5 w-5 text-primary flex-shrink-0" />
             {t.title}
           </AlertDialogTitle>
           
           {/* Contract termination disclaimer */}
-          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mt-3">
-            <p className="text-amber-800 dark:text-amber-200 font-medium text-sm">
+          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-3 sm:p-4">
+            <p className="text-amber-800 dark:text-amber-200 font-medium text-xs sm:text-sm">
               {t.disclaimer(moverName || "Mover")}
             </p>
           </div>
           
-          <AlertDialogDescription className="mt-3">
+          <AlertDialogDescription className="text-xs sm:text-sm">
             {t.message}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="flex-1 min-h-0 my-4">
-          <ScrollArea className="h-[400px] border rounded-lg">
+        {/* Document Viewer - Responsive height */}
+        <div className="flex-1 min-h-0 my-3 sm:my-4 overflow-hidden">
+          <div className="h-full border rounded-lg overflow-hidden bg-muted/30">
             {documentContent ? (
-              <div 
-                className="p-4 prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: documentContent }}
-              />
+              <ScrollArea className="h-full">
+                <div 
+                  className="p-3 sm:p-4 prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: documentContent }}
+                />
+              </ScrollArea>
+            ) : isPdf ? (
+              // For PDFs, use object tag which works better on mobile
+              <object
+                data={document.file_url}
+                type="application/pdf"
+                className="w-full h-full min-h-[300px] sm:min-h-[400px]"
+              >
+                <iframe
+                  src={`${document.file_url}#toolbar=0`}
+                  className="w-full h-full min-h-[300px] sm:min-h-[400px]"
+                  title="Terms and Conditions"
+                />
+              </object>
             ) : (
               <iframe
                 src={document.file_url}
-                className="w-full h-full min-h-[400px]"
+                className="w-full h-full min-h-[300px] sm:min-h-[400px]"
                 title="Terms and Conditions"
               />
             )}
-          </ScrollArea>
+          </div>
         </div>
 
+        {/* Agreement checkbox */}
         <div className="flex items-start space-x-3 pt-2 border-t">
           <Checkbox
             id="consent-agree"
             checked={hasAgreed}
             onCheckedChange={(checked) => setHasAgreed(checked === true)}
+            className="mt-0.5"
           />
           <label
             htmlFor="consent-agree"
-            className="text-sm font-medium leading-none cursor-pointer"
+            className="text-xs sm:text-sm font-medium leading-tight cursor-pointer"
           >
             {t.iAgree}
           </label>
         </div>
 
-        <AlertDialogFooter className="mt-4">
+        <AlertDialogFooter className="mt-3 sm:mt-4">
           <Button
             onClick={handleSign}
             disabled={!hasAgreed || submitting}
+            className="w-full sm:w-auto"
           >
             {submitting ? (
               <>

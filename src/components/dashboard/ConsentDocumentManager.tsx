@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, Upload, Check, X, Eye, Users, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { FileText, Upload, Check, X, Eye, Users, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -43,10 +53,13 @@ const ConsentDocumentManager = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [activating, setActivating] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [showAcknowledgments, setShowAcknowledgments] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [acknowledgments, setAcknowledgments] = useState<Acknowledgment[]>([]);
   const [moverStatuses, setMoverStatuses] = useState<MoverStatus[]>([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<ConsentDocument | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -154,6 +167,52 @@ const ConsentDocumentManager = () => {
       toast.error("Failed to update document status");
     } finally {
       setActivating(null);
+    }
+  };
+
+  const handleDeleteClick = (doc: ConsentDocument) => {
+    setDocToDelete(doc);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!docToDelete) return;
+    
+    setDeleting(docToDelete.id);
+    try {
+      // First delete any acknowledgments for this document
+      await supabase
+        .from("consent_acknowledgments")
+        .delete()
+        .eq("consent_document_id", docToDelete.id);
+
+      // Then delete the document record
+      const { error } = await supabase
+        .from("consent_documents")
+        .delete()
+        .eq("id", docToDelete.id);
+
+      if (error) throw error;
+
+      // Try to delete the file from storage (extract filename from URL)
+      try {
+        const urlParts = docToDelete.file_url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        await supabase.storage.from("handbooks").remove([fileName]);
+      } catch (storageError) {
+        console.error("Error deleting file from storage:", storageError);
+        // Continue even if storage deletion fails
+      }
+
+      toast.success("Document deleted successfully!");
+      fetchDocuments();
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      toast.error("Failed to delete document");
+    } finally {
+      setDeleting(null);
+      setDeleteConfirmOpen(false);
+      setDocToDelete(null);
     }
   };
 
@@ -296,6 +355,7 @@ const ConsentDocumentManager = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => window.open(doc.file_url, '_blank')}
+                            title="View document"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -303,6 +363,7 @@ const ConsentDocumentManager = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewAcknowledgments(doc.id)}
+                            title="View acknowledgments"
                           >
                             <Users className="h-4 w-4" />
                           </Button>
@@ -312,6 +373,7 @@ const ConsentDocumentManager = () => {
                               size="sm"
                               onClick={() => handleActivate(doc.id, false)}
                               disabled={activating === doc.id}
+                              title="Deactivate"
                             >
                               <X className="h-4 w-4 text-red-500" />
                             </Button>
@@ -321,10 +383,24 @@ const ConsentDocumentManager = () => {
                               size="sm"
                               onClick={() => handleActivate(doc.id, true)}
                               disabled={activating === doc.id}
+                              title="Activate"
                             >
                               <Check className="h-4 w-4 text-green-500" />
                             </Button>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteClick(doc)}
+                            disabled={deleting === doc.id || doc.is_active}
+                            title={doc.is_active ? "Deactivate before deleting" : "Delete document"}
+                          >
+                            {deleting === doc.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            )}
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -398,6 +474,27 @@ const ConsentDocumentManager = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Consent Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{docToDelete?.file_name}"? This will also remove all mover acknowledgments for this document. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
