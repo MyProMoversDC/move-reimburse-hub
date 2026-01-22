@@ -620,6 +620,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
 
       toast.success(t.savedSuccessfully);
       setOpen(false);
+      // Call onClose callback to trigger any parent refresh (e.g., address disclaimer)
+      onClose?.();
     } catch (error: unknown) {
       toast.error(handleError(error));
     } finally {

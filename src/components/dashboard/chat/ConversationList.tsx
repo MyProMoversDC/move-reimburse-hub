@@ -185,7 +185,8 @@ const ConversationList = ({
         })
       );
 
-      // Sort conversations by last message time (most recent first)
+      // Sort conversations by last message time or creation time (most recent first)
+      // Conversations without messages should still appear based on their updated_at
       conversationsWithDetails.sort((a, b) => {
         const aTime = a.lastMessage?.created_at || a.updated_at;
         const bTime = b.lastMessage?.created_at || b.updated_at;
@@ -329,11 +330,11 @@ const ConversationList = ({
                           {conv.unreadCount}
                         </Badge>
                       )}
-                      {conv.lastMessage && (
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(conv.lastMessage.created_at)}
-                        </span>
-                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {conv.lastMessage 
+                          ? formatDate(conv.lastMessage.created_at) 
+                          : formatDate(conv.updated_at)}
+                      </span>
                     </div>
                   </div>
                   {conv.topic_type !== 'general' && (
@@ -346,9 +347,13 @@ const ConversationList = ({
                       {conv.topic_reference_label}
                     </p>
                   )}
-                  {conv.lastMessage && (
+                  {conv.lastMessage ? (
                     <p className="text-sm text-muted-foreground truncate mt-1">
                       {conv.lastMessage.content || '📎 Attachment'}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground/60 italic truncate mt-1">
+                      {language === 'ru' ? 'Нет сообщений' : language === 'es' ? 'Sin mensajes' : 'No messages yet'}
                     </p>
                   )}
                 </div>

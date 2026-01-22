@@ -500,6 +500,8 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
               placeholder={t.declineReasonPlaceholder}
               className="mt-2"
               rows={4}
+              autoFocus
+              onKeyDown={(e) => e.stopPropagation()}
             />
           </div>
           <AlertDialogFooter>

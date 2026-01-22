@@ -171,7 +171,7 @@ export const violenceIncidentTranslations = {
     
     incidentDate: "Дата Инцидента",
     incidentTime: "Время Инцидента",
-    jobId: "Оценка/Котировка #",
+    jobId: "# работы",
     incidentAddress: "Адрес Инцидента",
     clientName: "Имя Клиента",
     
