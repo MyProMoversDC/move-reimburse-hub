@@ -141,7 +141,7 @@ Cada mover listado recibirá 1 hora de bono si la reseña es válida y toda la i
     jobDate: "Дата Работы",
     clientFullName: "Полное Имя Клиента",
     clientFullNamePlaceholder: "Должно совпадать с рабочим заказом/BOL",
-    invoiceNumber: "Номер Счета",
+    invoiceNumber: "Номер работы",
     crewMember: "Имя Члена Бригады",
     required: "(Обязательно)",
     optional: "(Необязательно)",
