@@ -164,7 +164,18 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         return;
       }
 
-      // Send notification email with the consent document attached
+      // Get mover profile for email notifications
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", userId)
+        .single();
+
+      const moverFullName = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Mover";
+      const moverEmail = profile?.email || "";
+      const signedAt = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+      // Send notification email to mover with the consent document attached
       try {
         await supabase.functions.invoke('send-consent-notification', {
           body: {
@@ -175,6 +186,21 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         });
       } catch (emailError) {
         console.error("Error sending consent notification email:", emailError);
+        // Don't fail the signing process if email fails
+      }
+
+      // Send admin notification email to Daniel@
+      try {
+        await supabase.functions.invoke('send-consent-admin-notification', {
+          body: {
+            moverName: moverFullName,
+            moverEmail: moverEmail,
+            documentName: document.file_name,
+            signedAt: signedAt,
+          },
+        });
+      } catch (adminEmailError) {
+        console.error("Error sending admin consent notification email:", adminEmailError);
         // Don't fail the signing process if email fails
       }
 
