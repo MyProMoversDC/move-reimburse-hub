@@ -263,10 +263,9 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
     toast.info(t.reviewLaterNote);
     moveToNextPost();
   };
-
   // Check if current post has been skipped 3+ times (must read)
-  const currentPost = unreadPosts[currentIndex];
-  const mustReadCurrentPost = currentPost ? (reviewLaterCounts[currentPost.id] || 0) >= 3 : false;
+  const currentPostForSkipCheck = unreadPosts[currentIndex];
+  const mustReadCurrentPost = currentPostForSkipCheck ? (reviewLaterCounts[currentPostForSkipCheck.id] || 0) >= 3 : false;
 
   const moveToNextPost = () => {
     // Clear translation state
@@ -441,15 +440,17 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            variant="outline"
-            onClick={handleReviewLater}
-            disabled={submitting}
-            className="w-full sm:w-auto"
-          >
-            <Clock className="h-4 w-4 mr-2" />
-            {t.reviewLater}
-          </Button>
+          {!mustReadCurrentPost && (
+            <Button
+              variant="outline"
+              onClick={handleReviewLater}
+              disabled={submitting}
+              className="w-full sm:w-auto"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              {t.reviewLater}
+            </Button>
+          )}
           <Button
             onClick={handleAcknowledge}
             disabled={submitting}
