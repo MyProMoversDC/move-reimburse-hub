@@ -548,12 +548,31 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         />
         <SidebarInset className="flex-1">
           <div className="p-6">
-            <HandbookPopup 
+            {/* Consent Document Popup - First Step */}
+            <ConsentDocumentPopup 
               userId={userId} 
-              language={language}
-              onAcknowledge={() => setShowFeedPosts(true)}
+              language={language} 
+              onComplete={() => {
+                setConsentCompleted(true);
+                setShowHandbook(true);
+              }}
             />
-            {showFeedPosts && (
+            
+            {/* Handbook Popup - Second Step (only shown after consent is completed) */}
+            {consentCompleted && showHandbook && (
+              <HandbookPopup 
+                userId={userId} 
+                language={language}
+                onAcknowledge={() => {
+                  setHandbookCompleted(true);
+                  setShowHandbook(false);
+                  setShowFeedPosts(true);
+                }}
+              />
+            )}
+            
+            {/* Feed Posts Popup - Third Step (only shown after handbook is completed) */}
+            {handbookCompleted && showFeedPosts && (
               <FeedPostPopup
                 userId={userId}
                 language={language}
@@ -565,6 +584,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                 onAcknowledge={fetchUnacknowledgedCount}
               />
             )}
+            
             <AnnualAddressDisclaimer userId={userId} language={language} />
             <DriverLicenseDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
             <AddressDisclaimer userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} refreshKey={addressRefreshKey} />
