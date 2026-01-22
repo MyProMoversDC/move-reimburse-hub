@@ -284,14 +284,14 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
   };
 
   const handleTranslate = async (targetLang: 'es' | 'ru') => {
-    const currentPost = unreadPosts[currentIndex];
-    if (!currentPost) return;
+    const postToTranslate = unreadPosts[currentIndex];
+    if (!postToTranslate) return;
 
     const textsToTranslate: string[] = [];
-    if (currentPost.content) textsToTranslate.push(currentPost.content);
-    if (currentPost.poll) {
-      textsToTranslate.push(currentPost.poll.question);
-      currentPost.poll.options.forEach(opt => textsToTranslate.push(opt.option_text));
+    if (postToTranslate.content) textsToTranslate.push(postToTranslate.content);
+    if (postToTranslate.poll) {
+      textsToTranslate.push(postToTranslate.poll.question);
+      postToTranslate.poll.options.forEach(opt => textsToTranslate.push(opt.option_text));
     }
     
     if (textsToTranslate.length === 0) return;
@@ -299,14 +299,14 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
     const results = await translateTexts(textsToTranslate, targetLang);
     
     let idx = 0;
-    if (currentPost.content) {
+    if (postToTranslate.content) {
       setTranslatedContent(results[idx]);
       idx++;
     }
-    if (currentPost.poll) {
+    if (postToTranslate.poll) {
       setTranslatedPollQuestion(results[idx]);
       idx++;
-      const translatedOpts = currentPost.poll.options.map(() => results[idx++]);
+      const translatedOpts = postToTranslate.poll.options.map(() => results[idx++]);
       setTranslatedPollOptions(translatedOpts);
     }
     setTranslatedToLang(targetLang);
