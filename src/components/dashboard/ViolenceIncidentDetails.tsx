@@ -18,6 +18,7 @@ import { handleError } from "@/lib/errorHandler";
 import { violenceIncidentTranslations, ViolenceIncidentLanguage } from "@/lib/violenceIncidentTranslations";
 import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
 import ApplyDeductibleDialog from "./ApplyDeductibleDialog";
+import { TranslateButton } from "./TranslateButton";
 
 interface ViolenceIncident {
   id: string;
@@ -73,12 +74,20 @@ const ViolenceIncidentDetails = ({
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [deductibleDialogOpen, setDeductibleDialogOpen] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translatedData, setTranslatedData] = useState<{
+    incident_description?: string;
+    injury_description?: string;
+    damage_description?: string;
+  } | null>(null);
 
   const t = violenceIncidentTranslations[language];
 
   useEffect(() => {
     if (open) {
       fetchAttachments();
+      // Reset translation when dialog opens with new incident
+      setTranslatedData(null);
     }
   }, [open, incident.id]);
 
@@ -99,6 +108,47 @@ const ViolenceIncidentDetails = ({
       })));
     } else {
       setAttachments([]);
+    }
+  };
+
+  const handleTranslate = async () => {
+    // If already translated, toggle back to original
+    if (translatedData) {
+      setTranslatedData(null);
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const textsToTranslate: Record<string, string> = {};
+      
+      if (incident.incident_description) {
+        textsToTranslate.incident_description = incident.incident_description;
+      }
+      if (incident.injury_description) {
+        textsToTranslate.injury_description = incident.injury_description;
+      }
+      if (incident.damage_description) {
+        textsToTranslate.damage_description = incident.damage_description;
+      }
+
+      const translations: Record<string, string> = {};
+      
+      for (const [key, text] of Object.entries(textsToTranslate)) {
+        const { data, error } = await supabase.functions.invoke('translate-text', {
+          body: { text, targetLanguage: 'en' }
+        });
+        
+        if (error) throw error;
+        translations[key] = data.translatedText || text;
+      }
+
+      setTranslatedData(translations);
+      toast.success("Translation complete");
+    } catch (error) {
+      toast.error(handleError(error));
+    } finally {
+      setTranslating(false);
     }
   };
 
@@ -162,10 +212,19 @@ const ViolenceIncidentDetails = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {t.formTitle}
-              {getSeverityBadge(incident.severity_level)}
-            </DialogTitle>
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle className="flex items-center gap-2">
+                {t.formTitle}
+                {getSeverityBadge(incident.severity_level)}
+              </DialogTitle>
+              {canEdit && (
+                <TranslateButton
+                  onClick={handleTranslate}
+                  isTranslating={translating}
+                  isTranslated={!!translatedData}
+                />
+              )}
+            </div>
           </DialogHeader>
 
           <ScrollArea className="max-h-[70vh] pr-4">
@@ -232,7 +291,7 @@ const ViolenceIncidentDetails = ({
                     ))}
                   </div>
                   <div className="p-3 bg-muted rounded-lg text-sm">
-                    {incident.incident_description}
+                    {translatedData?.incident_description || incident.incident_description}
                   </div>
                 </div>
               </div>
@@ -251,7 +310,7 @@ const ViolenceIncidentDetails = ({
                   </div>
                   {incident.property_damaged && incident.damage_description && (
                     <div className="p-3 bg-destructive/10 rounded-lg">
-                      {incident.damage_description}
+                      {translatedData?.damage_description || incident.damage_description}
                     </div>
                   )}
                 </div>
