@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
@@ -9,10 +9,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { FileText, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { SignaturePad, SignaturePadRef } from "@/components/ui/signature-pad";
 
 interface ConsentDocument {
   id: string;
@@ -32,25 +32,31 @@ const translations = {
     title: "Terms and Conditions",
     disclaimer: (name: string) => `Dear ${name}, your contract with ABC Movers has been terminated. Please study and sign a contract with XYZ Movers.`,
     message: "Please read and sign the following terms and conditions document before continuing.",
-    iAgree: "I have read and agree to the terms and conditions",
-    sign: "Sign Document",
+    signatureRequired: "Your signature is required below",
+    sign: "Submit Signature",
     signing: "Signing...",
+    clearSignature: "Clear Signature",
+    signatureEmpty: "Please provide your signature before submitting",
   },
   es: {
     title: "Términos y Condiciones",
     disclaimer: (name: string) => `Estimado/a ${name}, su contrato con ABC Movers ha sido terminado. Por favor estudie y firme un contrato con XYZ Movers.`,
     message: "Por favor lea y firme el siguiente documento de términos y condiciones antes de continuar.",
-    iAgree: "He leído y acepto los términos y condiciones",
-    sign: "Firmar Documento",
+    signatureRequired: "Se requiere su firma abajo",
+    sign: "Enviar Firma",
     signing: "Firmando...",
+    clearSignature: "Borrar Firma",
+    signatureEmpty: "Por favor proporcione su firma antes de enviar",
   },
   ru: {
     title: "Условия и Положения",
     disclaimer: (name: string) => `Уважаемый/ая ${name}, ваш контракт с ABC Movers был расторгнут. Пожалуйста, ознакомьтесь и подпишите контракт с XYZ Movers.`,
     message: "Пожалуйста, прочитайте и подпишите следующий документ с условиями и положениями перед продолжением.",
-    iAgree: "Я прочитал и согласен с условиями и положениями",
-    sign: "Подписать Документ",
+    signatureRequired: "Требуется ваша подпись ниже",
+    sign: "Отправить Подпись",
     signing: "Подписание...",
+    clearSignature: "Очистить Подпись",
+    signatureEmpty: "Пожалуйста, поставьте подпись перед отправкой",
   },
 };
 
@@ -59,11 +65,12 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
   
   const [open, setOpen] = useState(false);
   const [document, setDocument] = useState<ConsentDocument | null>(null);
-  const [hasAgreed, setHasAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [moverName, setMoverName] = useState<string>("");
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const signaturePadRef = useRef<SignaturePadRef>(null);
 
   useEffect(() => {
     const fetchMoverName = async () => {
@@ -145,10 +152,29 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
   };
 
   const handleSign = async () => {
-    if (!document || !hasAgreed) return;
+    if (!document) return;
+
+    // Check if signature is provided
+    const signature = signaturePadRef.current?.getSignatureDataUrl();
+    if (!signature) {
+      toast.error(t.signatureEmpty);
+      return;
+    }
 
     setSubmitting(true);
     try {
+      // Get mover profile for email notifications
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", userId)
+        .single();
+
+      const moverFullName = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Mover";
+      const moverEmail = profile?.email || "";
+      const signedAt = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+      // Insert acknowledgment
       const { error } = await supabase
         .from("consent_acknowledgments")
         .insert({
@@ -164,16 +190,21 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         return;
       }
 
-      // Get mover profile for email notifications
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, email")
-        .eq("id", userId)
-        .single();
+      // Store the signed consent document with signature
+      const { error: signedDocError } = await supabase
+        .from("signed_consent_documents")
+        .insert({
+          user_id: userId,
+          consent_document_id: document.id,
+          signature_url: signature,
+          mover_name: moverFullName,
+          document_name: document.file_name,
+        });
 
-      const moverFullName = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Mover";
-      const moverEmail = profile?.email || "";
-      const signedAt = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+      if (signedDocError) {
+        console.error("Error storing signed document:", signedDocError);
+        // Don't fail the signing process if storing fails
+      }
 
       // Send notification email to mover with the consent document attached
       try {
@@ -206,7 +237,7 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
 
       setOpen(false);
       setDocument(null);
-      setHasAgreed(false);
+      setSignatureDataUrl(null);
       
       toast.success(language === 'en' ? 'Document signed successfully!' : 
                     language === 'es' ? '¡Documento firmado exitosamente!' :
@@ -263,44 +294,42 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
               <object
                 data={document.file_url}
                 type="application/pdf"
-                className="w-full h-full min-h-[300px] sm:min-h-[400px]"
+                className="w-full h-full min-h-[200px] sm:min-h-[300px]"
               >
                 <iframe
                   src={`${document.file_url}#toolbar=0`}
-                  className="w-full h-full min-h-[300px] sm:min-h-[400px]"
+                  className="w-full h-full min-h-[200px] sm:min-h-[300px]"
                   title="Terms and Conditions"
                 />
               </object>
             ) : (
               <iframe
                 src={document.file_url}
-                className="w-full h-full min-h-[300px] sm:min-h-[400px]"
+                className="w-full h-full min-h-[200px] sm:min-h-[300px]"
                 title="Terms and Conditions"
               />
             )}
           </div>
         </div>
 
-        {/* Agreement checkbox */}
-        <div className="flex items-start space-x-3 pt-2 border-t">
-          <Checkbox
-            id="consent-agree"
-            checked={hasAgreed}
-            onCheckedChange={(checked) => setHasAgreed(checked === true)}
-            className="mt-0.5"
+        {/* Signature Section */}
+        <div className="space-y-2 pt-2 border-t">
+          <p className="text-sm font-medium text-center text-muted-foreground">
+            {t.signatureRequired}
+          </p>
+          <SignaturePad
+            ref={signaturePadRef}
+            onSign={setSignatureDataUrl}
+            onClear={() => setSignatureDataUrl(null)}
+            clearLabel={t.clearSignature}
+            height={120}
           />
-          <label
-            htmlFor="consent-agree"
-            className="text-xs sm:text-sm font-medium leading-tight cursor-pointer"
-          >
-            {t.iAgree}
-          </label>
         </div>
 
         <AlertDialogFooter className="mt-3 sm:mt-4">
           <Button
             onClick={handleSign}
-            disabled={!hasAgreed || submitting}
+            disabled={!signatureDataUrl || submitting}
             className="w-full sm:w-auto"
           >
             {submitting ? (

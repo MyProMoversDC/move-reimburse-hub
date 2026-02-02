@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle, FileText, XCircle } from "lucide-react";
+import { Save, X, Briefcase, Car, Settings2, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, AlertTriangle, FileText, XCircle, FileSignature, Eye } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -351,6 +352,15 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
   const [declineDocType, setDeclineDocType] = useState<"drivers_license" | "medical_card">("drivers_license");
   const [decliningDocument, setDecliningDocument] = useState(false);
   const [moverEmail, setMoverEmail] = useState<string>("");
+  
+  // Signed consent documents state
+  const [signedConsentDocs, setSignedConsentDocs] = useState<Array<{
+    id: string;
+    document_name: string;
+    signature_url: string;
+    signed_at: string;
+  }>>([]);
+  const [previewSignature, setPreviewSignature] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEmployeeData();
@@ -472,6 +482,17 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
         license: { ...licenseData },
         attributes: { ...attributesData },
       });
+
+      // Fetch signed consent documents for this employee
+      const { data: signedDocs } = await supabase
+        .from("signed_consent_documents")
+        .select("id, document_name, signature_url, signed_at")
+        .eq("user_id", employeeId)
+        .order("signed_at", { ascending: false });
+
+      if (signedDocs) {
+        setSignedConsentDocs(signedDocs);
+      }
     } catch (error) {
       console.error("Error fetching employee data:", error);
     }
@@ -1046,8 +1067,8 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
         </CardContent>
       </Card>
 
-      {/* Documents Section - Show Medical Card uploaded by mover */}
-      {medicalCardUrl && (
+      {/* Documents Section - Show Medical Card and Signed Consent Documents */}
+      {(medicalCardUrl || signedConsentDocs.length > 0) && (
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -1055,27 +1076,63 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
               {t.documents}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">{t.medicalCard}</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => openDeclineDialog("medical_card")}
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
-                  {language === 'ru' ? 'Отклонить' : language === 'es' ? 'Rechazar' : 'Decline'}
-                </Button>
+          <CardContent className="space-y-6">
+            {/* Medical Card Section */}
+            {medicalCardUrl && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">{t.medicalCard}</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => openDeclineDialog("medical_card")}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    {language === 'ru' ? 'Отклонить' : language === 'es' ? 'Rechazar' : 'Decline'}
+                  </Button>
+                </div>
+                <img 
+                  src={medicalCardUrl} 
+                  alt="Medical Card" 
+                  className="w-full max-w-md h-48 object-cover rounded-md border cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(medicalCardUrl, '_blank')}
+                />
               </div>
-              <img 
-                src={medicalCardUrl} 
-                alt="Medical Card" 
-                className="w-full max-w-md h-48 object-cover rounded-md border cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => window.open(medicalCardUrl, '_blank')}
-              />
-            </div>
+            )}
+
+            {/* Signed Consent Documents Section */}
+            {signedConsentDocs.length > 0 && (
+              <div className="space-y-3">
+                {medicalCardUrl && <div className="border-t pt-4" />}
+                <div className="flex items-center gap-2">
+                  <FileSignature className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-medium">
+                    {language === 'ru' ? 'Подписанные документы согласия' : language === 'es' ? 'Documentos de Consentimiento Firmados' : 'Signed Consent Documents'}
+                  </Label>
+                </div>
+                <div className="grid gap-3">
+                  {signedConsentDocs.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{doc.document_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {language === 'ru' ? 'Подписано' : language === 'es' ? 'Firmado' : 'Signed'}: {format(new Date(doc.signed_at), "MM/dd/yyyy hh:mm a")}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviewSignature(doc.signature_url)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        {language === 'ru' ? 'Подпись' : language === 'es' ? 'Firma' : 'Signature'}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -1133,6 +1190,26 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
         language={language}
         isSubmitting={decliningDocument}
       />
+
+      {/* Signature Preview Dialog */}
+      {previewSignature && (
+        <Dialog open={!!previewSignature} onOpenChange={() => setPreviewSignature(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {language === 'ru' ? 'Просмотр подписи' : language === 'es' ? 'Vista previa de firma' : 'Signature Preview'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <img
+                src={previewSignature}
+                alt="Mover Signature"
+                className="w-full max-h-[200px] object-contain"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
