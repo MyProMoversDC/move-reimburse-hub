@@ -279,37 +279,56 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        {/* Document Viewer - Responsive height */}
+        {/* Document Viewer - Responsive height with mobile scroll */}
         <div className="flex-1 min-h-0 my-3 sm:my-4 overflow-hidden">
-          <div className="h-full border rounded-lg overflow-hidden bg-muted/30">
-            {documentContent ? (
-              <ScrollArea className="h-full">
+          <ScrollArea className="h-full max-h-[40vh] sm:max-h-[50vh]">
+            <div className="h-full border rounded-lg overflow-hidden bg-muted/30">
+              {documentContent ? (
                 <div 
                   className="p-3 sm:p-4 prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: documentContent }}
                 />
-              </ScrollArea>
-            ) : isPdf ? (
-              // For PDFs, use object tag which works better on mobile
-              <object
-                data={document.file_url}
-                type="application/pdf"
-                className="w-full h-full min-h-[200px] sm:min-h-[300px]"
-              >
+              ) : isPdf ? (
+                // For PDFs on mobile, provide a link since PDF viewers don't work well in iframes
+                <div className="flex flex-col h-full">
+                  <div className="sm:hidden p-4 text-center space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'en' ? 'Tap below to view the document:' : 
+                       language === 'es' ? 'Toque abajo para ver el documento:' :
+                       'Нажмите ниже, чтобы просмотреть документ:'}
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open(document.file_url, '_blank')}
+                      className="w-full"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      {language === 'en' ? 'Open Document' : 
+                       language === 'es' ? 'Abrir Documento' :
+                       'Открыть Документ'}
+                    </Button>
+                  </div>
+                  <object
+                    data={document.file_url}
+                    type="application/pdf"
+                    className="hidden sm:block w-full h-full min-h-[300px]"
+                  >
+                    <iframe
+                      src={`${document.file_url}#toolbar=0`}
+                      className="w-full h-full min-h-[300px]"
+                      title="Terms and Conditions"
+                    />
+                  </object>
+                </div>
+              ) : (
                 <iframe
-                  src={`${document.file_url}#toolbar=0`}
+                  src={document.file_url}
                   className="w-full h-full min-h-[200px] sm:min-h-[300px]"
                   title="Terms and Conditions"
                 />
-              </object>
-            ) : (
-              <iframe
-                src={document.file_url}
-                className="w-full h-full min-h-[200px] sm:min-h-[300px]"
-                title="Terms and Conditions"
-              />
-            )}
-          </div>
+              )}
+            </div>
+          </ScrollArea>
         </div>
 
         {/* Signature Section */}
