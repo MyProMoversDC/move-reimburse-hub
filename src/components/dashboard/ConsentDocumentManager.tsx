@@ -15,10 +15,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileText, Upload, Check, X, Eye, Users, Loader2, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Upload, Check, X, Eye, Users, Loader2, Trash2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import SignedConsentDocuments from "./SignedConsentDocuments";
 
 interface ConsentDocument {
   id: string;
@@ -279,6 +281,19 @@ const ConsentDocumentManager = () => {
 
   return (
     <div className="space-y-4">
+      <Tabs defaultValue="manage" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="manage" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Manage Documents
+          </TabsTrigger>
+          <TabsTrigger value="signed" className="flex items-center gap-2">
+            <FileSignature className="h-4 w-4" />
+            Signed Documents
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="manage">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -535,6 +550,12 @@ const ConsentDocumentManager = () => {
           </div>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="signed">
+          <SignedConsentDocuments />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

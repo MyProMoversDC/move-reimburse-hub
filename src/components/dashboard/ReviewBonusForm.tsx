@@ -125,12 +125,9 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
       return;
     }
 
-    // Check for duplicate invoice number
-    const { data: existingInvoice, error: invoiceCheckError } = await supabase
-      .from("review_bonuses")
-      .select("id")
-      .eq("invoice_number", invoiceNumber.trim())
-      .maybeSingle();
+    // Check for duplicate invoice number using RPC function (bypasses RLS)
+    const { data: hasDuplicateInvoice, error: invoiceCheckError } = await supabase
+      .rpc("check_duplicate_invoice_number", { p_invoice_number: invoiceNumber.trim() });
 
     if (invoiceCheckError) {
       console.error("Error checking invoice number:", invoiceCheckError);
@@ -138,7 +135,7 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
       return;
     }
 
-    if (existingInvoice) {
+    if (hasDuplicateInvoice) {
       setDuplicateAlertMessage(
         language === 'en' 
           ? "This Invoice Number has already been submitted. Each invoice number can only be used once. Please check the invoice number and try again."
@@ -150,12 +147,9 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
       return;
     }
 
-    // Check for duplicate URL
-    const { data: existingUrl, error: urlCheckError } = await supabase
-      .from("review_bonuses")
-      .select("id")
-      .eq("review_url", reviewUrl.trim())
-      .maybeSingle();
+    // Check for duplicate URL using RPC function (bypasses RLS)
+    const { data: hasDuplicateUrl, error: urlCheckError } = await supabase
+      .rpc("check_duplicate_review_url", { p_review_url: reviewUrl.trim() });
 
     if (urlCheckError) {
       console.error("Error checking review URL:", urlCheckError);
@@ -163,7 +157,7 @@ const ReviewBonusForm = ({ userId, foremanName, onSuccess, onCancel, language }:
       return;
     }
 
-    if (existingUrl) {
+    if (hasDuplicateUrl) {
       setDuplicateAlertMessage(
         language === 'en' 
           ? "This Review URL has already been submitted. Each review URL can only be used once. Please check the URL and try again."

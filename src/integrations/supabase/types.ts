@@ -1659,6 +1659,44 @@ export type Database = {
         }
         Relationships: []
       }
+      signed_consent_documents: {
+        Row: {
+          consent_document_id: string
+          document_name: string
+          id: string
+          mover_name: string
+          signature_url: string
+          signed_at: string
+          user_id: string
+        }
+        Insert: {
+          consent_document_id: string
+          document_name: string
+          id?: string
+          mover_name: string
+          signature_url: string
+          signed_at?: string
+          user_id: string
+        }
+        Update: {
+          consent_document_id?: string
+          document_name?: string
+          id?: string
+          mover_name?: string
+          signature_url?: string
+          signed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signed_consent_documents_consent_document_id_fkey"
+            columns: ["consent_document_id"]
+            isOneToOne: false
+            referencedRelation: "consent_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_activity_logs: {
         Row: {
           activity_description: string
@@ -1861,6 +1899,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_duplicate_invoice_number: {
+        Args: { p_invoice_number: string }
+        Returns: boolean
+      }
+      check_duplicate_review_url: {
+        Args: { p_review_url: string }
+        Returns: boolean
+      }
       delete_user_account: {
         Args: { user_id_to_delete: string }
         Returns: undefined
