@@ -440,17 +440,6 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-          {!mustReadCurrentPost && (
-            <Button
-              variant="outline"
-              onClick={handleReviewLater}
-              disabled={submitting}
-              className="w-full sm:w-auto"
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              {t.reviewLater}
-            </Button>
-          )}
           <Button
             onClick={handleAcknowledge}
             disabled={submitting}
