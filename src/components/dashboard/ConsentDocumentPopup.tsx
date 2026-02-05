@@ -456,8 +456,7 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
               <h3 className="text-lg font-semibold text-center">{t.signatureRequired}</h3>
               <SignaturePad
                 ref={signaturePadRef}
-                onSign={handleSignatureComplete}
-                onClear={() => setSignatureDataUrl(null)}
+                onClear={() => {}}
                 clearLabel={t.clearSignature}
                 height={150}
               />
@@ -467,18 +466,21 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
                   className="flex-1"
                   onClick={() => setShowSignaturePad(false)}
                 >
-                  Cancel
+                  {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
                 </Button>
                 <Button
                   className="flex-1"
                   onClick={() => {
                     const sig = signaturePadRef.current?.getSignatureDataUrl();
                     if (sig) {
-                      handleSignatureComplete(sig);
+                      setSignatureDataUrl(sig);
+                      setShowSignaturePad(false);
+                    } else {
+                      toast.error(t.signatureEmpty);
                     }
                   }}
                 >
-                  Confirm
+                  {language === 'en' ? 'Confirm' : language === 'es' ? 'Confirmar' : 'Подтвердить'}
                 </Button>
               </div>
             </div>
