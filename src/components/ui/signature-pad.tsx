@@ -30,8 +30,17 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
       },
       isEmpty: () => sigCanvas.current?.isEmpty() ?? true,
       getSignatureDataUrl: () => {
-        if (sigCanvas.current?.isEmpty()) return null;
-        return sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png") ?? null;
+        if (!sigCanvas.current || sigCanvas.current.isEmpty()) return null;
+        try {
+          return sigCanvas.current.getTrimmedCanvas().toDataURL("image/png") ?? null;
+        } catch {
+          // Mobile Safari can be flaky with getTrimmedCanvas() in some resize scenarios
+          try {
+            return sigCanvas.current.getCanvas().toDataURL("image/png") ?? null;
+          } catch {
+            return null;
+          }
+        }
       },
     }));
 
