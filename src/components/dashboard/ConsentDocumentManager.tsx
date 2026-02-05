@@ -226,16 +226,25 @@ const ConsentDocumentManager = () => {
     setDeleting(docToDelete.id);
     try {
       // First delete any signed consent documents for this document
-      await supabase
+      const { error: signedError } = await supabase
         .from("signed_consent_documents")
         .delete()
         .eq("consent_document_id", docToDelete.id);
 
+      if (signedError) {
+        console.error("Error deleting signed documents:", signedError);
+      }
+
       // Then delete any acknowledgments for this document
-      await supabase
+      const { error: ackError } = await supabase
         .from("consent_acknowledgments")
         .delete()
         .eq("consent_document_id", docToDelete.id);
+
+      if (ackError) {
+        console.error("Error deleting acknowledgments:", ackError);
+        throw new Error("Failed to delete related acknowledgments. Please try again.");
+      }
 
       // Then delete the document record
       const { error } = await supabase
