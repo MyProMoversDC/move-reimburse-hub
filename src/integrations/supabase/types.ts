@@ -1667,6 +1667,7 @@ export type Database = {
           mover_name: string
           signature_url: string
           signed_at: string
+          signed_html_content: string | null
           user_id: string
         }
         Insert: {
@@ -1676,6 +1677,7 @@ export type Database = {
           mover_name: string
           signature_url: string
           signed_at?: string
+          signed_html_content?: string | null
           user_id: string
         }
         Update: {
@@ -1685,6 +1687,7 @@ export type Database = {
           mover_name?: string
           signature_url?: string
           signed_at?: string
+          signed_html_content?: string | null
           user_id?: string
         }
         Relationships: [
