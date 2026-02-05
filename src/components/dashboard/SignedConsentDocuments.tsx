@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { FileSignature, Eye, Search, Download, FileText, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
+import html2pdf from "html2pdf.js";
 
 interface SignedDocument {
   id: string;
@@ -18,6 +20,7 @@ interface SignedDocument {
   signed_at: string;
   mover_name: string;
   document_name: string;
+  signed_html_content?: string | null;
   consent_documents?: {
     file_url: string;
     file_name: string;
@@ -68,20 +71,57 @@ const SignedConsentDocuments = () => {
     );
   });
 
-  const handleDownloadSignedDocument = async (doc: SignedDocument) => {
+  const handleDownloadAsPdf = async (doc: SignedDocument) => {
+    setDownloading(doc.id);
+    
+    try {
+      if (doc.signed_html_content) {
+        // Generate PDF from signed HTML content
+        const container = document.createElement('div');
+        container.innerHTML = doc.signed_html_content;
+        container.style.padding = '20px';
+        container.style.fontFamily = 'Arial, sans-serif';
+        
+        const fileName = `${doc.mover_name.replace(/\s+/g, "_")}_signed_consent_${format(new Date(doc.signed_at), 'yyyy-MM-dd')}.pdf`;
+        
+        await html2pdf()
+          .set({
+            margin: 10,
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+              scale: 2,
+              useCORS: true,
+              allowTaint: true
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          })
+          .from(container)
+          .save();
+        
+        toast.success("PDF downloaded successfully!");
+      } else {
+        // Fall back to downloading separate files for legacy documents
+        await handleDownloadLegacy(doc);
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF");
+      // Fall back to legacy download
+      await handleDownloadLegacy(doc);
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleDownloadLegacy = async (doc: SignedDocument) => {
     const documentUrl = doc.consent_documents?.file_url;
     if (!documentUrl) {
       toast.error("Original document not found");
       return;
     }
 
-    setDownloading(doc.id);
-    
     try {
-      // Create a combined PDF with both document and signature
-      // For now, download the document and signature separately as a zip
-      // Or provide both in a preview window
-      
       // Download the original document
       const docLink = document.createElement("a");
       docLink.href = documentUrl;
@@ -105,9 +145,71 @@ const SignedConsentDocuments = () => {
     } catch (error) {
       console.error("Error downloading:", error);
       toast.error("Failed to download files");
-    } finally {
-      setDownloading(null);
     }
+  };
+
+  const renderPreviewContent = (doc: SignedDocument) => {
+    if (doc.signed_html_content) {
+      // Render the signed HTML content directly
+      return (
+        <div 
+          className="p-4 bg-white min-h-[50vh] prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ __html: doc.signed_html_content }}
+        />
+      );
+    }
+    
+    // Legacy preview with separate document and signature
+    return (
+      <div className="flex-1 min-h-0 space-y-4 overflow-y-auto">
+        {/* Document Preview */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Document</h3>
+          <div className="border rounded-lg overflow-hidden bg-muted/30 h-[50vh]">
+            {doc.consent_documents?.file_url ? (
+              doc.consent_documents.file_url.toLowerCase().endsWith('.pdf') ? (
+                <object
+                  data={doc.consent_documents.file_url}
+                  type="application/pdf"
+                  className="w-full h-full"
+                >
+                  <iframe
+                    src={`${doc.consent_documents.file_url}#toolbar=0`}
+                    className="w-full h-full"
+                    title="Consent Document"
+                  />
+                </object>
+              ) : (
+                <iframe
+                  src={doc.consent_documents.file_url}
+                  className="w-full h-full"
+                  title="Consent Document"
+                />
+              )
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Original document not available
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Signature Preview */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Signature</h3>
+          <div className="border rounded-lg p-4 bg-muted/30">
+            <img
+              src={doc.signature_url}
+              alt={`${doc.mover_name}'s Signature`}
+              className="max-h-[150px] mx-auto object-contain"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Signed on: {formatToEST(doc.signed_at)}
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -136,6 +238,7 @@ const SignedConsentDocuments = () => {
               <TableRow>
                 <TableHead>Mover Name</TableHead>
                 <TableHead>Document</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Signed At (EST)</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -143,13 +246,13 @@ const SignedConsentDocuments = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredDocuments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     {searchQuery ? "No matching documents found" : "No signed consent documents yet"}
                   </TableCell>
                 </TableRow>
@@ -158,6 +261,17 @@ const SignedConsentDocuments = () => {
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium">{doc.mover_name}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{doc.document_name}</TableCell>
+                    <TableCell>
+                      {doc.signed_html_content ? (
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                          Embedded Signature
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          Legacy
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{formatToEST(doc.signed_at)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -172,9 +286,9 @@ const SignedConsentDocuments = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDownloadSignedDocument(doc)}
+                          onClick={() => handleDownloadAsPdf(doc)}
                           disabled={downloading === doc.id}
-                          title="Download document & signature"
+                          title={doc.signed_html_content ? "Download as PDF" : "Download files"}
                         >
                           {downloading === doc.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -207,84 +321,45 @@ const SignedConsentDocuments = () => {
           </DialogHeader>
           
           {previewDoc && (
-            <div className="flex-1 min-h-0 space-y-4 overflow-y-auto">
-              {/* Document Preview */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Document</h3>
-                <div className="border rounded-lg overflow-hidden bg-muted/30 h-[50vh]">
-                  {previewDoc.consent_documents?.file_url ? (
-                    previewDoc.consent_documents.file_url.toLowerCase().endsWith('.pdf') ? (
-                      <object
-                        data={previewDoc.consent_documents.file_url}
-                        type="application/pdf"
-                        className="w-full h-full"
-                      >
-                        <iframe
-                          src={`${previewDoc.consent_documents.file_url}#toolbar=0`}
-                          className="w-full h-full"
-                          title="Consent Document"
-                        />
-                      </object>
-                    ) : (
-                      <iframe
-                        src={previewDoc.consent_documents.file_url}
-                        className="w-full h-full"
-                        title="Consent Document"
-                      />
-                    )
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      Original document not available
-                    </div>
-                  )}
-                </div>
+            <>
+              <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg">
+                {renderPreviewContent(previewDoc)}
               </div>
 
-              {/* Signature Preview */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Signature</h3>
-                <div className="border rounded-lg p-4 bg-muted/30">
-                  <img
-                    src={previewDoc.signature_url}
-                    alt={`${previewDoc.mover_name}'s Signature`}
-                    className="max-h-[150px] mx-auto object-contain"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
+              {/* Info & Download Section */}
+              <div className="pt-4 border-t space-y-3">
+                <p className="text-sm text-muted-foreground text-center">
                   Signed on: {formatToEST(previewDoc.signed_at)}
                 </p>
-              </div>
-
-              {/* Download Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    if (previewDoc.consent_documents?.file_url) {
-                      window.open(previewDoc.consent_documents.file_url, '_blank');
-                    }
-                  }}
-                  disabled={!previewDoc.consent_documents?.file_url}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Open Document
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => handleDownloadSignedDocument(previewDoc)}
-                  disabled={downloading === previewDoc.id}
-                >
-                  {downloading === previewDoc.id ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  {!previewDoc.signed_html_content && previewDoc.consent_documents?.file_url && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        window.open(previewDoc.consent_documents?.file_url, '_blank');
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Open Original Document
+                    </Button>
                   )}
-                  Download All
-                </Button>
+                  <Button
+                    variant="default"
+                    className="flex-1"
+                    onClick={() => handleDownloadAsPdf(previewDoc)}
+                    disabled={downloading === previewDoc.id}
+                  >
+                    {downloading === previewDoc.id ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-2" />
+                    )}
+                    {previewDoc.signed_html_content ? "Download as PDF" : "Download All"}
+                  </Button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

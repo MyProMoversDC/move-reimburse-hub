@@ -83,6 +83,26 @@ const ConsentDocumentManager = () => {
     setLoading(false);
   };
 
+  const validateHtmlPlaceholders = async (file: File): Promise<{ valid: boolean; hasSignature: boolean; hasDate: boolean; hasMoverName: boolean }> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        const hasSignature = content.includes("{{SIGNATURE}}");
+        const hasDate = content.includes("{{DATE}}");
+        const hasMoverName = content.includes("{{MOVER_NAME}}");
+        resolve({ 
+          valid: hasSignature, // Signature is required, others are optional
+          hasSignature, 
+          hasDate, 
+          hasMoverName 
+        });
+      };
+      reader.onerror = () => resolve({ valid: false, hasSignature: false, hasDate: false, hasMoverName: false });
+      reader.readAsText(file);
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -97,6 +117,25 @@ const ConsentDocumentManager = () => {
     if (file.size > 20 * 1024 * 1024) {
       toast.error("File must be less than 20MB");
       return;
+    }
+
+    // For HTML files, validate placeholders
+    const isHtmlFile = file.type === 'text/html' || file.name.toLowerCase().endsWith('.html');
+    if (isHtmlFile) {
+      const validation = await validateHtmlPlaceholders(file);
+      if (!validation.hasSignature) {
+        toast.error("HTML template must contain {{SIGNATURE}} placeholder for inline signing");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      if (!validation.hasDate) {
+        toast.warning("HTML template is missing {{DATE}} placeholder - date won't be auto-filled");
+      }
+      if (!validation.hasMoverName) {
+        toast.warning("HTML template is missing {{MOVER_NAME}} placeholder - name won't be auto-filled");
+      }
     }
 
     setUploading(true);
@@ -133,7 +172,9 @@ const ConsentDocumentManager = () => {
 
       if (insertError) throw insertError;
 
-      toast.success("Document uploaded successfully!");
+      toast.success(isHtmlFile 
+        ? "HTML template uploaded successfully! Placeholders will be replaced with mover data when signing." 
+        : "Document uploaded successfully!");
       fetchDocuments();
     } catch (error) {
       console.error("Error uploading document:", error);

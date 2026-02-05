@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, PenLine } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { SignaturePad, SignaturePadRef } from "@/components/ui/signature-pad";
@@ -37,6 +37,8 @@ const translations = {
     signing: "Signing...",
     clearSignature: "Clear Signature",
     signatureEmpty: "Please provide your signature before submitting",
+    clickToSign: "Click here to sign",
+    tapToSign: "Tap here to sign",
   },
   es: {
     title: "Términos y Condiciones",
@@ -47,6 +49,8 @@ const translations = {
     signing: "Firmando...",
     clearSignature: "Borrar Firma",
     signatureEmpty: "Por favor proporcione su firma antes de enviar",
+    clickToSign: "Haga clic aquí para firmar",
+    tapToSign: "Toque aquí para firmar",
   },
   ru: {
     title: "Условия и Положения",
@@ -57,8 +61,14 @@ const translations = {
     signing: "Подписание...",
     clearSignature: "Очистить Подпись",
     signatureEmpty: "Пожалуйста, поставьте подпись перед отправкой",
+    clickToSign: "Нажмите здесь, чтобы подписать",
+    tapToSign: "Нажмите здесь, чтобы подписать",
   },
 };
+
+const SIGNATURE_PLACEHOLDER = "{{SIGNATURE}}";
+const DATE_PLACEHOLDER = "{{DATE}}";
+const MOVER_NAME_PLACEHOLDER = "{{MOVER_NAME}}";
 
 const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentPopupProps) => {
   const t = translations[language];
@@ -69,19 +79,23 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
   const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [moverName, setMoverName] = useState<string>("");
+  const [moverFullName, setMoverFullName] = useState<string>("");
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [isHtmlTemplate, setIsHtmlTemplate] = useState(false);
   const signaturePadRef = useRef<SignaturePadRef>(null);
 
   useEffect(() => {
     const fetchMoverName = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("first_name")
+        .select("first_name, last_name")
         .eq("id", userId)
         .maybeSingle();
       
       if (data?.first_name) {
         setMoverName(data.first_name);
+        setMoverFullName(`${data.first_name} ${data.last_name || ""}`);
       }
     };
     
@@ -133,6 +147,10 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
               if (contentType?.includes('text') || contentType?.includes('html')) {
                 const text = await response.text();
                 setDocumentContent(text);
+                // Check if it's an HTML template with placeholders
+                if (text.includes(SIGNATURE_PLACEHOLDER)) {
+                  setIsHtmlTemplate(true);
+                }
               }
             }
           } catch {
@@ -151,11 +169,68 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
     }
   };
 
+  const handleSignatureComplete = (dataUrl: string) => {
+    setSignatureDataUrl(dataUrl);
+    setShowSignaturePad(false);
+  };
+
+  const generateSignedHtml = (templateHtml: string, signatureUrl: string): string => {
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    return templateHtml
+      .replace(SIGNATURE_PLACEHOLDER, `<img src="${signatureUrl}" style="max-height:80px; display:inline-block;" alt="Signature"/>`)
+      .replace(new RegExp(DATE_PLACEHOLDER, 'g'), currentDate)
+      .replace(new RegExp(MOVER_NAME_PLACEHOLDER, 'g'), moverFullName);
+  };
+
+  const renderDocumentWithSignatureZone = () => {
+    if (!documentContent) return null;
+
+    // Replace placeholders in the HTML for display
+    let displayHtml = documentContent;
+    
+    // Replace mover name placeholder
+    displayHtml = displayHtml.replace(new RegExp(MOVER_NAME_PLACEHOLDER, 'g'), moverFullName);
+    
+    // Replace date placeholder with current date
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    displayHtml = displayHtml.replace(new RegExp(DATE_PLACEHOLDER, 'g'), currentDate);
+    
+    // Replace signature placeholder with interactive zone or signature image
+    if (signatureDataUrl) {
+      displayHtml = displayHtml.replace(
+        SIGNATURE_PLACEHOLDER, 
+        `<div class="signature-display" style="display:inline-block; min-width:200px;">
+          <img src="${signatureDataUrl}" style="max-height:80px; display:block;" alt="Your Signature"/>
+        </div>`
+      );
+    } else {
+      // Create a placeholder for the signature zone that we'll replace with a React component
+      displayHtml = displayHtml.replace(
+        SIGNATURE_PLACEHOLDER, 
+        `<div id="signature-zone-placeholder" class="signature-zone"></div>`
+      );
+    }
+    
+    return displayHtml;
+  };
+
   const handleSign = async () => {
     if (!document) return;
 
-    // Check if signature is provided
-    const signature = signaturePadRef.current?.getSignatureDataUrl();
+    // For HTML templates, check if signature is in the document
+    // For non-HTML, check the separate signature pad
+    const signature = signatureDataUrl || signaturePadRef.current?.getSignatureDataUrl();
     if (!signature) {
       toast.error(t.signatureEmpty);
       return;
@@ -170,9 +245,15 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         .eq("id", userId)
         .single();
 
-      const moverFullName = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Mover";
+      const fullName = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Mover";
       const moverEmail = profile?.email || "";
       const signedAt = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+      // Generate the signed HTML content if it's an HTML template
+      let signedHtmlContent: string | null = null;
+      if (isHtmlTemplate && documentContent) {
+        signedHtmlContent = generateSignedHtml(documentContent, signature);
+      }
 
       // Insert acknowledgment
       const { error } = await supabase
@@ -190,15 +271,16 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         return;
       }
 
-      // Store the signed consent document with signature
+      // Store the signed consent document with signature and HTML content
       const { error: signedDocError } = await supabase
         .from("signed_consent_documents")
         .insert({
           user_id: userId,
           consent_document_id: document.id,
           signature_url: signature,
-          mover_name: moverFullName,
+          mover_name: fullName,
           document_name: document.file_name,
+          signed_html_content: signedHtmlContent,
         });
 
       if (signedDocError) {
@@ -224,7 +306,7 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
       try {
         await supabase.functions.invoke('send-consent-admin-notification', {
           body: {
-            moverName: moverFullName,
+            moverName: fullName,
             moverEmail: moverEmail,
             documentName: document.file_name,
             signedAt: signedAt,
@@ -282,8 +364,28 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
         {/* Document Viewer - Responsive height with mobile scroll */}
         <div className="flex-1 min-h-0 my-3 sm:my-4 overflow-hidden">
           <ScrollArea className="h-full max-h-[40vh] sm:max-h-[50vh]">
-            <div className="h-full border rounded-lg overflow-hidden bg-muted/30">
-              {documentContent ? (
+            <div className="h-full border rounded-lg overflow-hidden bg-white dark:bg-muted/30">
+              {isHtmlTemplate && documentContent ? (
+                // Render HTML template with inline signature zone
+                <div className="p-3 sm:p-4">
+                  <div 
+                    className="prose prose-sm dark:prose-invert max-w-none [&_.signature-zone]:my-2"
+                    dangerouslySetInnerHTML={{ __html: renderDocumentWithSignatureZone() || '' }}
+                  />
+                  {/* Signature Zone - Click to Sign */}
+                  {!signatureDataUrl && (
+                    <div 
+                      className="inline-flex items-center justify-center gap-2 min-w-[250px] min-h-[80px] border-2 border-dashed border-primary/50 rounded-lg bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
+                      onClick={() => setShowSignaturePad(true)}
+                    >
+                      <PenLine className="h-5 w-5 text-primary" />
+                      <span className="text-sm font-medium text-primary">
+                        {t.clickToSign}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : documentContent ? (
                 <div 
                   className="p-3 sm:p-4 prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: documentContent }}
@@ -331,19 +433,57 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
           </ScrollArea>
         </div>
 
-        {/* Signature Section */}
-        <div className="space-y-2 pt-2 border-t">
-          <p className="text-sm font-medium text-center text-muted-foreground">
-            {t.signatureRequired}
-          </p>
-          <SignaturePad
-            ref={signaturePadRef}
-            onSign={setSignatureDataUrl}
-            onClear={() => setSignatureDataUrl(null)}
-            clearLabel={t.clearSignature}
-            height={120}
-          />
-        </div>
+        {/* Signature Section - Only show for non-HTML templates */}
+        {!isHtmlTemplate && (
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-sm font-medium text-center text-muted-foreground">
+              {t.signatureRequired}
+            </p>
+            <SignaturePad
+              ref={signaturePadRef}
+              onSign={setSignatureDataUrl}
+              onClear={() => setSignatureDataUrl(null)}
+              clearLabel={t.clearSignature}
+              height={120}
+            />
+          </div>
+        )}
+
+        {/* Signature Pad Modal for HTML templates */}
+        {isHtmlTemplate && showSignaturePad && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-background rounded-lg p-4 w-[90vw] max-w-md space-y-4">
+              <h3 className="text-lg font-semibold text-center">{t.signatureRequired}</h3>
+              <SignaturePad
+                ref={signaturePadRef}
+                onSign={handleSignatureComplete}
+                onClear={() => setSignatureDataUrl(null)}
+                clearLabel={t.clearSignature}
+                height={150}
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowSignaturePad(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    const sig = signaturePadRef.current?.getSignatureDataUrl();
+                    if (sig) {
+                      handleSignatureComplete(sig);
+                    }
+                  }}
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <AlertDialogFooter className="mt-3 sm:mt-4">
           <Button
