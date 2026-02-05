@@ -462,6 +462,7 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
               />
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   className="flex-1"
                   onClick={() => setShowSignaturePad(false)}
@@ -469,6 +470,7 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
                   {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
                 </Button>
                 <Button
+                  type="button"
                   className="flex-1"
                   onClick={() => {
                     const sig = signaturePadRef.current?.getSignatureDataUrl();
