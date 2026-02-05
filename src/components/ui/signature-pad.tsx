@@ -30,8 +30,17 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
       },
       isEmpty: () => sigCanvas.current?.isEmpty() ?? true,
       getSignatureDataUrl: () => {
-        if (sigCanvas.current?.isEmpty()) return null;
-        return sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png") ?? null;
+        if (!sigCanvas.current || sigCanvas.current.isEmpty()) return null;
+        try {
+          return sigCanvas.current.getTrimmedCanvas().toDataURL("image/png") ?? null;
+        } catch {
+          // Mobile Safari can be flaky with getTrimmedCanvas() in some resize scenarios
+          try {
+            return sigCanvas.current.getCanvas().toDataURL("image/png") ?? null;
+          } catch {
+            return null;
+          }
+        }
       },
     }));
 
@@ -41,10 +50,21 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
     };
 
     const handleEnd = () => {
-      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
-        onSign?.(dataUrl);
-      }
+      const dataUrl = sigCanvas.current?.isEmpty()
+        ? null
+        : (() => {
+            try {
+              return sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png") ?? null;
+            } catch {
+              try {
+                return sigCanvas.current?.getCanvas().toDataURL("image/png") ?? null;
+              } catch {
+                return null;
+              }
+            }
+          })();
+
+      if (dataUrl) onSign?.(dataUrl);
     };
 
     // Handle resize
