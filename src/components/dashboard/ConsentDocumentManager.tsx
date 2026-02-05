@@ -225,7 +225,13 @@ const ConsentDocumentManager = () => {
     
     setDeleting(docToDelete.id);
     try {
-      // First delete any acknowledgments for this document
+      // First delete any signed consent documents for this document
+      await supabase
+        .from("signed_consent_documents")
+        .delete()
+        .eq("consent_document_id", docToDelete.id);
+
+      // Then delete any acknowledgments for this document
       await supabase
         .from("consent_acknowledgments")
         .delete()
