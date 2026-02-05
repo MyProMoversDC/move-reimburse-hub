@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useRef, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
@@ -48,28 +48,35 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
     };
 
     // Handle resize
-    useEffect(() => {
-      const resizeCanvas = () => {
-        if (containerRef.current && sigCanvas.current) {
-          const canvas = sigCanvas.current.getCanvas();
-          const ratio = Math.max(window.devicePixelRatio || 1, 1);
-          const containerWidth = containerRef.current.offsetWidth;
-          
-          canvas.width = containerWidth * ratio;
-          canvas.height = height * ratio;
-          canvas.style.width = `${containerWidth}px`;
-          canvas.style.height = `${height}px`;
-          canvas.getContext("2d")?.scale(ratio, ratio);
-          
+    const resizeCanvas = () => {
+      if (containerRef.current && sigCanvas.current) {
+        const canvas = sigCanvas.current.getCanvas();
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const containerWidth = containerRef.current.offsetWidth;
+
+        canvas.width = containerWidth * ratio;
+        canvas.height = height * ratio;
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = `${height}px`;
+        canvas.getContext("2d")?.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+        // IMPORTANT: Don't wipe a signature the user already drew (common on mobile
+        // when the keyboard/address bar triggers a resize after drawing).
+        if (sigCanvas.current.isEmpty()) {
           sigCanvas.current.clear();
         }
-      };
+      }
+    };
 
-      // Initial sizing
-      setTimeout(resizeCanvas, 100);
-      
+    useLayoutEffect(() => {
+      resizeCanvas();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [height]);
+
+    useEffect(() => {
       window.addEventListener("resize", resizeCanvas);
       return () => window.removeEventListener("resize", resizeCanvas);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [height]);
 
     return (
