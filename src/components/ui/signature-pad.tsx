@@ -50,10 +50,21 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
     };
 
     const handleEnd = () => {
-      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
-        onSign?.(dataUrl);
-      }
+      const dataUrl = sigCanvas.current?.isEmpty()
+        ? null
+        : (() => {
+            try {
+              return sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png") ?? null;
+            } catch {
+              try {
+                return sigCanvas.current?.getCanvas().toDataURL("image/png") ?? null;
+              } catch {
+                return null;
+              }
+            }
+          })();
+
+      if (dataUrl) onSign?.(dataUrl);
     };
 
     // Handle resize

@@ -473,6 +473,8 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
                   type="button"
                   className="flex-1"
                   onClick={() => {
+                    // Debug: confirm this handler fires on mobile
+                    console.log('[Consent] Signature modal confirm tapped');
                     const sig = signaturePadRef.current?.getSignatureDataUrl();
                     if (sig) {
                       setSignatureDataUrl(sig);
