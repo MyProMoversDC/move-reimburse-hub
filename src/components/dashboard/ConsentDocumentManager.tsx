@@ -453,8 +453,8 @@ const ConsentDocumentManager = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteClick(doc)}
-                            disabled={deleting === doc.id || doc.is_active}
-                            title={doc.is_active ? "Deactivate before deleting" : "Delete document"}
+                            disabled={deleting === doc.id}
+                            title="Delete document"
                           >
                             {deleting === doc.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
