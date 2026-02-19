@@ -1160,6 +1160,115 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_question_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_question_attachments_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "payment_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_question_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin_message: boolean
+          message: string
+          question_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_admin_message?: boolean
+          message: string
+          question_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin_message?: boolean
+          message?: string
+          question_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_question_messages_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "payment_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_questions: {
+        Row: {
+          created_at: string
+          id: string
+          job_number: string
+          mover_id: string
+          mover_name: string
+          other_subject: string | null
+          question_details: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["payment_question_status"]
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_number: string
+          mover_id: string
+          mover_name: string
+          other_subject?: string | null
+          question_details: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["payment_question_status"]
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_number?: string
+          mover_id?: string
+          mover_name?: string
+          other_subject?: string | null
+          question_details?: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["payment_question_status"]
+          subject?: string
+        }
+        Relationships: []
+      }
       performance_misconduct_messages: {
         Row: {
           created_at: string
@@ -1977,6 +2086,7 @@ export type Database = {
       feedback_priority: "needs_attention_soon" | "general_improvement"
       feedback_status: "pending" | "reviewed" | "responded"
       missing_payment_status: "pending" | "confirmed" | "declined" | "appeal"
+      payment_question_status: "open" | "answered" | "closed"
       reimbursement_status:
         | "pending"
         | "confirmed"
@@ -2156,6 +2266,7 @@ export const Constants = {
       feedback_priority: ["needs_attention_soon", "general_improvement"],
       feedback_status: ["pending", "reviewed", "responded"],
       missing_payment_status: ["pending", "confirmed", "declined", "appeal"],
+      payment_question_status: ["open", "answered", "closed"],
       reimbursement_status: [
         "pending",
         "confirmed",

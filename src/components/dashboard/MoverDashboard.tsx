@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -25,6 +25,8 @@ import { MoverFeedbackForm } from "./MoverFeedbackForm";
 import { MoverFeedbackHistory } from "./MoverFeedbackHistory";
 import ChatContainer from "./chat/ChatContainer";
 import FeedList from "./feed/FeedList";
+import PaymentQuestionForm from "./PaymentQuestionForm";
+import PaymentQuestionHistory from "./PaymentQuestionHistory";
 import MoverSettings from "./MoverSettings";
 import MoverTodoList from "./MoverTodoList";
 import { MoverNotificationBell } from "./MoverNotificationBell";
@@ -54,11 +56,13 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
   const [showViolenceForm, setShowViolenceForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showPaymentQuestionForm, setShowPaymentQuestionForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
+  const [paymentQuestionRefreshKey, setPaymentQuestionRefreshKey] = useState(0);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
   const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
@@ -89,6 +93,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setShowMissingPaymentForm(false);
     setShowViolenceForm(false);
     setShowFeedbackForm(false);
+    setShowPaymentQuestionForm(false);
 
     switch (formType) {
       case 'reimbursement':
@@ -110,6 +115,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       case 'feedback':
         setActiveTab('feedback');
         setTimeout(() => setShowFeedbackForm(true), 100);
+        break;
+      case 'payment-question':
+        setActiveTab('payment-questions');
+        setTimeout(() => setShowPaymentQuestionForm(true), 100);
         break;
     }
   };
@@ -190,6 +199,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const handleFeedbackSuccess = () => {
     setShowFeedbackForm(false);
     setFeedbackRefreshKey((prev) => prev + 1);
+  };
+
+  const handlePaymentQuestionSuccess = () => {
+    setShowPaymentQuestionForm(false);
+    setPaymentQuestionRefreshKey((prev) => prev + 1);
   };
 
   const handleLogout = async () => {
@@ -355,6 +369,31 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           </div>
         );
       
+      case "payment-questions":
+        return (
+          <div className="space-y-6">
+            {!showPaymentQuestionForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowPaymentQuestionForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {language === 'ru' ? 'Задать вопрос по оплате' : language === 'es' ? 'Enviar pregunta de pago' : 'Submit Payment Question'}
+                </Button>
+              </Card>
+            )}
+            {showPaymentQuestionForm && (
+              <div>
+                <div className="flex justify-end mb-4">
+                  <Button variant="outline" size="sm" onClick={() => setShowPaymentQuestionForm(false)}>
+                    {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
+                  </Button>
+                </div>
+                <PaymentQuestionForm userId={userId} language={language} onSuccess={handlePaymentQuestionSuccess} onCancel={() => setShowPaymentQuestionForm(false)} />
+              </div>
+            )}
+            <PaymentQuestionHistory userId={userId} language={language} refreshKey={paymentQuestionRefreshKey} />
+          </div>
+        );
+
       case "chat":
         return <ChatContainer userId={userId} userRole="mover" language={language} />;
       
@@ -367,7 +406,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const MobileLayout = () => {
     const showFormContent = activeTab !== "feed" && (
       showReimbursementForm || showReviewForm || showMissingPaymentForm || 
-      showViolenceForm || showFeedbackForm || activeTab === "misconduct" || activeTab === "chat"
+      showViolenceForm || showFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
+      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback"
     );
 
     const handleBackToFeed = () => {

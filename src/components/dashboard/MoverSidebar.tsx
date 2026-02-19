@@ -8,7 +8,8 @@ import {
   Lightbulb,
   ChevronLeft,
   Newspaper,
-  ClipboardList
+  ClipboardList,
+  HelpCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,6 +49,7 @@ const translations = {
     cases: "My Cases",
     feedback: "Feedback",
     chat: "Chat",
+    paymentQuestions: "Payment Questions",
   },
   es: {
     navigation: "Navegación",
@@ -60,6 +62,7 @@ const translations = {
     cases: "Mis Casos",
     feedback: "Comentarios",
     chat: "Chat",
+    paymentQuestions: "Preguntas de Pago",
   },
   ru: {
     navigation: "Навигация",
@@ -72,6 +75,7 @@ const translations = {
     cases: "Мои дела",
     feedback: "Отзывы",
     chat: "Чат",
+    paymentQuestions: "Вопросы по Оплате",
   },
 };
 
@@ -132,6 +136,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     { id: "violence", label: t.incidents, icon: Shield },
     { id: "misconduct", label: t.cases, icon: AlertTriangle },
     { id: "feedback", label: t.feedback, icon: Lightbulb },
+    { id: "payment-questions", label: t.paymentQuestions, icon: HelpCircle },
     { id: "chat", label: t.chat, icon: MessageSquare },
   ];
 
