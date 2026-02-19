@@ -562,6 +562,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                     <Lightbulb className="h-4 w-4 mr-2" />
                     {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('payment-question'); }} className="py-3">
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    {language === 'ru' ? 'Вопрос по оплате' : language === 'es' ? 'Pregunta de pago' : 'Payment Question'}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </Card>
