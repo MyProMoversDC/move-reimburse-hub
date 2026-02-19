@@ -24,6 +24,7 @@ import { AdminFeedbackList } from "./AdminFeedbackList";
 import { AdminAIAssistant } from "./AdminAIAssistant";
 import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
+import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
@@ -441,6 +442,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
               </Button>
             </div>
             <AdminAlcoholTestList language={language} />
+          </div>
+        );
+      case "payment-questions":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Payment Questions</h2>
+            <AdminPaymentQuestionList language={language} userId={userId} />
           </div>
         );
       case "mover-feedback":

@@ -2,9 +2,10 @@ import { useState } from "react";
 import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
 import ChatContainer from "./chat/ChatContainer";
+import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, MessageSquare } from "lucide-react";
+import { Download, MessageSquare, HelpCircle } from "lucide-react";
 import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -59,6 +60,10 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
           <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
             <TabsTrigger value="requests" className="text-xs md:text-sm px-2 md:px-3 py-1.5">{t.confirmedReimbursements}</TabsTrigger>
             <TabsTrigger value="movers" className="text-xs md:text-sm px-2 md:px-3 py-1.5">{t.moversDirectory}</TabsTrigger>
+            <TabsTrigger value="payment-questions" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <HelpCircle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Payment Questions
+            </TabsTrigger>
             <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
               <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Chat
@@ -82,6 +87,11 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
         
         <TabsContent value="movers">
           <MoversList language={language} />
+        </TabsContent>
+
+        <TabsContent value="payment-questions" className="space-y-6">
+          <h2 className="text-2xl font-bold">Payment Questions</h2>
+          <AdminPaymentQuestionList language={language} userId={userId} />
         </TabsContent>
 
         <TabsContent value="chat" className="space-y-6">
