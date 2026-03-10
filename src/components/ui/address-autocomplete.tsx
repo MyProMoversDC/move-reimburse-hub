@@ -33,7 +33,7 @@ export function AddressAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const containerRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setInputValue(value);
