@@ -61,24 +61,28 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   
   const t = dashboardTranslations[language];
 
-  // Detect duplicates by total_expenses + job_number (only if job_number is numeric)
+  // Detect duplicates by total_expenses + job_number (only if numeric)
+  // Exclude cases where one was declined and another re-applied (declined+appeal/pending pair)
   const duplicateIds = useMemo(() => {
     if (!showDuplicates) return new Set<string>();
-    const groupMap = new Map<string, string[]>();
+    const groupMap = new Map<string, Reimbursement[]>();
     for (const r of reimbursements) {
       const trimmedJob = r.job_number.trim();
-      // Only consider numeric job numbers for duplicate detection
       if (!/^\d+$/.test(trimmedJob)) continue;
       const key = `${trimmedJob}|${r.total_expenses.toFixed(2)}`;
-      const ids = groupMap.get(key) || [];
-      ids.push(r.id);
-      groupMap.set(key, ids);
+      const group = groupMap.get(key) || [];
+      group.push(r);
+      groupMap.set(key, group);
     }
     const dupes = new Set<string>();
-    for (const ids of groupMap.values()) {
-      if (ids.length > 1) {
-        ids.forEach(id => dupes.add(id));
-      }
+    for (const group of groupMap.values()) {
+      if (group.length <= 1) continue;
+      // If one is declined and others are re-submissions (pending/appeal), skip this group
+      const hasDeclined = group.some(r => r.status === "declined");
+      const nonDeclined = group.filter(r => r.status !== "declined");
+      if (hasDeclined && nonDeclined.length <= 1) continue;
+      // Otherwise mark all as duplicates
+      group.forEach(r => dupes.add(r.id));
     }
     return dupes;
   }, [reimbursements, showDuplicates]);
