@@ -81,7 +81,7 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
   const [moverName, setMoverName] = useState<string>("");
   const [moverFullName, setMoverFullName] = useState<string>("");
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [isHtmlTemplate, setIsHtmlTemplate] = useState(false);
   const [isHtmlTemplate, setIsHtmlTemplate] = useState(false);
   const signaturePadRef = useRef<SignaturePadRef>(null);
 
