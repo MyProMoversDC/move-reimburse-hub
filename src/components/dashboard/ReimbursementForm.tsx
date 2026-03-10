@@ -49,6 +49,9 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
   const [hotelExpenses, setHotelExpenses] = useState("");
   const [otherExpenses, setOtherExpenses] = useState("");
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [duplicateJobFound, setDuplicateJobFound] = useState(false);
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
   // Auto-pull mover name from profile
   useEffect(() => {
