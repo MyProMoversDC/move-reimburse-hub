@@ -176,14 +176,14 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
             </TableRow>
           </TableHeader>
           <TableBody>
-            {reimbursements.length === 0 ? (
+            {filteredReimbursements.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {t.noReimbursements}
                 </TableCell>
               </TableRow>
             ) : (
-              reimbursements.map((reimbursement) => {
+              filteredReimbursements.map((reimbursement) => {
                 const isDuplicate = duplicateIds.has(reimbursement.id);
                 return (
                 <TableRow key={reimbursement.id} className={isDuplicate ? "bg-destructive/10 hover:bg-destructive/20" : ""}>
