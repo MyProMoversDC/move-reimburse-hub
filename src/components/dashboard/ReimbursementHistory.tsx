@@ -61,12 +61,15 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   
   const t = dashboardTranslations[language];
 
-  // Detect duplicates by job_number + customer_name (case-insensitive)
+  // Detect duplicates by total_expenses + job_number (only if job_number is numeric)
   const duplicateIds = useMemo(() => {
     if (!showDuplicates) return new Set<string>();
     const groupMap = new Map<string, string[]>();
     for (const r of reimbursements) {
-      const key = `${r.job_number.trim().toLowerCase()}|${r.customer_name.trim().toLowerCase()}`;
+      const trimmedJob = r.job_number.trim();
+      // Only consider numeric job numbers for duplicate detection
+      if (!/^\d+$/.test(trimmedJob)) continue;
+      const key = `${trimmedJob}|${r.total_expenses.toFixed(2)}`;
       const ids = groupMap.get(key) || [];
       ids.push(r.id);
       groupMap.set(key, ids);
