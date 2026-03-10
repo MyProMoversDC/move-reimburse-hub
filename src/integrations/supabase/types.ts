@@ -1541,6 +1541,7 @@ export type Database = {
           gas_expenses: number | null
           hotel_expenses: number | null
           id: string
+          is_duplicate_job: boolean
           job_number: string
           mover_full_name: string
           mover_id: string
@@ -1564,6 +1565,7 @@ export type Database = {
           gas_expenses?: number | null
           hotel_expenses?: number | null
           id?: string
+          is_duplicate_job?: boolean
           job_number: string
           mover_full_name: string
           mover_id: string
@@ -1587,6 +1589,7 @@ export type Database = {
           gas_expenses?: number | null
           hotel_expenses?: number | null
           id?: string
+          is_duplicate_job?: boolean
           job_number?: string
           mover_full_name?: string
           mover_id?: string

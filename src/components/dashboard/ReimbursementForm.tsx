@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError, handleUploadError } from "@/lib/errorHandler";
-import { X, AlertCircle } from "lucide-react";
+import { X, AlertCircle, AlertTriangle } from "lucide-react";
 
 // File validation constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -48,6 +49,9 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
   const [hotelExpenses, setHotelExpenses] = useState("");
   const [otherExpenses, setOtherExpenses] = useState("");
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [duplicateJobFound, setDuplicateJobFound] = useState(false);
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
   // Auto-pull mover name from profile
   useEffect(() => {
@@ -64,6 +68,58 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
     };
     fetchProfile();
   }, [userId]);
+
+  // Check for duplicate job number when job number changes
+  const checkDuplicateJobNumber = useCallback(async (jn: string) => {
+    const trimmed = jn.trim();
+    if (!trimmed) {
+      setDuplicateJobFound(false);
+      setDuplicateAcknowledged(false);
+      return;
+    }
+    setCheckingDuplicate(true);
+    try {
+      const { data, error } = await supabase
+        .from("reimbursements")
+        .select("id")
+        .eq("job_number", trimmed)
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        setDuplicateJobFound(true);
+        setDuplicateAcknowledged(false);
+      } else {
+        setDuplicateJobFound(false);
+        setDuplicateAcknowledged(false);
+      }
+    } catch {
+      // Don't block form on check failure
+    } finally {
+      setCheckingDuplicate(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkDuplicateJobNumber(jobNumber);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [jobNumber, checkDuplicateJobNumber]);
+
+  const duplicateWarningText = {
+    en: {
+      warning: "A reimbursement for this Job # has already been submitted.",
+      acknowledge: "I understand that a reimbursement form with the same Job # has been submitted earlier and would like to re-submit or submit additional expense receipts.",
+    },
+    es: {
+      warning: "Ya se ha enviado un reembolso para este número de trabajo.",
+      acknowledge: "Entiendo que ya se ha enviado un formulario de reembolso con el mismo número de trabajo y deseo volver a enviar o enviar recibos de gastos adicionales.",
+    },
+    ru: {
+      warning: "Заявка на возмещение с этим номером работы уже была подана.",
+      acknowledge: "Я понимаю, что форма возмещения с тем же номером работы уже была подана ранее, и хочу повторно подать или подать дополнительные чеки расходов.",
+    },
+  };
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
@@ -114,6 +170,12 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Block if duplicate found but not acknowledged
+    if (duplicateJobFound && !duplicateAcknowledged) {
+      toast.error(duplicateWarningText[language].warning);
+      return;
+    }
+
     // Validate attachments are provided
     if (attachmentFiles.length === 0) {
       toast.error("Please attach at least one receipt image");
@@ -151,6 +213,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
           other_expenses: validated.otherExpenses || 0,
           total_expenses: validated.totalReimbursement,
           zelle_info: validated.zelleInfo,
+          is_duplicate_job: duplicateJobFound && duplicateAcknowledged,
         })
         .select()
         .single();
@@ -255,6 +318,28 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
             required
           />
         </div>
+
+        {/* Duplicate Job # Warning */}
+        {duplicateJobFound && (
+          <div className="md:col-span-2">
+            <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-900/20">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <p className="font-semibold mb-2">{duplicateWarningText[language].warning}</p>
+                <div className="flex items-start gap-2 mt-3">
+                  <Checkbox
+                    id="duplicateAck"
+                    checked={duplicateAcknowledged}
+                    onCheckedChange={(checked) => setDuplicateAcknowledged(checked === true)}
+                  />
+                  <label htmlFor="duplicateAck" className="text-sm leading-snug cursor-pointer">
+                    {duplicateWarningText[language].acknowledge}
+                  </label>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="truckNumber">Truck # *</Label>
@@ -403,7 +488,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full" disabled={loading || checkingDuplicate || (duplicateJobFound && !duplicateAcknowledged)}>
         {loading ? "Submitting..." : "Submit Reimbursement"}
       </Button>
       
