@@ -49,6 +49,7 @@ interface ReimbursementHistoryProps {
   language: DashboardLanguage;
   startDate?: Date;
   endDate?: Date;
+  showDuplicates?: boolean;
 }
 
 const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate }: ReimbursementHistoryProps) => {
