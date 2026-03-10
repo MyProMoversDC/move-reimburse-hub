@@ -80,6 +80,15 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
     return dupes;
   }, [reimbursements, showDuplicates]);
 
+  const filteredReimbursements = useMemo(() => {
+    if (!searchNumber.trim()) return reimbursements;
+    const query = searchNumber.trim().replace(/^#/, "");
+    return reimbursements.filter(r => 
+      String(r.reimbursement_number).padStart(5, "0").includes(query) ||
+      String(r.reimbursement_number).includes(query)
+    );
+  }, [reimbursements, searchNumber]);
+
   useEffect(() => {
     fetchReimbursements();
   }, [userId, refreshKey, startDate, endDate]);
