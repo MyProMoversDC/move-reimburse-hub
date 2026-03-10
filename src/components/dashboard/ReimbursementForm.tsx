@@ -69,7 +69,58 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
     fetchProfile();
   }, [userId]);
 
-  const validateFile = (file: File): string | null => {
+  // Check for duplicate job number when job number changes
+  const checkDuplicateJobNumber = useCallback(async (jn: string) => {
+    const trimmed = jn.trim();
+    if (!trimmed) {
+      setDuplicateJobFound(false);
+      setDuplicateAcknowledged(false);
+      return;
+    }
+    setCheckingDuplicate(true);
+    try {
+      const { data, error } = await supabase
+        .from("reimbursements")
+        .select("id")
+        .eq("job_number", trimmed)
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        setDuplicateJobFound(true);
+        setDuplicateAcknowledged(false);
+      } else {
+        setDuplicateJobFound(false);
+        setDuplicateAcknowledged(false);
+      }
+    } catch {
+      // Don't block form on check failure
+    } finally {
+      setCheckingDuplicate(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkDuplicateJobNumber(jobNumber);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [jobNumber, checkDuplicateJobNumber]);
+
+  const duplicateWarningText = {
+    en: {
+      warning: "A reimbursement for this Job # has already been submitted.",
+      acknowledge: "I understand that a reimbursement form with the same Job # has been submitted earlier and would like to re-submit or submit additional expense receipts.",
+    },
+    es: {
+      warning: "Ya se ha enviado un reembolso para este número de trabajo.",
+      acknowledge: "Entiendo que ya se ha enviado un formulario de reembolso con el mismo número de trabajo y deseo volver a enviar o enviar recibos de gastos adicionales.",
+    },
+    ru: {
+      warning: "Заявка на возмещение с этим номером работы уже была подана.",
+      acknowledge: "Я понимаю, что форма возмещения с тем же номером работы уже была подана ранее, и хочу повторно подать или подать дополнительные чеки расходов.",
+    },
+  };
+
     if (file.size > MAX_FILE_SIZE) {
       return `File "${file.name}" is too large (max 5MB)`;
     }
