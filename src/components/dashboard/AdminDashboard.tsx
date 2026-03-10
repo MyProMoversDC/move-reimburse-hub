@@ -289,11 +289,23 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 className="text-xl md:text-2xl font-bold">{t.allReimbursementRequests}</h2>
-                <Button onClick={handleExportReimbursements} disabled={exporting} size="sm" className="self-start sm:self-auto">
-                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">{exporting ? t.exporting : t.exportToExcel}</span>
-                  <span className="sm:hidden">Export</span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setShowDuplicates(!showDuplicates)} 
+                    variant={showDuplicates ? "destructive" : "outline"} 
+                    size="sm" 
+                    className="self-start sm:self-auto"
+                  >
+                    <Search className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">{showDuplicates ? "Hide Duplicates" : "Scan for Duplicates"}</span>
+                    <span className="sm:hidden">{showDuplicates ? "Hide" : "Scan"}</span>
+                  </Button>
+                  <Button onClick={handleExportReimbursements} disabled={exporting} size="sm" className="self-start sm:self-auto">
+                    <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">{exporting ? t.exporting : t.exportToExcel}</span>
+                    <span className="sm:hidden">Export</span>
+                  </Button>
+                </div>
               </div>
               <DateRangeFilter
                 startDate={reimbStartDate}
