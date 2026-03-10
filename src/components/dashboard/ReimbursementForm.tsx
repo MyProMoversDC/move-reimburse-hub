@@ -488,7 +488,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full" disabled={loading || checkingDuplicate || (duplicateJobFound && !duplicateAcknowledged)}>
         {loading ? "Submitting..." : "Submit Reimbursement"}
       </Button>
       
