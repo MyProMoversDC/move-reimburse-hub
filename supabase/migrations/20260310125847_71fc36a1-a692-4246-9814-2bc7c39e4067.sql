@@ -1,0 +1,1 @@
+ALTER TABLE public.reimbursements ADD COLUMN is_duplicate_job boolean NOT NULL DEFAULT false;
