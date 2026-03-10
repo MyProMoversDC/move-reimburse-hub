@@ -463,7 +463,16 @@ const ReimbursementReportingDashboard = ({ language }: ReimbursementReportingDas
                     <TableRow key={r.id}>
                       <TableCell>{String(r.reimbursement_number).padStart(5, "0")}</TableCell>
                       <TableCell>{format(new Date(r.created_at), "MM/dd/yyyy")}</TableCell>
-                      <TableCell>{r.job_number}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {r.job_number}
+                          {r.is_duplicate_job && (
+                            <Badge variant="destructive" className="text-[10px] px-1 py-0 ml-1">
+                              DUPLICATE
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{r.customer_name}</TableCell>
                       <TableCell className="text-right">${r.total_expenses.toFixed(2)}</TableCell>
                       <TableCell>
