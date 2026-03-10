@@ -170,6 +170,12 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Block if duplicate found but not acknowledged
+    if (duplicateJobFound && !duplicateAcknowledged) {
+      toast.error(duplicateWarningText[language].warning);
+      return;
+    }
+
     // Validate attachments are provided
     if (attachmentFiles.length === 0) {
       toast.error("Please attach at least one receipt image");
