@@ -319,6 +319,28 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
           />
         </div>
 
+        {/* Duplicate Job # Warning */}
+        {duplicateJobFound && (
+          <div className="md:col-span-2">
+            <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-900/20">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <p className="font-semibold mb-2">{duplicateWarningText[language].warning}</p>
+                <div className="flex items-start gap-2 mt-3">
+                  <Checkbox
+                    id="duplicateAck"
+                    checked={duplicateAcknowledged}
+                    onCheckedChange={(checked) => setDuplicateAcknowledged(checked === true)}
+                  />
+                  <label htmlFor="duplicateAck" className="text-sm leading-snug cursor-pointer">
+                    {duplicateWarningText[language].acknowledge}
+                  </label>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="truckNumber">Truck # *</Label>
           <Input
