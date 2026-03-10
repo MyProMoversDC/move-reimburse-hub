@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Loader2, PenLine } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { SignaturePad, SignaturePadRef } from "@/components/ui/signature-pad";
@@ -81,7 +81,6 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
   const [moverName, setMoverName] = useState<string>("");
   const [moverFullName, setMoverFullName] = useState<string>("");
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [isHtmlTemplate, setIsHtmlTemplate] = useState(false);
   const signaturePadRef = useRef<SignaturePadRef>(null);
 
@@ -171,7 +170,6 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
 
   const handleSignatureComplete = (dataUrl: string) => {
     setSignatureDataUrl(dataUrl);
-    setShowSignaturePad(false);
   };
 
   const generateSignedHtml = (templateHtml: string, signatureUrl: string): string => {
@@ -366,24 +364,12 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
           <ScrollArea className="h-full max-h-[40vh] sm:max-h-[50vh]">
             <div className="h-full border rounded-lg overflow-hidden bg-white dark:bg-muted/30">
               {isHtmlTemplate && documentContent ? (
-                // Render HTML template with inline signature zone
+                // Render HTML template content
                 <div className="p-3 sm:p-4">
                   <div 
-                    className="prose prose-sm dark:prose-invert max-w-none [&_.signature-zone]:my-2"
+                    className="prose prose-sm dark:prose-invert max-w-none"
                     dangerouslySetInnerHTML={{ __html: renderDocumentWithSignatureZone() || '' }}
                   />
-                  {/* Signature Zone - Click to Sign */}
-                  {!signatureDataUrl && (
-                    <div 
-                      className="inline-flex items-center justify-center gap-2 min-w-[250px] min-h-[80px] border-2 border-dashed border-primary/50 rounded-lg bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
-                      onClick={() => setShowSignaturePad(true)}
-                    >
-                      <PenLine className="h-5 w-5 text-primary" />
-                      <span className="text-sm font-medium text-primary">
-                        {t.clickToSign}
-                      </span>
-                    </div>
-                  )}
                 </div>
               ) : documentContent ? (
                 <div 
@@ -433,63 +419,19 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
           </ScrollArea>
         </div>
 
-        {/* Signature Section - Only show for non-HTML templates */}
-        {!isHtmlTemplate && (
-          <div className="space-y-2 pt-2 border-t">
-            <p className="text-sm font-medium text-center text-muted-foreground">
-              {t.signatureRequired}
-            </p>
-            <SignaturePad
-              ref={signaturePadRef}
-              onSign={setSignatureDataUrl}
-              onClear={() => setSignatureDataUrl(null)}
-              clearLabel={t.clearSignature}
-              height={120}
-            />
-          </div>
-        )}
-
-        {/* Signature Pad Modal for HTML templates */}
-        {isHtmlTemplate && showSignaturePad && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-background rounded-lg p-4 w-[90vw] max-w-md space-y-4">
-              <h3 className="text-lg font-semibold text-center">{t.signatureRequired}</h3>
-              <SignaturePad
-                ref={signaturePadRef}
-                onClear={() => {}}
-                clearLabel={t.clearSignature}
-                height={150}
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowSignaturePad(false)}
-                >
-                  {language === 'en' ? 'Cancel' : language === 'es' ? 'Cancelar' : 'Отмена'}
-                </Button>
-                <Button
-                  type="button"
-                  className="flex-1"
-                  onClick={() => {
-                    // Debug: confirm this handler fires on mobile
-                    console.log('[Consent] Signature modal confirm tapped');
-                    const sig = signaturePadRef.current?.getSignatureDataUrl();
-                    if (sig) {
-                      setSignatureDataUrl(sig);
-                      setShowSignaturePad(false);
-                    } else {
-                      toast.error(t.signatureEmpty);
-                    }
-                  }}
-                >
-                  {language === 'en' ? 'Confirm' : language === 'es' ? 'Confirmar' : 'Подтвердить'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Signature Section - Always visible below the document */}
+        <div className="space-y-2 pt-2 border-t">
+          <p className="text-sm font-medium text-center text-muted-foreground">
+            {t.signatureRequired}
+          </p>
+          <SignaturePad
+            ref={signaturePadRef}
+            onSign={setSignatureDataUrl}
+            onClear={() => setSignatureDataUrl(null)}
+            clearLabel={t.clearSignature}
+            height={120}
+          />
+        </div>
 
         <AlertDialogFooter className="mt-3 sm:mt-4">
           <Button
