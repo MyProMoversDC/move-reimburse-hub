@@ -50,9 +50,10 @@ interface ReimbursementHistoryProps {
   startDate?: Date;
   endDate?: Date;
   showDuplicates?: boolean;
+  searchNumber?: string;
 }
 
-const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, showDuplicates = false }: ReimbursementHistoryProps) => {
+const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, showDuplicates = false, searchNumber = "" }: ReimbursementHistoryProps) => {
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
@@ -78,6 +79,15 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
     }
     return dupes;
   }, [reimbursements, showDuplicates]);
+
+  const filteredReimbursements = useMemo(() => {
+    if (!searchNumber.trim()) return reimbursements;
+    const query = searchNumber.trim().replace(/^#/, "");
+    return reimbursements.filter(r => 
+      String(r.reimbursement_number).padStart(5, "0").includes(query) ||
+      String(r.reimbursement_number).includes(query)
+    );
+  }, [reimbursements, searchNumber]);
 
   useEffect(() => {
     fetchReimbursements();
@@ -166,14 +176,14 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
             </TableRow>
           </TableHeader>
           <TableBody>
-            {reimbursements.length === 0 ? (
+            {filteredReimbursements.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {t.noReimbursements}
                 </TableCell>
               </TableRow>
             ) : (
-              reimbursements.map((reimbursement) => {
+              filteredReimbursements.map((reimbursement) => {
                 const isDuplicate = duplicateIds.has(reimbursement.id);
                 return (
                 <TableRow key={reimbursement.id} className={isDuplicate ? "bg-destructive/10 hover:bg-destructive/20" : ""}>

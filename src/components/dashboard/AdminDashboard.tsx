@@ -64,6 +64,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   // Date filters for reimbursements
   const [reimbStartDate, setReimbStartDate] = useState<Date | undefined>();
   const [reimbEndDate, setReimbEndDate] = useState<Date | undefined>();
+  const [reimbSearchNumber, setReimbSearchNumber] = useState("");
   const [showDuplicates, setShowDuplicates] = useState(false);
   
   // Date filters for reviews
@@ -307,16 +308,28 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
                   </Button>
                 </div>
               </div>
-              <DateRangeFilter
-                startDate={reimbStartDate}
-                endDate={reimbEndDate}
-                onStartDateChange={setReimbStartDate}
-                onEndDateChange={setReimbEndDate}
-                onClear={() => {
-                  setReimbStartDate(undefined);
-                  setReimbEndDate(undefined);
-                }}
-              />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <DateRangeFilter
+                  startDate={reimbStartDate}
+                  endDate={reimbEndDate}
+                  onStartDateChange={setReimbStartDate}
+                  onEndDateChange={setReimbEndDate}
+                  onClear={() => {
+                    setReimbStartDate(undefined);
+                    setReimbEndDate(undefined);
+                  }}
+                />
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search by Reimbursement #"
+                    value={reimbSearchNumber}
+                    onChange={(e) => setReimbSearchNumber(e.target.value)}
+                    className="pl-9 pr-3 py-2 text-sm border rounded-md bg-background w-full sm:w-56 h-10"
+                  />
+                </div>
+              </div>
             </div>
             <ReimbursementHistory 
               refreshKey={refreshKey} 
@@ -326,6 +339,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
               startDate={reimbStartDate}
               endDate={reimbEndDate}
               showDuplicates={showDuplicates}
+              searchNumber={reimbSearchNumber}
             />
           </div>
         );
