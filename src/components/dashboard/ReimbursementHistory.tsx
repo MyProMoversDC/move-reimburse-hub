@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, AlertCircle } from "lucide-react";
+import { Eye, AlertCircle, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReimbursementDetails from "./ReimbursementDetails";
 import AppealForm from "./AppealForm";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface Reimbursement {
   id: string;
@@ -57,6 +58,25 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   const [appealReimbursement, setAppealReimbursement] = useState<Reimbursement | null>(null);
   
   const t = dashboardTranslations[language];
+
+  // Detect duplicates by job_number + customer_name (case-insensitive)
+  const duplicateIds = useMemo(() => {
+    if (userRole !== "admin") return new Set<string>();
+    const groupMap = new Map<string, string[]>();
+    for (const r of reimbursements) {
+      const key = `${r.job_number.trim().toLowerCase()}|${r.customer_name.trim().toLowerCase()}`;
+      const ids = groupMap.get(key) || [];
+      ids.push(r.id);
+      groupMap.set(key, ids);
+    }
+    const dupes = new Set<string>();
+    for (const ids of groupMap.values()) {
+      if (ids.length > 1) {
+        ids.forEach(id => dupes.add(id));
+      }
+    }
+    return dupes;
+  }, [reimbursements, userRole]);
 
   useEffect(() => {
     fetchReimbursements();
@@ -152,10 +172,26 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
                 </TableCell>
               </TableRow>
             ) : (
-              reimbursements.map((reimbursement) => (
-                <TableRow key={reimbursement.id}>
+              reimbursements.map((reimbursement) => {
+                const isDuplicate = duplicateIds.has(reimbursement.id);
+                return (
+                <TableRow key={reimbursement.id} className={isDuplicate ? "bg-destructive/10 hover:bg-destructive/20" : ""}>
                   <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
-                    #{String(reimbursement.reimbursement_number).padStart(5, "0")}
+                    <div className="flex items-center gap-1">
+                      #{String(reimbursement.reimbursement_number).padStart(5, "0")}
+                      {isDuplicate && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Copy className="h-3 w-3 text-destructive" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Potential duplicate (same Job # & Customer)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-xs md:text-sm whitespace-nowrap">{formatDate(reimbursement.created_at)}</TableCell>
                   {userRole !== "mover" && (
@@ -188,7 +224,8 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
