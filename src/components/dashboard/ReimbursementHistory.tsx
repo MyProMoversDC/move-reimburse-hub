@@ -59,6 +59,25 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   
   const t = dashboardTranslations[language];
 
+  // Detect duplicates by job_number + customer_name (case-insensitive)
+  const duplicateIds = useMemo(() => {
+    if (userRole !== "admin") return new Set<string>();
+    const groupMap = new Map<string, string[]>();
+    for (const r of reimbursements) {
+      const key = `${r.job_number.trim().toLowerCase()}|${r.customer_name.trim().toLowerCase()}`;
+      const ids = groupMap.get(key) || [];
+      ids.push(r.id);
+      groupMap.set(key, ids);
+    }
+    const dupes = new Set<string>();
+    for (const ids of groupMap.values()) {
+      if (ids.length > 1) {
+        ids.forEach(id => dupes.add(id));
+      }
+    }
+    return dupes;
+  }, [reimbursements, userRole]);
+
   useEffect(() => {
     fetchReimbursements();
   }, [userId, refreshKey, startDate, endDate]);
