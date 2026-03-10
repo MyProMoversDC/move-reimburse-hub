@@ -170,7 +170,6 @@ const ConsentDocumentPopup = ({ userId, language, onComplete }: ConsentDocumentP
 
   const handleSignatureComplete = (dataUrl: string) => {
     setSignatureDataUrl(dataUrl);
-    setShowSignaturePad(false);
   };
 
   const generateSignedHtml = (templateHtml: string, signatureUrl: string): string => {
