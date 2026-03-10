@@ -172,10 +172,26 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
                 </TableCell>
               </TableRow>
             ) : (
-              reimbursements.map((reimbursement) => (
-                <TableRow key={reimbursement.id}>
+              reimbursements.map((reimbursement) => {
+                const isDuplicate = duplicateIds.has(reimbursement.id);
+                return (
+                <TableRow key={reimbursement.id} className={isDuplicate ? "bg-destructive/10 hover:bg-destructive/20" : ""}>
                   <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
-                    #{String(reimbursement.reimbursement_number).padStart(5, "0")}
+                    <div className="flex items-center gap-1">
+                      #{String(reimbursement.reimbursement_number).padStart(5, "0")}
+                      {isDuplicate && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Copy className="h-3 w-3 text-destructive" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Potential duplicate (same Job # & Customer)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-xs md:text-sm whitespace-nowrap">{formatDate(reimbursement.created_at)}</TableCell>
                   {userRole !== "mover" && (
