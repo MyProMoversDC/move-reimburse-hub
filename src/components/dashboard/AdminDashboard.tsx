@@ -26,7 +26,7 @@ import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
-import { Download, PlayCircle } from "lucide-react";
+import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
