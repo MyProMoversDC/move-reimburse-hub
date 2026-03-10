@@ -72,7 +72,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
   // Check for duplicate job number when job number changes
   const checkDuplicateJobNumber = useCallback(async (jn: string) => {
     const trimmed = jn.trim();
-    if (!trimmed) {
+    if (!trimmed || !/^\d+$/.test(trimmed)) {
       setDuplicateJobFound(false);
       setDuplicateAcknowledged(false);
       return;
