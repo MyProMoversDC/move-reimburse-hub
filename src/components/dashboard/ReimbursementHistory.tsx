@@ -226,7 +226,6 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
                 </TableRow>
                 );
               })
-            )
             )}
           </TableBody>
         </Table>
