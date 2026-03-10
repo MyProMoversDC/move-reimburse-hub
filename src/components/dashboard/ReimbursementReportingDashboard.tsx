@@ -37,6 +37,7 @@ interface Reimbursement {
   status: string;
   decline_reason: string | null;
   created_at: string;
+  is_duplicate_job: boolean;
 }
 
 interface MoverSummary {
