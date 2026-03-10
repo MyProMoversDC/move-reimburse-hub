@@ -77,7 +77,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
       }
     }
     return dupes;
-  }, [reimbursements, userRole]);
+  }, [reimbursements, showDuplicates]);
 
   useEffect(() => {
     fetchReimbursements();
