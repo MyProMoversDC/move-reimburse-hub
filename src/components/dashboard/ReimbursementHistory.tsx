@@ -49,9 +49,10 @@ interface ReimbursementHistoryProps {
   language: DashboardLanguage;
   startDate?: Date;
   endDate?: Date;
+  showDuplicates?: boolean;
 }
 
-const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate }: ReimbursementHistoryProps) => {
+const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, showDuplicates = false }: ReimbursementHistoryProps) => {
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
@@ -61,7 +62,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
 
   // Detect duplicates by job_number + customer_name (case-insensitive)
   const duplicateIds = useMemo(() => {
-    if (userRole !== "admin") return new Set<string>();
+    if (!showDuplicates) return new Set<string>();
     const groupMap = new Map<string, string[]>();
     for (const r of reimbursements) {
       const key = `${r.job_number.trim().toLowerCase()}|${r.customer_name.trim().toLowerCase()}`;
@@ -76,7 +77,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
       }
     }
     return dupes;
-  }, [reimbursements, userRole]);
+  }, [reimbursements, showDuplicates]);
 
   useEffect(() => {
     fetchReimbursements();

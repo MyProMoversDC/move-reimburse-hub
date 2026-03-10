@@ -26,7 +26,7 @@ import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
-import { Download, PlayCircle } from "lucide-react";
+import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -64,6 +64,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   // Date filters for reimbursements
   const [reimbStartDate, setReimbStartDate] = useState<Date | undefined>();
   const [reimbEndDate, setReimbEndDate] = useState<Date | undefined>();
+  const [showDuplicates, setShowDuplicates] = useState(false);
   
   // Date filters for reviews
   const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
@@ -277,7 +278,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Admin Dashboard</h2>
-            <AdminTodoList onNavigate={setActiveTab} />
+            <AdminTodoList onNavigate={(tab) => { setShowDuplicates(false); setActiveTab(tab); }} />
           </div>
         );
       case "feed":
@@ -288,11 +289,23 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 className="text-xl md:text-2xl font-bold">{t.allReimbursementRequests}</h2>
-                <Button onClick={handleExportReimbursements} disabled={exporting} size="sm" className="self-start sm:self-auto">
-                  <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">{exporting ? t.exporting : t.exportToExcel}</span>
-                  <span className="sm:hidden">Export</span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setShowDuplicates(!showDuplicates)} 
+                    variant={showDuplicates ? "destructive" : "outline"} 
+                    size="sm" 
+                    className="self-start sm:self-auto"
+                  >
+                    <Search className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">{showDuplicates ? "Hide Duplicates" : "Scan for Duplicates"}</span>
+                    <span className="sm:hidden">{showDuplicates ? "Hide" : "Scan"}</span>
+                  </Button>
+                  <Button onClick={handleExportReimbursements} disabled={exporting} size="sm" className="self-start sm:self-auto">
+                    <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">{exporting ? t.exporting : t.exportToExcel}</span>
+                    <span className="sm:hidden">Export</span>
+                  </Button>
+                </div>
               </div>
               <DateRangeFilter
                 startDate={reimbStartDate}
@@ -312,6 +325,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
               language={language}
               startDate={reimbStartDate}
               endDate={reimbEndDate}
+              showDuplicates={showDuplicates}
             />
           </div>
         );
@@ -512,7 +526,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       <div className="flex min-h-screen w-full">
         <AdminSidebar 
           activeTab={activeTab} 
-          onTabChange={setActiveTab}
+          onTabChange={(tab) => { setShowDuplicates(false); setActiveTab(tab); }}
           pendingCounts={pendingCounts}
           hasUnreadMessages={hasUnreadMessages}
         />
