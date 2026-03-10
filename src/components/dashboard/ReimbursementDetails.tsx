@@ -43,6 +43,7 @@ interface Reimbursement {
   decline_reason?: string | null;
   appeal_note?: string | null;
   appeal_at?: string | null;
+  is_duplicate_job?: boolean;
 }
 
 interface Attachment {
