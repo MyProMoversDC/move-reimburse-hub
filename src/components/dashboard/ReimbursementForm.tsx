@@ -122,6 +122,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
   };
 
   const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
       return `File "${file.name}" is too large (max 5MB)`;
     }
     if (!VALID_FILE_TYPES.includes(file.type)) {
