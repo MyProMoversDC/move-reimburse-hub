@@ -1,4 +1,4 @@
-import { useRef, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from "react";
+import { useRef, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
   ({ onSign, onClear, className, clearLabel = "Clear", width, height = 150 }, ref) => {
     const sigCanvas = useRef<SignatureCanvas>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState<number>(0);
 
     useImperativeHandle(ref, () => ({
       clear: () => {
@@ -34,7 +35,6 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
         try {
           return sigCanvas.current.getTrimmedCanvas().toDataURL("image/png") ?? null;
         } catch {
-          // Mobile Safari can be flaky with getTrimmedCanvas() in some resize scenarios
           try {
             return sigCanvas.current.getCanvas().toDataURL("image/png") ?? null;
           } catch {
@@ -67,62 +67,51 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
       if (dataUrl) onSign?.(dataUrl);
     };
 
-    // Handle resize
-    const resizeCanvas = () => {
-      if (containerRef.current && sigCanvas.current) {
-        const canvas = sigCanvas.current.getCanvas();
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        const containerWidth = containerRef.current.offsetWidth;
-
-        canvas.width = containerWidth * ratio;
-        canvas.height = height * ratio;
-        canvas.style.width = `${containerWidth}px`;
-        canvas.style.height = `${height}px`;
-        canvas.getContext("2d")?.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-        // IMPORTANT: Don't wipe a signature the user already drew (common on mobile
-        // when the keyboard/address bar triggers a resize after drawing).
-        if (sigCanvas.current.isEmpty()) {
-          sigCanvas.current.clear();
-        }
-      }
-    };
-
-    useLayoutEffect(() => {
-      resizeCanvas();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [height]);
-
+    // Measure container width on mount and resize
     useEffect(() => {
-      window.addEventListener("resize", resizeCanvas);
-      return () => window.removeEventListener("resize", resizeCanvas);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [height]);
+      const measure = () => {
+        if (containerRef.current) {
+          setContainerWidth(containerRef.current.offsetWidth);
+        }
+      };
+      measure();
+      // Small delay to handle modal open timing
+      const timer = setTimeout(measure, 100);
+      window.addEventListener("resize", measure);
+      return () => {
+        window.removeEventListener("resize", measure);
+        clearTimeout(timer);
+      };
+    }, []);
 
     return (
       <div className={cn("space-y-2", className)}>
         <div 
           ref={containerRef}
-          className="relative border-2 border-dashed border-muted-foreground/30 rounded-lg bg-background overflow-hidden"
+          className="relative border-2 border-dashed border-muted-foreground/30 rounded-lg bg-white overflow-hidden"
           style={{ height: `${height}px` }}
         >
-          <SignatureCanvas
-            ref={sigCanvas}
-            canvasProps={{
-              className: "w-full h-full touch-none",
-              style: { 
-                width: "100%", 
-                height: `${height}px`,
-                touchAction: "none"
-              }
-            }}
-            backgroundColor="transparent"
-            penColor="currentColor"
-            onEnd={handleEnd}
-          />
+          {containerWidth > 0 && (
+            <SignatureCanvas
+              ref={sigCanvas}
+              canvasProps={{
+                width: containerWidth,
+                height: height,
+                className: "touch-none",
+                style: { 
+                  width: `${containerWidth}px`, 
+                  height: `${height}px`,
+                  touchAction: "none",
+                },
+              }}
+              backgroundColor="rgba(255,255,255,0)"
+              penColor="#000000"
+              onEnd={handleEnd}
+            />
+          )}
           {/* Signature line */}
-          <div className="absolute bottom-6 left-4 right-4 border-b border-muted-foreground/40" />
-          <span className="absolute bottom-2 left-4 text-xs text-muted-foreground">
+          <div className="absolute bottom-6 left-4 right-4 border-b border-muted-foreground/40 pointer-events-none" />
+          <span className="absolute bottom-2 left-4 text-xs text-muted-foreground pointer-events-none">
             Sign above the line
           </span>
         </div>
