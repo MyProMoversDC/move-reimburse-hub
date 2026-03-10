@@ -360,7 +360,14 @@ const ReimbursementDetails = ({ reimbursement, userRole, onUpdate, onClose, lang
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Job #</p>
-          <p className="text-base">{reimbursement.job_number}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-base">{reimbursement.job_number}</p>
+            {reimbursement.is_duplicate_job && (
+              <Badge variant="destructive" className="text-xs">
+                ⚠️ DUPLICATE JOB #
+              </Badge>
+            )}
+          </div>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Truck #</p>
