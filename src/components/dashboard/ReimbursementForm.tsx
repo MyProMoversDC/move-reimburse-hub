@@ -213,6 +213,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
           other_expenses: validated.otherExpenses || 0,
           total_expenses: validated.totalReimbursement,
           zelle_info: validated.zelleInfo,
+          is_duplicate_job: duplicateJobFound && duplicateAcknowledged,
         })
         .select()
         .single();
