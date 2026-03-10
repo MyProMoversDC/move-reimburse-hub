@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, AlertCircle } from "lucide-react";
+import { Eye, AlertCircle, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReimbursementDetails from "./ReimbursementDetails";
 import AppealForm from "./AppealForm";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface Reimbursement {
   id: string;
