@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
 import { dashboardTranslations, DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError, handleUploadError } from "@/lib/errorHandler";
-import { X, AlertCircle } from "lucide-react";
+import { X, AlertCircle, AlertTriangle } from "lucide-react";
 
 // File validation constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
