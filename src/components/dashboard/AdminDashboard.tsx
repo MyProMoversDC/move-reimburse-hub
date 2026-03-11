@@ -65,7 +65,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [reimbStartDate, setReimbStartDate] = useState<Date | undefined>();
   const [reimbEndDate, setReimbEndDate] = useState<Date | undefined>();
   const [reimbSearchNumber, setReimbSearchNumber] = useState("");
-  const [showDuplicates, setShowDuplicates] = useState(false);
+  
   
   // Date filters for reviews
   const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
