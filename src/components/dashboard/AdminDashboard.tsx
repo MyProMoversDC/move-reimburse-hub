@@ -328,7 +328,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
               language={language}
               startDate={reimbStartDate}
               endDate={reimbEndDate}
-              showDuplicates={showDuplicates}
+              
               searchNumber={reimbSearchNumber}
             />
           </div>
