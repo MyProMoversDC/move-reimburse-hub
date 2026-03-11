@@ -84,7 +84,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
       group.forEach(r => dupes.add(r.id));
     }
     return dupes;
-  }, [reimbursements, showDuplicates]);
+  }, [reimbursements, userRole]);
 
   const filteredReimbursements = useMemo(() => {
     if (!searchNumber.trim()) return reimbursements;
