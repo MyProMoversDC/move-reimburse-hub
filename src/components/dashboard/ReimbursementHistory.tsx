@@ -52,7 +52,7 @@ interface ReimbursementHistoryProps {
   searchNumber?: string;
 }
 
-const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, showDuplicates = false, searchNumber = "" }: ReimbursementHistoryProps) => {
+const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, searchNumber = "" }: ReimbursementHistoryProps) => {
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
