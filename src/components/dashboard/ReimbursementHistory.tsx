@@ -63,7 +63,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   // Detect duplicates by total_expenses + job_number (only if numeric)
   // Exclude cases where one was declined and another re-applied (declined+appeal/pending pair)
   const duplicateIds = useMemo(() => {
-    if (!showDuplicates) return new Set<string>();
+    if (userRole === "mover") return new Set<string>();
     const groupMap = new Map<string, Reimbursement[]>();
     for (const r of reimbursements) {
       const trimmedJob = r.job_number.trim();
