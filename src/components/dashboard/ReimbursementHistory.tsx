@@ -49,7 +49,6 @@ interface ReimbursementHistoryProps {
   language: DashboardLanguage;
   startDate?: Date;
   endDate?: Date;
-  showDuplicates?: boolean;
   searchNumber?: string;
 }
 
