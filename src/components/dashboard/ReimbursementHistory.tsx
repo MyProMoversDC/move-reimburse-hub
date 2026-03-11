@@ -49,11 +49,10 @@ interface ReimbursementHistoryProps {
   language: DashboardLanguage;
   startDate?: Date;
   endDate?: Date;
-  showDuplicates?: boolean;
   searchNumber?: string;
 }
 
-const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, showDuplicates = false, searchNumber = "" }: ReimbursementHistoryProps) => {
+const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language, startDate, endDate, searchNumber = "" }: ReimbursementHistoryProps) => {
   const [reimbursements, setReimbursements] = useState<Reimbursement[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
@@ -64,7 +63,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
   // Detect duplicates by total_expenses + job_number (only if numeric)
   // Exclude cases where one was declined and another re-applied (declined+appeal/pending pair)
   const duplicateIds = useMemo(() => {
-    if (!showDuplicates) return new Set<string>();
+    if (userRole === "mover") return new Set<string>();
     const groupMap = new Map<string, Reimbursement[]>();
     for (const r of reimbursements) {
       const trimmedJob = r.job_number.trim();
@@ -85,7 +84,7 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
       group.forEach(r => dupes.add(r.id));
     }
     return dupes;
-  }, [reimbursements, showDuplicates]);
+  }, [reimbursements, userRole]);
 
   const filteredReimbursements = useMemo(() => {
     if (!searchNumber.trim()) return reimbursements;
