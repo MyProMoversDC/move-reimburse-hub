@@ -7,6 +7,7 @@ import AccountantDashboard from "@/components/dashboard/AccountantDashboard";
 import OperationsManagerDashboard from "@/components/dashboard/OperationsManagerDashboard";
 import ReviewsAdminDashboard from "@/components/dashboard/ReviewsAdminDashboard";
 import HRDashboard from "@/components/dashboard/HRDashboard";
+import OfficeStaffDashboard from "@/components/dashboard/OfficeStaffDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
