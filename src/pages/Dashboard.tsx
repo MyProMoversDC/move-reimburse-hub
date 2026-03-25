@@ -13,7 +13,7 @@ import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager";
+type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff";
 
 const Dashboard = () => {
   const navigate = useNavigate();

@@ -49,7 +49,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
 
         <TabsContent value="feed" className="space-y-4 md:space-y-6">
           <h2 className="text-lg md:text-2xl font-bold">Feed</h2>
-          <FeedList userId={userId} language={language} />
+          <FeedList userId={userId} language={language} isAdmin={false} />
         </TabsContent>
 
         <TabsContent value="customer-refund" className="space-y-4 md:space-y-6">
