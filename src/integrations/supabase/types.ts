@@ -358,6 +358,45 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_refunds: {
+        Row: {
+          amount: number
+          comments: string | null
+          created_at: string
+          customer_name: string
+          id: string
+          payment_method: string
+          payment_method_other: string | null
+          reimbursement_reason: string
+          request_date: string
+          submitted_by: string
+        }
+        Insert: {
+          amount: number
+          comments?: string | null
+          created_at?: string
+          customer_name: string
+          id?: string
+          payment_method: string
+          payment_method_other?: string | null
+          reimbursement_reason: string
+          request_date: string
+          submitted_by: string
+        }
+        Update: {
+          amount?: number
+          comments?: string | null
+          created_at?: string
+          customer_name?: string
+          id?: string
+          payment_method?: string
+          payment_method_other?: string | null
+          reimbursement_reason?: string
+          request_date?: string
+          submitted_by?: string
+        }
+        Relationships: []
+      }
       deductibles: {
         Row: {
           amount: number

@@ -25,6 +25,7 @@ import { AdminAIAssistant } from "./AdminAIAssistant";
 import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
+import AdminCustomerRefundList from "./AdminCustomerRefundList";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
@@ -502,6 +503,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">User Activity Log</h2>
             <UserActivityLog />
+          </div>
+        );
+      case "customer-refunds":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Customer Refunds</h2>
+            <AdminCustomerRefundList />
           </div>
         );
       case "chat":

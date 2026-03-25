@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Shield, MessageSquare, Wine } from "lucide-react";
+import { FileText, Shield, MessageSquare, Wine, DollarSign } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AlcoholTestReportForm from "./AlcoholTestReportForm";
+import CustomerRefundForm from "./CustomerRefundForm";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -44,6 +45,11 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
               <span className="hidden sm:inline">Alcohol Testing</span>
               <span className="sm:hidden">Alcohol</span>
             </TabsTrigger>
+            <TabsTrigger value="customer-refund" className="text-[11px] md:text-sm px-2 md:px-3 py-1.5">
+              <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Customer Refund</span>
+              <span className="sm:hidden">Refund</span>
+            </TabsTrigger>
             <TabsTrigger value="chat" className="relative text-[11px] md:text-sm px-2 md:px-3 py-1.5">
               <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 flex-shrink-0" />
               Chat
@@ -68,6 +74,10 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
 
         <TabsContent value="alcohol-test" className="space-y-4 md:space-y-6">
           <AlcoholTestReportForm userId={userId} language={language} />
+        </TabsContent>
+
+        <TabsContent value="customer-refund" className="space-y-4 md:space-y-6">
+          <CustomerRefundForm userId={userId} language={language} />
         </TabsContent>
 
         <TabsContent value="chat" className="space-y-4 md:space-y-6">

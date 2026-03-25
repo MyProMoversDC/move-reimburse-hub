@@ -70,6 +70,7 @@ const menuItems = [
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "handbook", label: "Handbook Management", icon: BookOpen },
   { id: "consent-documents", label: "Consent Documents", icon: FileText },
+  { id: "customer-refunds", label: "Customer Refunds", icon: DollarSign },
   { id: "email-logs", label: "Email Logs", icon: Mail },
   { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
   { id: "chat", label: "Chat", icon: MessageSquare },
