@@ -203,6 +203,10 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         return <AlertCircle className="h-5 w-5 text-orange-500" />;
       case "missing_payment":
         return <DollarSign className="h-5 w-5 text-green-500" />;
+      case "customer_refund":
+        return <DollarSign className="h-5 w-5 text-cyan-500" />;
+      case "payment_question":
+        return <HelpCircle className="h-5 w-5 text-indigo-500" />;
       case "mover_feedback":
         return <MessageCircle className="h-5 w-5 text-purple-500" />;
       case "performance_report":
