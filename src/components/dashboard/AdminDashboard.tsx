@@ -25,6 +25,7 @@ import { AdminAIAssistant } from "./AdminAIAssistant";
 import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
+import AdminCustomerRefundList from "./AdminCustomerRefundList";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
