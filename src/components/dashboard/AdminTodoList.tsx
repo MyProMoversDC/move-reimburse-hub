@@ -231,6 +231,12 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
     if (type === "mover_feedback") {
       return <Badge variant="outline" className="border-purple-500 text-purple-600">Feedback</Badge>;
     }
+    if (type === "customer_refund") {
+      return <Badge variant="outline" className="border-cyan-500 text-cyan-600">New Refund</Badge>;
+    }
+    if (type === "payment_question") {
+      return <Badge variant="outline" className="border-indigo-500 text-indigo-600">Open Question</Badge>;
+    }
     return <Badge variant="secondary">Pending</Badge>;
   };
 
