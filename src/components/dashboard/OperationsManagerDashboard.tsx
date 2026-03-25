@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Shield, MessageSquare, Wine } from "lucide-react";
+import { FileText, Shield, MessageSquare, Wine, DollarSign } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AlcoholTestReportForm from "./AlcoholTestReportForm";
+import CustomerRefundForm from "./CustomerRefundForm";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
