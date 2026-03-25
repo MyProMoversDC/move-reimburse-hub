@@ -2102,6 +2102,7 @@ export type Database = {
         | "operations_manager"
         | "reviews_admin"
         | "hr_manager"
+        | "office_staff"
       chat_topic_type:
         | "general"
         | "reimbursement"
@@ -2278,6 +2279,7 @@ export const Constants = {
         "operations_manager",
         "reviews_admin",
         "hr_manager",
+        "office_staff",
       ],
       chat_topic_type: [
         "general",
