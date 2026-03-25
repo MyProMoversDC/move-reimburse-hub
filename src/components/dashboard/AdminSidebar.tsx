@@ -51,6 +51,8 @@ interface AdminSidebarProps {
     performanceReports: number;
     violenceIncidents: number;
     alcoholTests: number;
+    customerRefunds: number;
+    paymentQuestions: number;
   };
   hasUnreadMessages?: boolean;
 }
@@ -101,7 +103,9 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "performance-reports") return pendingCounts.performanceReports;
     if (id === "violence-incidents") return pendingCounts.violenceIncidents;
     if (id === "alcohol-tests") return pendingCounts.alcoholTests;
-    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests;
+    if (id === "customer-refunds") return pendingCounts.customerRefunds;
+    if (id === "payment-questions") return pendingCounts.paymentQuestions;
+    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests + pendingCounts.customerRefunds + pendingCounts.paymentQuestions;
     return 0;
   };
 

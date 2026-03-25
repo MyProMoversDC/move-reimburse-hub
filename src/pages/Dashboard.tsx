@@ -7,12 +7,13 @@ import AccountantDashboard from "@/components/dashboard/AccountantDashboard";
 import OperationsManagerDashboard from "@/components/dashboard/OperationsManagerDashboard";
 import ReviewsAdminDashboard from "@/components/dashboard/ReviewsAdminDashboard";
 import HRDashboard from "@/components/dashboard/HRDashboard";
+import OfficeStaffDashboard from "@/components/dashboard/OfficeStaffDashboard";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager";
+type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -60,6 +61,8 @@ const Dashboard = () => {
           setUserRole("operations_manager");
         } else if (roles.some((r) => r.role === "hr_manager")) {
           setUserRole("hr_manager");
+        } else if (roles.some((r) => r.role === "office_staff")) {
+          setUserRole("office_staff");
         } else {
           setUserRole("mover");
         }
@@ -122,6 +125,7 @@ const Dashboard = () => {
                   {userRole === "accountant" && "Accountant Portal"}
                   {userRole === "operations_manager" && "Ops Manager Portal"}
                   {userRole === "hr_manager" && "HR Portal"}
+                  {userRole === "office_staff" && "Office Staff Portal"}
                   {userRole === "mover" && "Mover Portal"}
                 </h1>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
@@ -142,6 +146,7 @@ const Dashboard = () => {
         {userRole === "accountant" && <AccountantDashboard userId={userId} />}
         {userRole === "operations_manager" && <OperationsManagerDashboard userId={userId} />}
         {userRole === "hr_manager" && <HRDashboard userId={userId} />}
+        {userRole === "office_staff" && <OfficeStaffDashboard userId={userId} />}
       </main>
     </div>
   );

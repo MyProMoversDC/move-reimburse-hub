@@ -3,12 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Star, AlertCircle, Clock, ArrowRight, MessageCircle, Shield, DollarSign } from "lucide-react";
+import { FileText, Star, AlertCircle, Clock, ArrowRight, MessageCircle, Shield, DollarSign, HelpCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface TodoItem {
   id: string;
-  type: "reimbursement" | "review" | "appeal_reimbursement" | "appeal_review" | "missing_payment" | "mover_feedback" | "performance_report" | "violence_incident";
+  type: "reimbursement" | "review" | "appeal_reimbursement" | "appeal_review" | "missing_payment" | "mover_feedback" | "performance_report" | "violence_incident" | "customer_refund" | "payment_question";
   title: string;
   subtitle: string;
   createdAt: Date;
@@ -68,6 +68,19 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         .from("violence_incidents")
         .select("id, mover_name, incident_date, severity_level, created_at")
         .is("admin_actions", null)
+        .order("created_at", { ascending: true });
+
+      // Fetch customer refunds
+      const { data: customerRefunds } = await supabase
+        .from("customer_refunds" as any)
+        .select("id, customer_name, amount, payment_method, created_at, submitted_by")
+        .order("created_at", { ascending: true });
+
+      // Fetch open payment questions
+      const { data: paymentQuestions } = await supabase
+        .from("payment_questions")
+        .select("id, mover_name, subject, job_number, created_at, status")
+        .eq("status", "open")
         .order("created_at", { ascending: true });
 
       const items: TodoItem[] = [];
@@ -144,6 +157,30 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         });
       });
 
+      // Map customer refunds
+      (customerRefunds as any[])?.forEach((cr: any) => {
+        items.push({
+          id: cr.id,
+          type: "customer_refund",
+          title: `Customer Refund - $${Number(cr.amount).toFixed(2)}`,
+          subtitle: `${cr.customer_name} | ${cr.payment_method}`,
+          createdAt: new Date(cr.created_at),
+          status: "new",
+        });
+      });
+
+      // Map payment questions
+      paymentQuestions?.forEach((pq) => {
+        items.push({
+          id: pq.id,
+          type: "payment_question",
+          title: `Payment Question - Job #${pq.job_number}`,
+          subtitle: `${pq.mover_name} | ${pq.subject}`,
+          createdAt: new Date(pq.created_at),
+          status: pq.status,
+        });
+      });
+
       // Sort by date (oldest first)
       items.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
@@ -166,6 +203,10 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         return <AlertCircle className="h-5 w-5 text-orange-500" />;
       case "missing_payment":
         return <DollarSign className="h-5 w-5 text-green-500" />;
+      case "customer_refund":
+        return <DollarSign className="h-5 w-5 text-cyan-500" />;
+      case "payment_question":
+        return <HelpCircle className="h-5 w-5 text-indigo-500" />;
       case "mover_feedback":
         return <MessageCircle className="h-5 w-5 text-purple-500" />;
       case "performance_report":
@@ -189,6 +230,12 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
     }
     if (type === "mover_feedback") {
       return <Badge variant="outline" className="border-purple-500 text-purple-600">Feedback</Badge>;
+    }
+    if (type === "customer_refund") {
+      return <Badge variant="outline" className="border-cyan-500 text-cyan-600">New Refund</Badge>;
+    }
+    if (type === "payment_question") {
+      return <Badge variant="outline" className="border-indigo-500 text-indigo-600">Open Question</Badge>;
     }
     return <Badge variant="secondary">Pending</Badge>;
   };
@@ -230,6 +277,10 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         return "performance-reports";
       case "violence_incident":
         return "violence-incidents";
+      case "customer_refund":
+        return "customer-refunds";
+      case "payment_question":
+        return "payment-questions";
       default:
         return "dashboard";
     }
@@ -242,6 +293,8 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
   const pendingFeedback = todoItems.filter(i => i.type === "mover_feedback").length;
   const pendingPerformanceReports = todoItems.filter(i => i.type === "performance_report").length;
   const pendingViolenceIncidents = todoItems.filter(i => i.type === "violence_incident").length;
+  const pendingCustomerRefunds = todoItems.filter(i => i.type === "customer_refund").length;
+  const pendingPaymentQuestions = todoItems.filter(i => i.type === "payment_question").length;
 
   if (loading) {
     return <div>Loading...</div>;
@@ -360,6 +413,40 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
                 <div>
                   <p className="text-xs text-muted-foreground">Violence Incidents</p>
                   <p className="text-xl font-bold">{pendingViolenceIncidents}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate("customer-refunds")}>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-cyan-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-cyan-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Customer Refunds</p>
+                  <p className="text-xl font-bold">{pendingCustomerRefunds}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate("payment-questions")}>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <HelpCircle className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Payment Questions</p>
+                  <p className="text-xl font-bold">{pendingPaymentQuestions}</p>
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />

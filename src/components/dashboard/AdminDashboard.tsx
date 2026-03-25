@@ -60,6 +60,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     performanceReports: 0,
     violenceIncidents: 0,
     alcoholTests: 0,
+    customerRefunds: 0,
+    paymentQuestions: 0,
   });
   
   // Date filters for reimbursements
@@ -142,6 +144,17 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true })
         .is("reviewed_at", null);
 
+      // Count new customer refunds (all, since no status field - use created_at within last 7 days as "new")
+      const { count: customerRefundsCount } = await supabase
+        .from("customer_refunds" as any)
+        .select("*", { count: "exact", head: true });
+
+      // Count open payment questions
+      const { count: paymentQuestionsCount } = await supabase
+        .from("payment_questions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "open");
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
@@ -152,6 +165,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         performanceReports: performanceReportsCount || 0,
         violenceIncidents: violenceIncidentsCount || 0,
         alcoholTests: alcoholTestsCount || 0,
+        customerRefunds: customerRefundsCount || 0,
+        paymentQuestions: paymentQuestionsCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
