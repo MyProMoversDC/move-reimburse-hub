@@ -8,7 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 
 interface TodoItem {
   id: string;
-  type: "reimbursement" | "review" | "appeal_reimbursement" | "appeal_review" | "missing_payment" | "mover_feedback" | "performance_report" | "violence_incident";
+  type: "reimbursement" | "review" | "appeal_reimbursement" | "appeal_review" | "missing_payment" | "mover_feedback" | "performance_report" | "violence_incident" | "customer_refund" | "payment_question";
   title: string;
   subtitle: string;
   createdAt: Date;
