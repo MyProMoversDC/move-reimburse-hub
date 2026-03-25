@@ -76,6 +76,10 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           <AlcoholTestReportForm userId={userId} language={language} />
         </TabsContent>
 
+        <TabsContent value="customer-refund" className="space-y-4 md:space-y-6">
+          <CustomerRefundForm userId={userId} language={language} />
+        </TabsContent>
+
         <TabsContent value="chat" className="space-y-4 md:space-y-6">
           <h2 className="text-lg md:text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="operations_manager" language={language} />
