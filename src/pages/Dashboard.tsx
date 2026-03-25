@@ -146,6 +146,7 @@ const Dashboard = () => {
         {userRole === "accountant" && <AccountantDashboard userId={userId} />}
         {userRole === "operations_manager" && <OperationsManagerDashboard userId={userId} />}
         {userRole === "hr_manager" && <HRDashboard userId={userId} />}
+        {userRole === "office_staff" && <OfficeStaffDashboard userId={userId} />}
       </main>
     </div>
   );
