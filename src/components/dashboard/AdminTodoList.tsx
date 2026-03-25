@@ -157,6 +157,30 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         });
       });
 
+      // Map customer refunds
+      (customerRefunds as any[])?.forEach((cr: any) => {
+        items.push({
+          id: cr.id,
+          type: "customer_refund",
+          title: `Customer Refund - $${Number(cr.amount).toFixed(2)}`,
+          subtitle: `${cr.customer_name} | ${cr.payment_method}`,
+          createdAt: new Date(cr.created_at),
+          status: "new",
+        });
+      });
+
+      // Map payment questions
+      paymentQuestions?.forEach((pq) => {
+        items.push({
+          id: pq.id,
+          type: "payment_question",
+          title: `Payment Question - Job #${pq.job_number}`,
+          subtitle: `${pq.mover_name} | ${pq.subject}`,
+          createdAt: new Date(pq.created_at),
+          status: pq.status,
+        });
+      });
+
       // Sort by date (oldest first)
       items.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
