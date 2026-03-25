@@ -112,6 +112,31 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
 
       if (error) throw error;
 
+      // Send notification email
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", userId)
+          .single();
+        
+        const submitterName = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown";
+        
+        await supabase.functions.invoke("send-customer-refund-notification", {
+          body: {
+            customerName: customerName.trim(),
+            reason: reason.trim(),
+            requestDate: format(requestDate, "MM/dd/yyyy"),
+            amount: parseFloat(amount),
+            paymentMethod: paymentMethod === "other" ? paymentMethodOther.trim() : paymentMethod,
+            comments: comments.trim() || null,
+            submitterName,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send notification email:", emailError);
+      }
+
       toast.success(t.success);
       setCustomerName("");
       setReason("");
