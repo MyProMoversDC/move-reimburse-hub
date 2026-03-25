@@ -51,6 +51,8 @@ interface AdminSidebarProps {
     performanceReports: number;
     violenceIncidents: number;
     alcoholTests: number;
+    customerRefunds: number;
+    paymentQuestions: number;
   };
   hasUnreadMessages?: boolean;
 }
