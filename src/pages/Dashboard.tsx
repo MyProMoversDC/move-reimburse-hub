@@ -125,6 +125,7 @@ const Dashboard = () => {
                   {userRole === "accountant" && "Accountant Portal"}
                   {userRole === "operations_manager" && "Ops Manager Portal"}
                   {userRole === "hr_manager" && "HR Portal"}
+                  {userRole === "office_staff" && "Office Staff Portal"}
                   {userRole === "mover" && "Mover Portal"}
                 </h1>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
