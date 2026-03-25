@@ -61,6 +61,8 @@ const Dashboard = () => {
           setUserRole("operations_manager");
         } else if (roles.some((r) => r.role === "hr_manager")) {
           setUserRole("hr_manager");
+        } else if (roles.some((r) => r.role === "office_staff")) {
+          setUserRole("office_staff");
         } else {
           setUserRole("mover");
         }
