@@ -70,6 +70,19 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         .is("admin_actions", null)
         .order("created_at", { ascending: true });
 
+      // Fetch customer refunds
+      const { data: customerRefunds } = await supabase
+        .from("customer_refunds" as any)
+        .select("id, customer_name, amount, payment_method, created_at, submitted_by")
+        .order("created_at", { ascending: true });
+
+      // Fetch open payment questions
+      const { data: paymentQuestions } = await supabase
+        .from("payment_questions")
+        .select("id, mover_name, subject, job_number, created_at, status")
+        .eq("status", "open")
+        .order("created_at", { ascending: true });
+
       const items: TodoItem[] = [];
 
       // Map reimbursements
