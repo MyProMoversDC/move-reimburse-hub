@@ -293,6 +293,8 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
   const pendingFeedback = todoItems.filter(i => i.type === "mover_feedback").length;
   const pendingPerformanceReports = todoItems.filter(i => i.type === "performance_report").length;
   const pendingViolenceIncidents = todoItems.filter(i => i.type === "violence_incident").length;
+  const pendingCustomerRefunds = todoItems.filter(i => i.type === "customer_refund").length;
+  const pendingPaymentQuestions = todoItems.filter(i => i.type === "payment_question").length;
 
   if (loading) {
     return <div>Loading...</div>;
