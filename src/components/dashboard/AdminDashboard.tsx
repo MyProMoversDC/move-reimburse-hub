@@ -60,6 +60,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     performanceReports: 0,
     violenceIncidents: 0,
     alcoholTests: 0,
+    customerRefunds: 0,
+    paymentQuestions: 0,
   });
   
   // Date filters for reimbursements
