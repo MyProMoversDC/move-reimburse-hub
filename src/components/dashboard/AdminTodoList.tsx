@@ -277,6 +277,10 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         return "performance-reports";
       case "violence_incident":
         return "violence-incidents";
+      case "customer_refund":
+        return "customer-refunds";
+      case "payment_question":
+        return "payment-questions";
       default:
         return "dashboard";
     }
