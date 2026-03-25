@@ -419,6 +419,40 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate("customer-refunds")}>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-cyan-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-cyan-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Customer Refunds</p>
+                  <p className="text-xl font-bold">{pendingCustomerRefunds}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate("payment-questions")}>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <HelpCircle className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Payment Questions</p>
+                  <p className="text-xl font-bold">{pendingPaymentQuestions}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Todo List */}
