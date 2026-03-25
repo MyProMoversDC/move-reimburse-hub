@@ -505,6 +505,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <UserActivityLog />
           </div>
         );
+      case "customer-refunds":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Customer Refunds</h2>
+            <AdminCustomerRefundList />
+          </div>
+        );
       case "chat":
         return (
           <div className="space-y-6">
