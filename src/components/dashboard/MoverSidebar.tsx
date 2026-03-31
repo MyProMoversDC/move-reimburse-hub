@@ -133,6 +133,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
 
   const menuItems = [
     { id: "feed", label: t.feed, icon: Newspaper, badgeCount: unacknowledgedCount },
+    { id: "refer-friend", label: t.referFriend, icon: UserPlus },
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },
