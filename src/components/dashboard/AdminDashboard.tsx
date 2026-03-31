@@ -63,6 +63,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     alcoholTests: 0,
     customerRefunds: 0,
     paymentQuestions: 0,
+    referrals: 0,
   });
   
   // Date filters for reimbursements
