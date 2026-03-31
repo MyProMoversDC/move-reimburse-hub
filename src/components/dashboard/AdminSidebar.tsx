@@ -15,7 +15,8 @@ import {
   MessageCircle,
   BookOpen,
   Newspaper,
-  Mail
+  Mail,
+  UserPlus
 } from "lucide-react";
 import {
   Sidebar,
