@@ -1504,6 +1504,75 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_requests: {
+        Row: {
+          admin_start_date: string | null
+          approved_at: string | null
+          approved_by: string | null
+          available_date: string
+          bonus_amount: number | null
+          bonus_claimed_at: string | null
+          bonus_eligible_at: string | null
+          bonus_paid_at: string | null
+          created_at: string
+          decline_reason: string | null
+          declined_at: string | null
+          id: string
+          license_file_name: string | null
+          license_url: string | null
+          referred_name: string
+          referred_position: string
+          referrer_id: string
+          referrer_name: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["referral_status"]
+        }
+        Insert: {
+          admin_start_date?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          available_date: string
+          bonus_amount?: number | null
+          bonus_claimed_at?: string | null
+          bonus_eligible_at?: string | null
+          bonus_paid_at?: string | null
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          id?: string
+          license_file_name?: string | null
+          license_url?: string | null
+          referred_name: string
+          referred_position: string
+          referrer_id: string
+          referrer_name: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["referral_status"]
+        }
+        Update: {
+          admin_start_date?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          available_date?: string
+          bonus_amount?: number | null
+          bonus_claimed_at?: string | null
+          bonus_eligible_at?: string | null
+          bonus_paid_at?: string | null
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          id?: string
+          license_file_name?: string | null
+          license_url?: string | null
+          referred_name?: string
+          referred_position?: string
+          referrer_id?: string
+          referrer_name?: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["referral_status"]
+        }
+        Relationships: []
+      }
       reimbursement_appeal_attachments: {
         Row: {
           created_at: string | null
@@ -2130,6 +2199,13 @@ export type Database = {
       feedback_status: "pending" | "reviewed" | "responded"
       missing_payment_status: "pending" | "confirmed" | "declined" | "appeal"
       payment_question_status: "open" | "answered" | "closed"
+      referral_status:
+        | "pending"
+        | "approved"
+        | "declined"
+        | "bonus_eligible"
+        | "bonus_claimed"
+        | "bonus_paid"
       reimbursement_status:
         | "pending"
         | "confirmed"
@@ -2311,6 +2387,14 @@ export const Constants = {
       feedback_status: ["pending", "reviewed", "responded"],
       missing_payment_status: ["pending", "confirmed", "declined", "appeal"],
       payment_question_status: ["open", "answered", "closed"],
+      referral_status: [
+        "pending",
+        "approved",
+        "declined",
+        "bonus_eligible",
+        "bonus_claimed",
+        "bonus_paid",
+      ],
       reimbursement_status: [
         "pending",
         "confirmed",
