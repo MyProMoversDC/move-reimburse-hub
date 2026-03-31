@@ -38,6 +38,7 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
+import { referralTranslations } from "@/lib/referralTranslations";
 import { chatTranslations } from "@/lib/chatTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import HandbookPopup from "./HandbookPopup";
