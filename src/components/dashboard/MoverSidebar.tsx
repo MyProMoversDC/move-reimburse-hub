@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   Newspaper,
   ClipboardList,
-  HelpCircle
+  HelpCircle,
+  UserPlus
 } from "lucide-react";
 import {
   Sidebar,
