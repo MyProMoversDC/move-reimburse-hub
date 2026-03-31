@@ -403,6 +403,29 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       case "chat":
         return <ChatContainer userId={userId} userRole="mover" language={language} />;
       
+      case "refer-friend":
+        return (
+          <div className="space-y-6">
+            {!showReferFriendForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowReferFriendForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {rft.referFriend}
+                </Button>
+              </Card>
+            )}
+            {showReferFriendForm && (
+              <ReferFriendForm
+                userId={userId}
+                language={language}
+                onSuccess={() => { setShowReferFriendForm(false); setReferralRefreshKey(prev => prev + 1); }}
+                onCancel={() => setShowReferFriendForm(false)}
+              />
+            )}
+            <ReferFriendHistory userId={userId} language={language} refreshKey={referralRefreshKey} />
+          </div>
+        );
+
       default:
         return null;
     }
