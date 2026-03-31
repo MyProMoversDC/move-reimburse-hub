@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
