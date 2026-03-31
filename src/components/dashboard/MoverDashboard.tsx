@@ -133,6 +133,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const mt = missingPaymentTranslations[language];
   const vt = violenceIncidentTranslations[language];
   const ct = chatTranslations[language];
+  const rft = referralTranslations[language];
   
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
