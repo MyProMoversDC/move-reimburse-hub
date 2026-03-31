@@ -536,6 +536,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminCustomerRefundList />
           </div>
         );
+      case "referrals":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Referral Requests</h2>
+            <AdminReferralList language={language} />
+          </div>
+        );
       case "chat":
         return (
           <div className="space-y-6">
