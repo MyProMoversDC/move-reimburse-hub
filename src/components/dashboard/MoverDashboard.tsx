@@ -548,6 +548,16 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           </div>
         </Card>
 
+        {/* Refer a Friend Button for Mobile */}
+        <Button 
+          variant={activeTab === "refer-friend" ? "default" : "outline"}
+          className="w-full justify-start"
+          onClick={() => setActiveTab("refer-friend")}
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          {rft.referFriend}
+        </Button>
+
         {/* Show Form Content or Feed */}
         {showFormContent ? (
           <div className="space-y-4">
