@@ -60,12 +60,14 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showViolenceForm, setShowViolenceForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showPaymentQuestionForm, setShowPaymentQuestionForm] = useState(false);
+  const [showReferFriendForm, setShowReferFriendForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
   const [paymentQuestionRefreshKey, setPaymentQuestionRefreshKey] = useState(0);
+  const [referralRefreshKey, setReferralRefreshKey] = useState(0);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
   const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
