@@ -26,6 +26,7 @@ import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import AdminCustomerRefundList from "./AdminCustomerRefundList";
+import AdminReferralList from "./AdminReferralList";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
@@ -62,6 +63,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     alcoholTests: 0,
     customerRefunds: 0,
     paymentQuestions: 0,
+    referrals: 0,
   });
   
   // Date filters for reimbursements
@@ -155,6 +157,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true })
         .eq("status", "open");
 
+      // Count pending referrals
+      const { count: referralsCount } = await supabase
+        .from("referral_requests" as any)
+        .select("*", { count: "exact", head: true })
+        .in("status", ["pending", "bonus_claimed"]);
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
@@ -167,6 +175,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         alcoholTests: alcoholTestsCount || 0,
         customerRefunds: customerRefundsCount || 0,
         paymentQuestions: paymentQuestionsCount || 0,
+        referrals: referralsCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
@@ -525,6 +534,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Customer Refunds</h2>
             <AdminCustomerRefundList />
+          </div>
+        );
+      case "referrals":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Referral Requests</h2>
+            <AdminReferralList language={language} />
           </div>
         );
       case "chat":

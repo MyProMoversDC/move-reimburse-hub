@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   Newspaper,
   ClipboardList,
-  HelpCircle
+  HelpCircle,
+  UserPlus
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +51,7 @@ const translations = {
     feedback: "Feedback",
     chat: "Chat",
     paymentQuestions: "Payment Questions",
+    referFriend: "Refer a Friend",
   },
   es: {
     navigation: "Navegación",
@@ -63,6 +65,7 @@ const translations = {
     feedback: "Comentarios",
     chat: "Chat",
     paymentQuestions: "Preguntas de Pago",
+    referFriend: "Referir un Amigo",
   },
   ru: {
     navigation: "Навигация",
@@ -76,6 +79,7 @@ const translations = {
     feedback: "Отзывы",
     chat: "Чат",
     paymentQuestions: "Вопросы по Оплате",
+    referFriend: "Порекомендовать Друга",
   },
 };
 
@@ -129,6 +133,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
 
   const menuItems = [
     { id: "feed", label: t.feed, icon: Newspaper, badgeCount: unacknowledgedCount },
+    { id: "refer-friend", label: t.referFriend, icon: UserPlus },
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },

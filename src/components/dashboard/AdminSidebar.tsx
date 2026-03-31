@@ -15,7 +15,8 @@ import {
   MessageCircle,
   BookOpen,
   Newspaper,
-  Mail
+  Mail,
+  UserPlus
 } from "lucide-react";
 import {
   Sidebar,
@@ -53,6 +54,7 @@ interface AdminSidebarProps {
     alcoholTests: number;
     customerRefunds: number;
     paymentQuestions: number;
+    referrals: number;
   };
   hasUnreadMessages?: boolean;
 }
@@ -73,6 +75,7 @@ const menuItems = [
   { id: "handbook", label: "Handbook Management", icon: BookOpen },
   { id: "consent-documents", label: "Consent Documents", icon: FileText },
   { id: "customer-refunds", label: "Customer Refunds", icon: DollarSign },
+  { id: "referrals", label: "Referral Requests", icon: UserPlus },
   { id: "email-logs", label: "Email Logs", icon: Mail },
   { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -105,7 +108,8 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "alcohol-tests") return pendingCounts.alcoholTests;
     if (id === "customer-refunds") return pendingCounts.customerRefunds;
     if (id === "payment-questions") return pendingCounts.paymentQuestions;
-    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests + pendingCounts.customerRefunds + pendingCounts.paymentQuestions;
+    if (id === "referrals") return pendingCounts.referrals;
+    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests + pendingCounts.customerRefunds + pendingCounts.paymentQuestions + pendingCounts.referrals;
     return 0;
   };
 

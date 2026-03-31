@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -27,6 +27,8 @@ import ChatContainer from "./chat/ChatContainer";
 import FeedList from "./feed/FeedList";
 import PaymentQuestionForm from "./PaymentQuestionForm";
 import PaymentQuestionHistory from "./PaymentQuestionHistory";
+import ReferFriendForm from "./ReferFriendForm";
+import ReferFriendHistory from "./ReferFriendHistory";
 import MoverSettings from "./MoverSettings";
 import MoverTodoList from "./MoverTodoList";
 import { MoverNotificationBell } from "./MoverNotificationBell";
@@ -36,6 +38,7 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
 import { violenceIncidentTranslations } from "@/lib/violenceIncidentTranslations";
+import { referralTranslations } from "@/lib/referralTranslations";
 import { chatTranslations } from "@/lib/chatTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import HandbookPopup from "./HandbookPopup";
@@ -57,12 +60,14 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showViolenceForm, setShowViolenceForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showPaymentQuestionForm, setShowPaymentQuestionForm] = useState(false);
+  const [showReferFriendForm, setShowReferFriendForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0);
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
   const [paymentQuestionRefreshKey, setPaymentQuestionRefreshKey] = useState(0);
+  const [referralRefreshKey, setReferralRefreshKey] = useState(0);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
   const { language, setLanguage } = useLanguage();
   const [foremanName, setForemanName] = useState("");
@@ -128,6 +133,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const mt = missingPaymentTranslations[language];
   const vt = violenceIncidentTranslations[language];
   const ct = chatTranslations[language];
+  const rft = referralTranslations[language];
   
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
@@ -397,6 +403,29 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       case "chat":
         return <ChatContainer userId={userId} userRole="mover" language={language} />;
       
+      case "refer-friend":
+        return (
+          <div className="space-y-6">
+            {!showReferFriendForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowReferFriendForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {rft.referFriend}
+                </Button>
+              </Card>
+            )}
+            {showReferFriendForm && (
+              <ReferFriendForm
+                userId={userId}
+                language={language}
+                onSuccess={() => { setShowReferFriendForm(false); setReferralRefreshKey(prev => prev + 1); }}
+                onCancel={() => setShowReferFriendForm(false)}
+              />
+            )}
+            <ReferFriendHistory userId={userId} language={language} refreshKey={referralRefreshKey} />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -407,7 +436,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     const showFormContent = activeTab !== "feed" && (
       showReimbursementForm || showReviewForm || showMissingPaymentForm || 
       showViolenceForm || showFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
-      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback"
+      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "refer-friend"
     );
 
     const handleBackToFeed = () => {
@@ -518,6 +547,16 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             </Button>
           </div>
         </Card>
+
+        {/* Refer a Friend Button for Mobile */}
+        <Button 
+          variant={activeTab === "refer-friend" ? "default" : "outline"}
+          className="w-full justify-start"
+          onClick={() => setActiveTab("refer-friend")}
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          {rft.referFriend}
+        </Button>
 
         {/* Show Form Content or Feed */}
         {showFormContent ? (
