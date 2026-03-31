@@ -27,6 +27,8 @@ import ChatContainer from "./chat/ChatContainer";
 import FeedList from "./feed/FeedList";
 import PaymentQuestionForm from "./PaymentQuestionForm";
 import PaymentQuestionHistory from "./PaymentQuestionHistory";
+import ReferFriendForm from "./ReferFriendForm";
+import ReferFriendHistory from "./ReferFriendHistory";
 import MoverSettings from "./MoverSettings";
 import MoverTodoList from "./MoverTodoList";
 import { MoverNotificationBell } from "./MoverNotificationBell";
