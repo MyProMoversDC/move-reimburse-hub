@@ -54,6 +54,7 @@ interface AdminSidebarProps {
     alcoholTests: number;
     customerRefunds: number;
     paymentQuestions: number;
+    referrals: number;
   };
   hasUnreadMessages?: boolean;
 }
