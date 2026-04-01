@@ -54,7 +54,7 @@ export const referralTranslations = {
     driversLicense: "Licencia de Conducir (Requerida para Conductor)",
     uploadLicense: "Subir Licencia de Conducir",
     removeFile: "Eliminar archivo",
-    disclaimer: "Programa de Bonificación por Referencia: Cuando la persona referida trabaje 3 meses consecutivos con al menos 40 horas por semana, recibirás un bono de $300 por referir un Ayudante o $400 por referir un Conductor.",
+    disclaimer: "Programa de Bonificación por Referencia: Cuando la persona referida trabaje 3 meses consecutivos con al menos 40 horas por semana, recibirás un bono de $300 por referir un Ayudante o $500 por referir un Conductor.",
     submit: "Enviar Referencia",
     submitting: "Enviando...",
     submitted: "¡Referencia enviada exitosamente!",
