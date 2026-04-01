@@ -12,7 +12,7 @@ export const referralTranslations = {
     driversLicense: "Driver's License (Required for Driver position)",
     uploadLicense: "Upload Driver's License",
     removeFile: "Remove file",
-    disclaimer: "Referral Bonus Program: When the referred person works 3 consecutive months with at least 40 hours per week, you will receive a $300 bonus for a Helper referral or $400 for a Driver referral.",
+    disclaimer: "Referral Bonus Program: When the referred person works 3 consecutive months with at least 40 hours per week, you will receive a $300 bonus for a Helper referral or $500 for a Driver referral.",
     submit: "Submit Referral",
     submitting: "Submitting...",
     submitted: "Referral submitted successfully!",
