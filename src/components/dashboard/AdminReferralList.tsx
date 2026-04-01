@@ -65,7 +65,7 @@ const AdminReferralList = ({ language }: { language: string }) => {
     if (!selectedReferral || !startDate) return;
     setProcessing(true);
     try {
-      const bonusAmount = selectedReferral.referred_position === "driver" ? 400 : 300;
+      const bonusAmount = selectedReferral.referred_position === "driver" ? 500 : 300;
       const bonusEligibleAt = addMonths(startDate, 3).toISOString();
 
       const { error } = await supabase

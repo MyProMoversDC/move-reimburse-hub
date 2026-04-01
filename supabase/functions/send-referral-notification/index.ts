@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
           <h2>Referral Approved</h2>
           <p>Your referral for <strong>${sanitize(referredName)}</strong> (${sanitize(position)}) has been approved.</p>
           <p><strong>Start Date:</strong> ${sanitize(startDate)}</p>
-          <p>After 3 months of consecutive work (at least 40 hours/week), you will be eligible to claim your referral bonus.</p>
+          <p>After 3 months of consecutive work (at least 40 hours/week), you will be eligible to claim your referral bonus ($300 for Helper, $500 for Driver).</p>
         `;
         await sendEmail([profile.email], subject, html, "referral_approved");
       }
