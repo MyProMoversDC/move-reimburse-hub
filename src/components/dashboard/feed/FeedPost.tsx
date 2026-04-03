@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import FeedPoll from "./FeedPoll";
 import FeedReactions from "./FeedReactions";
+import FeedComments from "./FeedComments";
 import { MoverTranslateButton } from "../MoverTranslateButton";
 import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 
