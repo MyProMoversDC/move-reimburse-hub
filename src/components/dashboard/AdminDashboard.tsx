@@ -27,6 +27,7 @@ import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import AdminCustomerRefundList from "./AdminCustomerRefundList";
 import AdminReferralList from "./AdminReferralList";
+import AdminShiftManagement from "./AdminShiftManagement";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
@@ -543,6 +544,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminReferralList language={language} />
           </div>
         );
+      case "shift-schedule":
+        return <AdminShiftManagement userId={userId} language={language} />;
       case "chat":
         return (
           <div className="space-y-6">
@@ -555,7 +558,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "roles":
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">User Role Management</h2>
+            <h2 className="text-2xl font-bold">User Management</h2>
             <UserRoleManager language={language} />
           </div>
         );

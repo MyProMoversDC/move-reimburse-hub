@@ -9,6 +9,7 @@ import AlcoholTestReportForm from "./AlcoholTestReportForm";
 import CustomerRefundForm from "./CustomerRefundForm";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
+import ShiftSchedule from "./ShiftSchedule";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface OperationsManagerDashboardProps {
@@ -57,6 +58,9 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-[11px] md:text-sm px-2 md:px-3 py-1.5">
+              Shift Schedule
+            </TabsTrigger>
           </TabsList>
         </div>
         
@@ -83,6 +87,10 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
         <TabsContent value="chat" className="space-y-4 md:space-y-6">
           <h2 className="text-lg md:text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="operations_manager" language={language} />
+        </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
         </TabsContent>
       </Tabs>
     </div>

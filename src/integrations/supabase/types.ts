@@ -397,6 +397,57 @@ export type Database = {
         }
         Relationships: []
       }
+      day_off_requests: {
+        Row: {
+          created_at: string
+          decline_reason: string | null
+          end_date: string
+          id: string
+          is_partial_day: boolean
+          partial_end_time: string | null
+          partial_start_time: string | null
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["day_off_status"]
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          decline_reason?: string | null
+          end_date: string
+          id?: string
+          is_partial_day?: boolean
+          partial_end_time?: string | null
+          partial_start_time?: string | null
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["day_off_status"]
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          decline_reason?: string | null
+          end_date?: string
+          id?: string
+          is_partial_day?: boolean
+          partial_end_time?: string | null
+          partial_start_time?: string | null
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["day_off_status"]
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       deductibles: {
         Row: {
           amount: number
@@ -1882,6 +1933,133 @@ export type Database = {
         }
         Relationships: []
       }
+      shift_breaks: {
+        Row: {
+          break_end: string | null
+          break_start: string
+          clock_entry_id: string
+          created_at: string
+          duration_minutes: number
+          id: string
+        }
+        Insert: {
+          break_end?: string | null
+          break_start?: string
+          clock_entry_id: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+        }
+        Update: {
+          break_end?: string | null
+          break_start?: string
+          clock_entry_id?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_breaks_clock_entry_id_fkey"
+            columns: ["clock_entry_id"]
+            isOneToOne: false
+            referencedRelation: "shift_clock_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_clock_entries: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          id: string
+          shift_id: string | null
+          user_id: string
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          id?: string
+          shift_id?: string | null
+          user_id: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          id?: string
+          shift_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_clock_entries_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_hourly_rates: {
+        Row: {
+          hourly_rate: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          hourly_rate?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          hourly_rate?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shifts: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_time: string
+          id: string
+          shift_date: string
+          start_time: string
+          status: Database["public"]["Enums"]["shift_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_time: string
+          id?: string
+          shift_date: string
+          start_time: string
+          status?: Database["public"]["Enums"]["shift_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_time?: string
+          id?: string
+          shift_date?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["shift_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       signed_consent_documents: {
         Row: {
           consent_document_id: string
@@ -2183,6 +2361,7 @@ export type Database = {
         | "violence_incident"
         | "performance_report"
         | "deductible"
+      day_off_status: "pending" | "approved" | "declined"
       discrepancy_type:
         | "missing_hours"
         | "incorrect_hourly_rate"
@@ -2216,6 +2395,7 @@ export type Database = {
         | "declined"
         | "appeal"
       review_bonus_status: "pending" | "confirmed" | "declined" | "appeal"
+      shift_status: "pending" | "confirmed" | "cancelled"
       violence_incident_type:
         | "verbal_threat"
         | "physical_contact"
@@ -2369,6 +2549,7 @@ export const Constants = {
         "performance_report",
         "deductible",
       ],
+      day_off_status: ["pending", "approved", "declined"],
       discrepancy_type: [
         "missing_hours",
         "incorrect_hourly_rate",
@@ -2406,6 +2587,7 @@ export const Constants = {
         "appeal",
       ],
       review_bonus_status: ["pending", "confirmed", "declined", "appeal"],
+      shift_status: ["pending", "confirmed", "cancelled"],
       violence_incident_type: [
         "verbal_threat",
         "physical_contact",

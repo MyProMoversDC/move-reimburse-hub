@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Newspaper, MessageSquare, DollarSign } from "lucide-react";
+import { Newspaper, MessageSquare, DollarSign, Clock } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import CustomerRefundForm from "./CustomerRefundForm";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import FeedList from "./feed/FeedList";
+import ShiftSchedule from "./ShiftSchedule";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface OfficeStaffDashboardProps {
@@ -44,6 +45,10 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-[11px] md:text-sm px-2 md:px-3 py-1.5">
+              <Clock className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 flex-shrink-0" />
+              Shift Schedule
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -63,6 +68,10 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
         <TabsContent value="chat" className="space-y-4 md:space-y-6">
           <h2 className="text-lg md:text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="office_staff" language={language} />
+        </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
         </TabsContent>
       </Tabs>
     </div>

@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import UserSettings from "./UserSettings";
+import ShiftSchedule from "./ShiftSchedule";
 
 interface AccountantDashboardProps {
   userId: string;
@@ -71,6 +72,7 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
           </TabsList>
         </div>
         
@@ -97,6 +99,10 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
         <TabsContent value="chat" className="space-y-6">
           <h2 className="text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="accountant" language={language} />
+        </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
         </TabsContent>
       </Tabs>
     </div>
