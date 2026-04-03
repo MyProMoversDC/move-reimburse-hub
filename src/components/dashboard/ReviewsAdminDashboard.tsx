@@ -179,6 +179,10 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
           <h2 className="text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="reviews_admin" language={language} />
         </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
       </Tabs>
     </div>
   );
