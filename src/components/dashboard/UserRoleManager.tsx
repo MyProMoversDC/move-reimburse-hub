@@ -159,7 +159,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Role Management</CardTitle>
+        <CardTitle>User Management</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>

@@ -52,6 +52,8 @@ const translations = {
     uploading: "Uploading...",
     photoUpdated: "Profile photo updated!",
     photoRemoved: "Profile photo removed!",
+    birthDate: "Date of Birth",
+    birthDateSet: "Your date of birth has been set and cannot be changed. Contact an admin if you need to update it.",
     driversLicenseInfo: "Driver's License Information",
     licenseNumber: "Driver's License Number",
     licenseClass: "License Class",
@@ -90,6 +92,8 @@ const translations = {
     uploading: "Subiendo...",
     photoUpdated: "¡Foto de perfil actualizada!",
     photoRemoved: "¡Foto de perfil eliminada!",
+    birthDate: "Fecha de Nacimiento",
+    birthDateSet: "Su fecha de nacimiento ha sido establecida y no se puede cambiar. Contacte a un administrador si necesita actualizarla.",
     driversLicenseInfo: "Información de Licencia de Conducir",
     licenseNumber: "Número de Licencia de Conducir",
     licenseClass: "Clase de Licencia",
@@ -128,6 +132,8 @@ const translations = {
     uploading: "Загрузка...",
     photoUpdated: "Фото профиля обновлено!",
     photoRemoved: "Фото профиля удалено!",
+    birthDate: "Дата Рождения",
+    birthDateSet: "Ваша дата рождения установлена и не может быть изменена. Свяжитесь с администратором, если вам нужно её обновить.",
     driversLicenseInfo: "Информация о Водительских Правах",
     licenseNumber: "Номер Водительского Удостоверения",
     licenseClass: "Класс Прав",
@@ -170,6 +176,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     address: "",
     hourly_rate: 0,
     avatar_url: "",
+    birth_date: null as string | null,
   });
   const [driversLicense, setDriversLicense] = useState<DriversLicense>({
     number: "",
@@ -192,6 +199,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const [licenseExpiresOpen, setLicenseExpiresOpen] = useState(false);
   const [medicalCardIssueDateOpen, setMedicalCardIssueDateOpen] = useState(false);
   const [medicalCardExpirationDateOpen, setMedicalCardExpirationDateOpen] = useState(false);
+  const [birthDateOpen, setBirthDateOpen] = useState(false);
+  const [originalBirthDate, setOriginalBirthDate] = useState<string | null>(null);
 
   const t = translations[language];
 
@@ -427,7 +436,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires")
+        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires, birth_date")
         .eq("id", userId)
         .single();
 
@@ -441,7 +450,9 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           address: data.address || "",
           hourly_rate: data.hourly_rate || 0,
           avatar_url: data.avatar_url || "",
+          birth_date: data.birth_date || null,
         });
+        setOriginalBirthDate(data.birth_date || null);
         setDriversLicense({
           number: data.license_number || "",
           licenseClass: data.license_class || "",
@@ -569,6 +580,11 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
         phone: profile.phone,
         address: profile.address,
       };
+
+      // Only save birth_date if it wasn't already set (one-time set by user)
+      if (profile.birth_date && !originalBirthDate) {
+        updateData.birth_date = profile.birth_date;
+      }
 
       if (showHourlyRate) {
         updateData.hourly_rate = profile.hourly_rate;
@@ -748,6 +764,48 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                 value={profile.phone}
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               />
+            </div>
+
+            {/* Birth Date */}
+            <div className="space-y-2">
+              <Label>{t.birthDate}</Label>
+              {originalBirthDate ? (
+                <div>
+                  <Input value={format(new Date(originalBirthDate), "PPP")} disabled className="bg-muted" />
+                  <p className="text-xs text-muted-foreground mt-1">{t.birthDateSet}</p>
+                </div>
+              ) : (
+                <Popover open={birthDateOpen} onOpenChange={setBirthDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !profile.birth_date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {profile.birth_date ? format(new Date(profile.birth_date), "PPP") : t.selectDate}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={profile.birth_date ? new Date(profile.birth_date) : undefined}
+                      onSelect={(date) => {
+                        setProfile({ ...profile, birth_date: date ? format(date, "yyyy-MM-dd") : null });
+                        setBirthDateOpen(false);
+                      }}
+                      disabled={(date) => date > new Date()}
+                      captionLayout="dropdown-buttons"
+                      fromYear={1940}
+                      toYear={new Date().getFullYear()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
 
             {showHourlyRate && (

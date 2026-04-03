@@ -1430,6 +1430,7 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          birth_date: string | null
           branch: string | null
           created_at: string | null
           custom_attributes: Json | null
@@ -1455,6 +1456,7 @@ export type Database = {
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           branch?: string | null
           created_at?: string | null
           custom_attributes?: Json | null
@@ -1480,6 +1482,7 @@ export type Database = {
         Update: {
           address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           branch?: string | null
           created_at?: string | null
           custom_attributes?: Json | null
