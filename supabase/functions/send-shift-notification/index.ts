@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { emailLogger } from "../_shared/emailLogger.ts";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
