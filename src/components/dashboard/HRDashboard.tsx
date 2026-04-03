@@ -841,6 +841,12 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
           )}
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
