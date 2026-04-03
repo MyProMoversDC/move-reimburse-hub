@@ -523,6 +523,17 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
     );
   };
 
+  const renderMessageContent = (content: string) => {
+    // Highlight @mentions
+    const parts = content.split(/(@\S+(?:\s\S+)?)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <span key={i} className="font-semibold text-blue-400">{part}</span>;
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] md:h-[600px]">
       {/* Header */}
