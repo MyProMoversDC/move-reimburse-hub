@@ -435,7 +435,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires")
+        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires, birth_date")
         .eq("id", userId)
         .single();
 
@@ -449,6 +449,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           address: data.address || "",
           hourly_rate: data.hourly_rate || 0,
           avatar_url: data.avatar_url || "",
+          birth_date: data.birth_date || null,
         });
         setDriversLicense({
           number: data.license_number || "",
