@@ -558,7 +558,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "roles":
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">User Role Management</h2>
+            <h2 className="text-2xl font-bold">User Management</h2>
             <UserRoleManager language={language} />
           </div>
         );
