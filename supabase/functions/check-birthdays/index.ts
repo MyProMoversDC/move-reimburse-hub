@@ -109,17 +109,17 @@ Deno.serve(async (req) => {
 
         const emailResult = await emailResponse.json();
 
-        await emailLogger(supabase, {
-          emailType: "birthday_notification",
-          fromEmail: "notifications@mypromoversreimbursements.com",
-          toEmails: ["Daniel@mypromoversdc.com"],
+        await logEmail({
+          email_type: "birthday_notification",
+          from_email: "notifications@mypromoversreimbursements.com",
+          to_emails: ["Daniel@mypromoversdc.com"],
           subject: `🎂 Birthday Today: ${fullName}`,
-          bodyHtml: emailHtml,
+          body_html: emailHtml,
           status: emailResponse.ok ? "sent" : "failed",
-          resendId: emailResult?.id || null,
-          errorMessage: emailResponse.ok ? null : JSON.stringify(emailResult),
-          referenceId: user.id,
-          referenceType: "birthday",
+          resend_id: emailResult?.id || null,
+          error_message: emailResponse.ok ? undefined : JSON.stringify(emailResult),
+          reference_id: user.id,
+          reference_type: "birthday",
         });
       } catch (emailError) {
         console.error(`Error sending birthday email for ${fullName}:`, emailError);
