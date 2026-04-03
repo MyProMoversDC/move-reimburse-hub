@@ -452,6 +452,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           avatar_url: data.avatar_url || "",
           birth_date: data.birth_date || null,
         });
+        setOriginalBirthDate(data.birth_date || null);
         setDriversLicense({
           number: data.license_number || "",
           licenseClass: data.license_class || "",
