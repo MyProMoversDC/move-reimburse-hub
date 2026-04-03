@@ -579,6 +579,11 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
         address: profile.address,
       };
 
+      // Only save birth_date if it wasn't already set (one-time set by user)
+      if (profile.birth_date && !originalBirthDate) {
+        updateData.birth_date = profile.birth_date;
+      }
+
       if (showHourlyRate) {
         updateData.hourly_rate = profile.hourly_rate;
       }
