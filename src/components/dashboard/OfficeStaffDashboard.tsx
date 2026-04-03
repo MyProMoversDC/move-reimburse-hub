@@ -7,6 +7,7 @@ import CustomerRefundForm from "./CustomerRefundForm";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import FeedList from "./feed/FeedList";
+import ShiftSchedule from "./ShiftSchedule";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface OfficeStaffDashboardProps {
