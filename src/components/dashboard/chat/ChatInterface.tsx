@@ -282,6 +282,94 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Mention helpers
+  const mentionUsers: MentionUser[] = conversation.is_group
+    ? conversation.participants
+        .filter(p => p.user_id !== userId)
+        .map(p => {
+          const u = usersMap.get(p.user_id);
+          return {
+            id: p.user_id,
+            first_name: u?.first_name || p.profile?.first_name || '',
+            last_name: u?.last_name || p.profile?.last_name || '',
+            avatar_url: u?.avatar_url,
+          };
+        })
+    : [];
+
+  const filteredMentionUsers = mentionUsers.filter(u => {
+    const name = `${u.first_name} ${u.last_name}`.toLowerCase();
+    return name.includes(mentionFilter.toLowerCase());
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart || 0;
+    setNewMessage(value);
+
+    // Check for @ mention trigger
+    if (conversation.is_group) {
+      const textBeforeCursor = value.slice(0, cursorPos);
+      const atIndex = textBeforeCursor.lastIndexOf('@');
+      if (atIndex !== -1) {
+        const charBefore = atIndex > 0 ? textBeforeCursor[atIndex - 1] : ' ';
+        const textAfterAt = textBeforeCursor.slice(atIndex + 1);
+        // Only trigger if @ is at start or after a space, and no space after @
+        if ((charBefore === ' ' || atIndex === 0) && !textAfterAt.includes(' ')) {
+          setMentionVisible(true);
+          setMentionFilter(textAfterAt);
+          setMentionStartPos(atIndex);
+          setMentionIndex(0);
+          return;
+        }
+      }
+    }
+    setMentionVisible(false);
+  };
+
+  const handleMentionSelect = (user: MentionUser) => {
+    if (mentionStartPos === null) return;
+    const before = newMessage.slice(0, mentionStartPos);
+    const cursorPos = inputRef.current?.selectionStart || newMessage.length;
+    const after = newMessage.slice(cursorPos);
+    const mention = `@${user.first_name} ${user.last_name} `;
+    setNewMessage(before + mention + after);
+    setMentionVisible(false);
+    setMentionStartPos(null);
+    setTimeout(() => {
+      const pos = (before + mention).length;
+      inputRef.current?.setSelectionRange(pos, pos);
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (mentionVisible && filteredMentionUsers.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(i => (i + 1) % filteredMentionUsers.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(i => (i - 1 + filteredMentionUsers.length) % filteredMentionUsers.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleMentionSelect(filteredMentionUsers[mentionIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        setMentionVisible(false);
+        return;
+      }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      handleSend();
+    }
+  };
+
   const getSenderName = (senderId: string) => {
     if (senderId === userId) return t.you;
     // First try from conversation participants
