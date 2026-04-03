@@ -118,6 +118,11 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
   };
 
   const isReportTab = reportingItems.some(item => item.id === activeTab);
+  const isFormTab = formItems.some(item => item.id === activeTab);
+
+  const getFormsBadgeCount = () => {
+    return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.moverFeedback + pendingCounts.paymentQuestions;
+  };
 
   return (
     <Sidebar collapsible="icon">
