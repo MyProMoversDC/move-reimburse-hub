@@ -62,14 +62,9 @@ interface AdminSidebarProps {
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "feed", label: "Feed Management", icon: Newspaper },
-  { id: "requests", label: "Reimbursements", icon: FileText },
-  { id: "reviews", label: "Review Bonuses", icon: Star },
-  { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
-  { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle },
   { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
   { id: "alcohol-tests", label: "Alcohol Test Reports", icon: Shield },
-  { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
   { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
   { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
   { id: "handbook", label: "Handbook Management", icon: BookOpen },
@@ -79,6 +74,14 @@ const menuItems = [
   { id: "email-logs", label: "Email Logs", icon: Mail },
   { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
   { id: "chat", label: "Chat", icon: MessageSquare },
+];
+
+const formItems = [
+  { id: "requests", label: "Reimbursements", icon: FileText },
+  { id: "reviews", label: "Review Bonuses", icon: Star },
+  { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
+  { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle },
+  { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
 ];
 
 const reportingItems = [
