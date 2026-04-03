@@ -92,7 +92,7 @@ const reportingItems = [
 
 const bottomMenuItems = [
   { id: "movers", label: "Movers Directory", icon: Users },
-  { id: "roles", label: "Role Management", icon: UserCog },
+  { id: "roles", label: "User Management", icon: UserCog },
 ];
 
 const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages = false }: AdminSidebarProps) => {
