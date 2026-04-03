@@ -544,6 +544,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminReferralList language={language} />
           </div>
         );
+      case "shift-schedule":
+        return <AdminShiftManagement userId={userId} language={language} />;
       case "chat":
         return (
           <div className="space-y-6">
