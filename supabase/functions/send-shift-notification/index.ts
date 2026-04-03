@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { emailLogger } from "../_shared/emailLogger.ts";
+import { logEmail } from "../_shared/emailLogger.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
@@ -133,16 +133,16 @@ Deno.serve(async (req) => {
 
     const emailResult = await emailResponse.json();
 
-    await emailLogger(supabase, {
-      emailType: `shift_${type}`,
-      fromEmail: "notifications@mypromoversreimbursements.com",
-      toEmails,
+    await logEmail({
+      email_type: `shift_${type}`,
+      from_email: "notifications@mypromoversreimbursements.com",
+      to_emails: toEmails,
       subject,
-      bodyHtml: htmlContent,
+      body_html: htmlContent,
       status: emailResponse.ok ? "sent" : "failed",
-      resendId: emailResult?.id || null,
-      errorMessage: emailResponse.ok ? null : JSON.stringify(emailResult),
-      referenceType: "shift",
+      resend_id: emailResult?.id || null,
+      error_message: emailResponse.ok ? undefined : JSON.stringify(emailResult),
+      reference_type: "shift",
     });
 
     return new Response(JSON.stringify({ success: true }), {

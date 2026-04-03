@@ -4,12 +4,13 @@ import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
 import DeductiblesReport from "./DeductiblesReport";
 import DateRangeFilter from "./DateRangeFilter";
+import ShiftSchedule from "./ShiftSchedule";
 import ChatContainer from "./chat/ChatContainer";
 import AddBonusDialog from "./AddBonusDialog";
 import UserSettings from "./UserSettings";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -105,6 +106,10 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <Clock className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              Shift Schedule
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -173,6 +178,10 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
         <TabsContent value="chat" className="space-y-6">
           <h2 className="text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="reviews_admin" language={language} />
+        </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
         </TabsContent>
       </Tabs>
     </div>
