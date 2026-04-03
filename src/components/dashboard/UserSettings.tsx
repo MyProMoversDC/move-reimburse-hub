@@ -766,6 +766,48 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
               />
             </div>
 
+            {/* Birth Date */}
+            <div className="space-y-2">
+              <Label>{t.birthDate}</Label>
+              {originalBirthDate ? (
+                <div>
+                  <Input value={format(new Date(originalBirthDate), "PPP")} disabled className="bg-muted" />
+                  <p className="text-xs text-muted-foreground mt-1">{t.birthDateSet}</p>
+                </div>
+              ) : (
+                <Popover open={birthDateOpen} onOpenChange={setBirthDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !profile.birth_date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {profile.birth_date ? format(new Date(profile.birth_date), "PPP") : t.selectDate}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={profile.birth_date ? new Date(profile.birth_date) : undefined}
+                      onSelect={(date) => {
+                        setProfile({ ...profile, birth_date: date ? format(date, "yyyy-MM-dd") : null });
+                        setBirthDateOpen(false);
+                      }}
+                      disabled={(date) => date > new Date()}
+                      captionLayout="dropdown-buttons"
+                      fromYear={1940}
+                      toYear={new Date().getFullYear()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+
             {showHourlyRate && (
               <div className="space-y-2">
                 <Label htmlFor="address">{t.address}</Label>
