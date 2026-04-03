@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
 import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { playMessageNotification } from "@/lib/notificationSound";
+import MentionDropdown, { type MentionUser } from "./MentionDropdown";
 
 interface Message {
   id: string;
