@@ -259,7 +259,15 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    const total = selectedFiles.length + files.length;
+    if (total > 10) {
+      toast.error("Maximum 10 files allowed");
+      const allowed = files.slice(0, 10 - selectedFiles.length);
+      setSelectedFiles(prev => [...prev, ...allowed]);
+    } else {
+      setSelectedFiles(prev => [...prev, ...files]);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeFile = (index: number) => {
