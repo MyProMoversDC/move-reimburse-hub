@@ -61,8 +61,13 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string }>>(new Map());
+  const [mentionVisible, setMentionVisible] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState("");
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch all users for name and avatar display
   useEffect(() => {
