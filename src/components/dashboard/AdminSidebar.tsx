@@ -16,7 +16,8 @@ import {
   BookOpen,
   Newspaper,
   Mail,
-  UserPlus
+  UserPlus,
+  Clock
 } from "lucide-react";
 import {
   Sidebar,
