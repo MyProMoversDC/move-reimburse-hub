@@ -545,7 +545,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
           ref={fileInputRef}
           onChange={handleFileSelect}
           multiple
-          accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
           className="hidden"
         />
         <Button
