@@ -58,13 +58,19 @@ const ShiftSchedule = ({ userId, language }: ShiftScheduleProps) => {
   const [earningsStartOpen, setEarningsStartOpen] = useState(false);
   const [earningsEndOpen, setEarningsEndOpen] = useState(false);
 
-  // Timer
+  // Timer - keeps running during breaks, subtracts all break time
   useEffect(() => {
-    if (!activeClockEntry || activeBreak) return;
+    if (!activeClockEntry) return;
     const interval = setInterval(() => {
-      const mins = differenceInMinutes(new Date(), new Date(activeClockEntry.clock_in)) - todayBreakMinutes;
-      const hours = Math.floor(mins / 60);
-      const remainingMins = mins % 60;
+      const now = new Date();
+      let totalBreakMins = todayBreakMinutes;
+      // Add ongoing break duration if currently on break
+      if (activeBreak) {
+        totalBreakMins += differenceInMinutes(now, new Date(activeBreak.break_start));
+      }
+      const workedMins = Math.max(0, differenceInMinutes(now, new Date(activeClockEntry.clock_in)) - totalBreakMins);
+      const hours = Math.floor(workedMins / 60);
+      const remainingMins = workedMins % 60;
       setElapsedTime(`${hours}h ${remainingMins}m`);
     }, 1000);
     return () => clearInterval(interval);
