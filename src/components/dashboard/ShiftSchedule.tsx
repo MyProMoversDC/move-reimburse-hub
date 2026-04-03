@@ -58,17 +58,19 @@ const ShiftSchedule = ({ userId, language }: ShiftScheduleProps) => {
   const [earningsStartOpen, setEarningsStartOpen] = useState(false);
   const [earningsEndOpen, setEarningsEndOpen] = useState(false);
 
-  // Timer - keeps running during breaks, subtracts all break time
+  // Timer - freezes during breaks, resumes after
   useEffect(() => {
     if (!activeClockEntry) return;
+    if (activeBreak) {
+      // Freeze: show worked time up to break start
+      const minsBeforeBreak = Math.max(0, differenceInMinutes(new Date(activeBreak.break_start), new Date(activeClockEntry.clock_in)) - todayBreakMinutes);
+      const hours = Math.floor(minsBeforeBreak / 60);
+      const remainingMins = minsBeforeBreak % 60;
+      setElapsedTime(`${hours}h ${remainingMins}m`);
+      return;
+    }
     const interval = setInterval(() => {
-      const now = new Date();
-      let totalBreakMins = todayBreakMinutes;
-      // Add ongoing break duration if currently on break
-      if (activeBreak) {
-        totalBreakMins += differenceInMinutes(now, new Date(activeBreak.break_start));
-      }
-      const workedMins = Math.max(0, differenceInMinutes(now, new Date(activeClockEntry.clock_in)) - totalBreakMins);
+      const workedMins = Math.max(0, differenceInMinutes(new Date(), new Date(activeClockEntry.clock_in)) - todayBreakMinutes);
       const hours = Math.floor(workedMins / 60);
       const remainingMins = workedMins % 60;
       setElapsedTime(`${hours}h ${remainingMins}m`);
