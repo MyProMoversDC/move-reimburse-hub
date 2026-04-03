@@ -100,6 +100,10 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
           <h2 className="text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="accountant" language={language} />
         </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
       </Tabs>
     </div>
   );

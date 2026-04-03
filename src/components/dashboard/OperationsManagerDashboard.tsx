@@ -88,6 +88,10 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           <h2 className="text-lg md:text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="operations_manager" language={language} />
         </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
       </Tabs>
     </div>
   );

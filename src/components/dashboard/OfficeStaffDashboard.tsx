@@ -69,6 +69,10 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           <h2 className="text-lg md:text-2xl font-bold">Chat</h2>
           <ChatContainer userId={userId} userRole="office_staff" language={language} />
         </TabsContent>
+
+        <TabsContent value="shift-schedule">
+          <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
       </Tabs>
     </div>
   );
