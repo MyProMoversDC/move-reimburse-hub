@@ -345,6 +345,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />;
     if (fileType.startsWith('video/')) return <Film className="h-4 w-4" />;
+    if (fileType.startsWith('audio/')) return <Music className="h-4 w-4" />;
     return <FileText className="h-4 w-4" />;
   };
 
