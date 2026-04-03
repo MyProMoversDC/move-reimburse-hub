@@ -52,6 +52,8 @@ const translations = {
     uploading: "Uploading...",
     photoUpdated: "Profile photo updated!",
     photoRemoved: "Profile photo removed!",
+    birthDate: "Date of Birth",
+    birthDateSet: "Your date of birth has been set and cannot be changed. Contact an admin if you need to update it.",
     driversLicenseInfo: "Driver's License Information",
     licenseNumber: "Driver's License Number",
     licenseClass: "License Class",
