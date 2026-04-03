@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
+  const resendApiKey = Deno.env.get("RESEND_API_KEY_1") || Deno.env.get("RESEND_API_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
   try {
