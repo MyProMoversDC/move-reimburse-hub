@@ -635,40 +635,53 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       )}
 
       {/* Input */}
-      <div className="p-3 md:p-4 border-t flex gap-2">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          multiple
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
-          className="hidden"
-        />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
-        <Input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder={t.typeMessage}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          disabled={sending || uploading}
-          className="text-sm md:text-base"
-        />
-        <Button 
-          onClick={handleSend} 
-          disabled={sending || uploading || (!newMessage.trim() && selectedFiles.length === 0)}
-          className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
-          size="icon"
-        >
-          {sending || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
+      <div className="p-3 md:p-4 border-t relative">
+        {/* Mention dropdown */}
+        {conversation.is_group && (
+          <MentionDropdown
+            users={mentionUsers}
+            filter={mentionFilter}
+            onSelect={handleMentionSelect}
+            selectedIndex={mentionIndex}
+            visible={mentionVisible}
+          />
+        )}
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            multiple
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+          <Input
+            ref={inputRef}
+            value={newMessage}
+            onChange={handleInputChange}
+            placeholder={conversation.is_group ? `${t.typeMessage} (@ to mention)` : t.typeMessage}
+            onKeyDown={handleKeyDown}
+            disabled={sending || uploading}
+            className="text-sm md:text-base"
+          />
+          <Button 
+            onClick={handleSend} 
+            disabled={sending || uploading || (!newMessage.trim() && selectedFiles.length === 0)}
+            className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
+            size="icon"
+          >
+            {sending || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
     </div>
   );
