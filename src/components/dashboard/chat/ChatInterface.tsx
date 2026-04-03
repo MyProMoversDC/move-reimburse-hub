@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download } from "lucide-react";
+import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music } from "lucide-react";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
@@ -259,7 +259,15 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    const total = selectedFiles.length + files.length;
+    if (total > 10) {
+      toast.error("Maximum 10 files allowed");
+      const allowed = files.slice(0, 10 - selectedFiles.length);
+      setSelectedFiles(prev => [...prev, ...allowed]);
+    } else {
+      setSelectedFiles(prev => [...prev, ...files]);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeFile = (index: number) => {
@@ -337,43 +345,85 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />;
     if (fileType.startsWith('video/')) return <Film className="h-4 w-4" />;
+    if (fileType.startsWith('audio/')) return <Music className="h-4 w-4" />;
     return <FileText className="h-4 w-4" />;
   };
 
+  const handleDownload = async (url: string, fileName: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(url, '_blank');
+    }
+  };
+
   const renderAttachment = (attachment: { file_url: string; file_name: string; file_type: string }) => {
+    const downloadBtn = (
+      <button
+        onClick={(e) => { e.stopPropagation(); handleDownload(attachment.file_url, attachment.file_name); }}
+        className="flex items-center gap-1 text-xs mt-1 opacity-70 hover:opacity-100 transition-opacity"
+        title="Download"
+      >
+        <Download className="h-3.5 w-3.5" />
+        <span className="truncate max-w-[150px]">{attachment.file_name}</span>
+      </button>
+    );
+
     if (attachment.file_type.startsWith('image/')) {
       return (
-        <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
-          <img 
-            src={attachment.file_url} 
-            alt={attachment.file_name}
-            className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
-          />
-        </a>
+        <div>
+          <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
+            <img 
+              src={attachment.file_url} 
+              alt={attachment.file_name}
+              className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
+            />
+          </a>
+          {downloadBtn}
+        </div>
       );
     }
     
     if (attachment.file_type.startsWith('video/')) {
       return (
-        <video 
-          src={attachment.file_url} 
-          controls 
-          className="max-w-[300px] rounded-lg"
-        />
+        <div>
+          <video 
+            src={attachment.file_url} 
+            controls 
+            className="max-w-[300px] rounded-lg"
+          />
+          {downloadBtn}
+        </div>
+      );
+    }
+
+    if (attachment.file_type.startsWith('audio/')) {
+      return (
+        <div>
+          <audio src={attachment.file_url} controls className="max-w-[280px]" />
+          {downloadBtn}
+        </div>
       );
     }
 
     return (
-      <a 
-        href={attachment.file_url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80"
+      <button
+        onClick={() => handleDownload(attachment.file_url, attachment.file_name)}
+        className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
       >
         {getFileIcon(attachment.file_type)}
         <span className="text-sm truncate max-w-[150px]">{attachment.file_name}</span>
         <Download className="h-4 w-4" />
-      </a>
+      </button>
     );
   };
 
@@ -495,7 +545,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
           ref={fileInputRef}
           onChange={handleFileSelect}
           multiple
-          accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
           className="hidden"
         />
         <Button
