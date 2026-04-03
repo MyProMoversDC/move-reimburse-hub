@@ -598,7 +598,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
                           : 'bg-muted'
                       }`}
                     >
-                      {message.content && <p className="text-sm">{message.content}</p>}
+                      {message.content && <p className="text-sm">{renderMessageContent(message.content)}</p>}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-2 space-y-2">
                           {message.attachments.map((att) => (
