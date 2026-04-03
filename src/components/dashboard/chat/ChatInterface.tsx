@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
 import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { playMessageNotification } from "@/lib/notificationSound";
+import MentionDropdown, { type MentionUser } from "./MentionDropdown";
 
 interface Message {
   id: string;
@@ -59,8 +61,13 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string }>>(new Map());
+  const [mentionVisible, setMentionVisible] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState("");
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch all users for name and avatar display
   useEffect(() => {
@@ -121,6 +128,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
           setMessages(prev => [...prev, { ...newMsg, attachments: attachments || [] }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
+            playMessageNotification();
           }
         }
       )
@@ -272,6 +280,94 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Mention helpers
+  const mentionUsers: MentionUser[] = conversation.is_group
+    ? conversation.participants
+        .filter(p => p.user_id !== userId)
+        .map(p => {
+          const u = usersMap.get(p.user_id);
+          return {
+            id: p.user_id,
+            first_name: u?.first_name || p.profile?.first_name || '',
+            last_name: u?.last_name || p.profile?.last_name || '',
+            avatar_url: u?.avatar_url,
+          };
+        })
+    : [];
+
+  const filteredMentionUsers = mentionUsers.filter(u => {
+    const name = `${u.first_name} ${u.last_name}`.toLowerCase();
+    return name.includes(mentionFilter.toLowerCase());
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart || 0;
+    setNewMessage(value);
+
+    // Check for @ mention trigger
+    if (conversation.is_group) {
+      const textBeforeCursor = value.slice(0, cursorPos);
+      const atIndex = textBeforeCursor.lastIndexOf('@');
+      if (atIndex !== -1) {
+        const charBefore = atIndex > 0 ? textBeforeCursor[atIndex - 1] : ' ';
+        const textAfterAt = textBeforeCursor.slice(atIndex + 1);
+        // Only trigger if @ is at start or after a space, and no space after @
+        if ((charBefore === ' ' || atIndex === 0) && !textAfterAt.includes(' ')) {
+          setMentionVisible(true);
+          setMentionFilter(textAfterAt);
+          setMentionStartPos(atIndex);
+          setMentionIndex(0);
+          return;
+        }
+      }
+    }
+    setMentionVisible(false);
+  };
+
+  const handleMentionSelect = (user: MentionUser) => {
+    if (mentionStartPos === null) return;
+    const before = newMessage.slice(0, mentionStartPos);
+    const cursorPos = inputRef.current?.selectionStart || newMessage.length;
+    const after = newMessage.slice(cursorPos);
+    const mention = `@${user.first_name} ${user.last_name} `;
+    setNewMessage(before + mention + after);
+    setMentionVisible(false);
+    setMentionStartPos(null);
+    setTimeout(() => {
+      const pos = (before + mention).length;
+      inputRef.current?.setSelectionRange(pos, pos);
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (mentionVisible && filteredMentionUsers.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(i => (i + 1) % filteredMentionUsers.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(i => (i - 1 + filteredMentionUsers.length) % filteredMentionUsers.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleMentionSelect(filteredMentionUsers[mentionIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        setMentionVisible(false);
+        return;
+      }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      handleSend();
+    }
   };
 
   const getSenderName = (senderId: string) => {
@@ -427,6 +523,17 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
     );
   };
 
+  const renderMessageContent = (content: string) => {
+    // Highlight @mentions
+    const parts = content.split(/(@\S+(?:\s\S+)?)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <span key={i} className="font-semibold text-blue-400">{part}</span>;
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] md:h-[600px]">
       {/* Header */}
@@ -502,7 +609,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
                           : 'bg-muted'
                       }`}
                     >
-                      {message.content && <p className="text-sm">{message.content}</p>}
+                      {message.content && <p className="text-sm">{renderMessageContent(message.content)}</p>}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-2 space-y-2">
                           {message.attachments.map((att) => (
@@ -539,40 +646,53 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       )}
 
       {/* Input */}
-      <div className="p-3 md:p-4 border-t flex gap-2">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          multiple
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
-          className="hidden"
-        />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
-        <Input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder={t.typeMessage}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          disabled={sending || uploading}
-          className="text-sm md:text-base"
-        />
-        <Button 
-          onClick={handleSend} 
-          disabled={sending || uploading || (!newMessage.trim() && selectedFiles.length === 0)}
-          className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
-          size="icon"
-        >
-          {sending || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
+      <div className="p-3 md:p-4 border-t relative">
+        {/* Mention dropdown */}
+        {conversation.is_group && (
+          <MentionDropdown
+            users={mentionUsers}
+            filter={mentionFilter}
+            onSelect={handleMentionSelect}
+            selectedIndex={mentionIndex}
+            visible={mentionVisible}
+          />
+        )}
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            multiple
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+          <Input
+            ref={inputRef}
+            value={newMessage}
+            onChange={handleInputChange}
+            placeholder={conversation.is_group ? `${t.typeMessage} (@ to mention)` : t.typeMessage}
+            onKeyDown={handleKeyDown}
+            disabled={sending || uploading}
+            className="text-sm md:text-base"
+          />
+          <Button 
+            onClick={handleSend} 
+            disabled={sending || uploading || (!newMessage.trim() && selectedFiles.length === 0)}
+            className="h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
+            size="icon"
+          >
+            {sending || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
     </div>
   );
