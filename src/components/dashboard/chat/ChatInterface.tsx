@@ -349,40 +349,81 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
     return <FileText className="h-4 w-4" />;
   };
 
+  const handleDownload = async (url: string, fileName: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(url, '_blank');
+    }
+  };
+
   const renderAttachment = (attachment: { file_url: string; file_name: string; file_type: string }) => {
+    const downloadBtn = (
+      <button
+        onClick={(e) => { e.stopPropagation(); handleDownload(attachment.file_url, attachment.file_name); }}
+        className="flex items-center gap-1 text-xs mt-1 opacity-70 hover:opacity-100 transition-opacity"
+        title="Download"
+      >
+        <Download className="h-3.5 w-3.5" />
+        <span className="truncate max-w-[150px]">{attachment.file_name}</span>
+      </button>
+    );
+
     if (attachment.file_type.startsWith('image/')) {
       return (
-        <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
-          <img 
-            src={attachment.file_url} 
-            alt={attachment.file_name}
-            className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
-          />
-        </a>
+        <div>
+          <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
+            <img 
+              src={attachment.file_url} 
+              alt={attachment.file_name}
+              className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
+            />
+          </a>
+          {downloadBtn}
+        </div>
       );
     }
     
     if (attachment.file_type.startsWith('video/')) {
       return (
-        <video 
-          src={attachment.file_url} 
-          controls 
-          className="max-w-[300px] rounded-lg"
-        />
+        <div>
+          <video 
+            src={attachment.file_url} 
+            controls 
+            className="max-w-[300px] rounded-lg"
+          />
+          {downloadBtn}
+        </div>
+      );
+    }
+
+    if (attachment.file_type.startsWith('audio/')) {
+      return (
+        <div>
+          <audio src={attachment.file_url} controls className="max-w-[280px]" />
+          {downloadBtn}
+        </div>
       );
     }
 
     return (
-      <a 
-        href={attachment.file_url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80"
+      <button
+        onClick={() => handleDownload(attachment.file_url, attachment.file_name)}
+        className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
       >
         {getFileIcon(attachment.file_type)}
         <span className="text-sm truncate max-w-[150px]">{attachment.file_name}</span>
         <Download className="h-4 w-4" />
-      </a>
+      </button>
     );
   };
 
