@@ -92,6 +92,8 @@ const translations = {
     uploading: "Subiendo...",
     photoUpdated: "¡Foto de perfil actualizada!",
     photoRemoved: "¡Foto de perfil eliminada!",
+    birthDate: "Fecha de Nacimiento",
+    birthDateSet: "Su fecha de nacimiento ha sido establecida y no se puede cambiar. Contacte a un administrador si necesita actualizarla.",
     driversLicenseInfo: "Información de Licencia de Conducir",
     licenseNumber: "Número de Licencia de Conducir",
     licenseClass: "Clase de Licencia",
