@@ -31,6 +31,7 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
   const [shifts, setShifts] = useState<any[]>([]);
   const [dayOffRequests, setDayOffRequests] = useState<any[]>([]);
   const [clockEntries, setClockEntries] = useState<any[]>([]);
+  const [activeBreaks, setActiveBreaks] = useState<Record<string, boolean>>({});
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
