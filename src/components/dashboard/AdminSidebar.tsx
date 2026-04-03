@@ -99,6 +99,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [reportsOpen, setReportsOpen] = useState(false);
+  const [formsOpen, setFormsOpen] = useState(false);
 
   const getBadgeCount = (id: string) => {
     if (id === "requests") return pendingCounts.reimbursements;
