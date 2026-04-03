@@ -31,6 +31,7 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
   const [shifts, setShifts] = useState<any[]>([]);
   const [dayOffRequests, setDayOffRequests] = useState<any[]>([]);
   const [clockEntries, setClockEntries] = useState<any[]>([]);
+  const [activeBreaks, setActiveBreaks] = useState<Record<string, boolean>>({});
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -107,6 +108,21 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
       .lte("clock_in", addDays(end, 1).toISOString())
       .order("clock_in", { ascending: false });
     setClockEntries(data || []);
+
+    // Fetch active breaks for currently clocked-in entries
+    const activeIds = (data || []).filter(e => !e.clock_out).map(e => e.id);
+    if (activeIds.length > 0) {
+      const { data: breaks } = await supabase
+        .from("shift_breaks")
+        .select("clock_entry_id")
+        .in("clock_entry_id", activeIds)
+        .is("break_end", null);
+      const breakMap: Record<string, boolean> = {};
+      (breaks || []).forEach(b => { breakMap[b.clock_entry_id] = true; });
+      setActiveBreaks(breakMap);
+    } else {
+      setActiveBreaks({});
+    }
   };
 
   const fetchDayOffRequests = async () => {
@@ -366,15 +382,22 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
                 <p className="text-muted-foreground">No employees currently clocked in</p>
               ) : (
                 <div className="space-y-2">
-                  {activeEntries.map(entry => (
-                    <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{getEmployeeName(entry.user_id)}</p>
-                        <p className="text-sm text-muted-foreground">Clocked in: {format(new Date(entry.clock_in), "h:mm a")}</p>
+                  {activeEntries.map(entry => {
+                    const isOnBreak = activeBreaks[entry.id];
+                    return (
+                      <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{getEmployeeName(entry.user_id)}</p>
+                          <p className="text-sm text-muted-foreground">Clocked in: {format(new Date(entry.clock_in), "h:mm a")}</p>
+                        </div>
+                        {isOnBreak ? (
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">On Break</Badge>
+                        ) : (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
+                        )}
                       </div>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
