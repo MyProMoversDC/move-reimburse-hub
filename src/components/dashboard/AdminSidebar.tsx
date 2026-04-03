@@ -179,6 +179,64 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                 );
               })}
 
+              {/* Forms dropdown */}
+              {!isCollapsed && (
+                <Collapsible open={formsOpen || isFormTab} onOpenChange={setFormsOpen}>
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip="Forms">
+                        <FileText className="h-4 w-4" />
+                        <span className="flex-1">Forms</span>
+                        {getFormsBadgeCount() > 0 && (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
+                            {getFormsBadgeCount()}
+                          </span>
+                        )}
+                        <ChevronDown className={`h-4 w-4 transition-transform ${formsOpen || isFormTab ? "rotate-180" : ""}`} />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                  </SidebarMenuItem>
+                  <CollapsibleContent>
+                    {formItems.map((formItem) => {
+                      const count = getBadgeCount(formItem.id);
+                      return (
+                        <SidebarMenuItem key={formItem.id} className="pl-6">
+                          <SidebarMenuButton
+                            isActive={activeTab === formItem.id}
+                            onClick={() => onTabChange(formItem.id)}
+                            tooltip={formItem.label}
+                          >
+                            <formItem.icon className="h-4 w-4" />
+                            <span className="flex-1 text-sm">{formItem.label}</span>
+                            {count > 0 && (
+                              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
+                                {count}
+                              </span>
+                            )}
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+              {isCollapsed && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isFormTab}
+                    onClick={() => onTabChange("requests")}
+                    tooltip="Forms"
+                  >
+                    <div className="relative">
+                      <FileText className="h-4 w-4" />
+                      {getFormsBadgeCount() > 0 && (
+                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+                      )}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               {/* Mover Form Reports dropdown */}
               {!isCollapsed && (
                 <Collapsible open={reportsOpen || isReportTab} onOpenChange={setReportsOpen}>
