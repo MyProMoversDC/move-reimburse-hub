@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import FeedPoll from "./FeedPoll";
 import FeedReactions from "./FeedReactions";
+import FeedComments from "./FeedComments";
 import { MoverTranslateButton } from "../MoverTranslateButton";
 import { useTargetTranslation } from "@/hooks/useTargetTranslation";
 
@@ -444,6 +445,11 @@ const FeedPost = ({
       <CardFooter className="pt-0 flex-col items-start gap-3">
         <FeedReactions postId={post.id} userId={userId} />
         
+        {/* Comments */}
+        <div className="w-full pt-2 border-t">
+          <FeedComments postId={post.id} userId={userId} isAdmin={isAdmin} language={language} />
+        </div>
+
         {/* Acknowledgment button for movers */}
         {!isAdmin && (
           <div className="w-full pt-2 border-t">

@@ -673,6 +673,51 @@ export type Database = {
           },
         ]
       }
+      feed_post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parent_comment_id: string | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_post_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "feed_post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_post_poll_options: {
         Row: {
           created_at: string
