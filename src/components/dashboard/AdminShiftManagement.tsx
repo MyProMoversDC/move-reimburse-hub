@@ -108,6 +108,21 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
       .lte("clock_in", addDays(end, 1).toISOString())
       .order("clock_in", { ascending: false });
     setClockEntries(data || []);
+
+    // Fetch active breaks for currently clocked-in entries
+    const activeIds = (data || []).filter(e => !e.clock_out).map(e => e.id);
+    if (activeIds.length > 0) {
+      const { data: breaks } = await supabase
+        .from("shift_breaks")
+        .select("clock_entry_id")
+        .in("clock_entry_id", activeIds)
+        .is("break_end", null);
+      const breakMap: Record<string, boolean> = {};
+      (breaks || []).forEach(b => { breakMap[b.clock_entry_id] = true; });
+      setActiveBreaks(breakMap);
+    } else {
+      setActiveBreaks({});
+    }
   };
 
   const fetchDayOffRequests = async () => {
