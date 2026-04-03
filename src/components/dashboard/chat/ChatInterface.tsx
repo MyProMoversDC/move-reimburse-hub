@@ -128,6 +128,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
           setMessages(prev => [...prev, { ...newMsg, attachments: attachments || [] }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
+            playMessageNotification();
           }
         }
       )
