@@ -75,6 +75,7 @@ const menuItems = [
   { id: "email-logs", label: "Email Logs", icon: Mail },
   { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
   { id: "chat", label: "Chat", icon: MessageSquare },
+  { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
 ];
 
 const formItems = [
