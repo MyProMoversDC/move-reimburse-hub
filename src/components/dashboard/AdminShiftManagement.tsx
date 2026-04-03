@@ -382,15 +382,22 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
                 <p className="text-muted-foreground">No employees currently clocked in</p>
               ) : (
                 <div className="space-y-2">
-                  {activeEntries.map(entry => (
-                    <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{getEmployeeName(entry.user_id)}</p>
-                        <p className="text-sm text-muted-foreground">Clocked in: {format(new Date(entry.clock_in), "h:mm a")}</p>
+                  {activeEntries.map(entry => {
+                    const isOnBreak = activeBreaks[entry.id];
+                    return (
+                      <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{getEmployeeName(entry.user_id)}</p>
+                          <p className="text-sm text-muted-foreground">Clocked in: {format(new Date(entry.clock_in), "h:mm a")}</p>
+                        </div>
+                        {isOnBreak ? (
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">On Break</Badge>
+                        ) : (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
+                        )}
                       </div>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
