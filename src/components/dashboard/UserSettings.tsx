@@ -200,6 +200,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const [medicalCardIssueDateOpen, setMedicalCardIssueDateOpen] = useState(false);
   const [medicalCardExpirationDateOpen, setMedicalCardExpirationDateOpen] = useState(false);
   const [birthDateOpen, setBirthDateOpen] = useState(false);
+  const [originalBirthDate, setOriginalBirthDate] = useState<string | null>(null);
 
   const t = translations[language];
 
