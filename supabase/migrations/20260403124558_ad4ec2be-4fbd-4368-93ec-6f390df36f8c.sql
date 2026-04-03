@@ -1,0 +1,12 @@
+-- Replace the restrictive per-role SELECT policies with a single policy for all authenticated users
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Accountants can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "HR managers can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Operations managers can view all profiles" ON public.profiles;
+
+CREATE POLICY "Authenticated users can view all profiles"
+ON public.profiles
+FOR SELECT
+TO authenticated
+USING (true);
