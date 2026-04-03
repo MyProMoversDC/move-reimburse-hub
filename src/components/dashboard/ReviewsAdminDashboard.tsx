@@ -4,6 +4,7 @@ import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import CustomerReviewReportingDashboard from "./CustomerReviewReportingDashboard";
 import DeductiblesReport from "./DeductiblesReport";
 import DateRangeFilter from "./DateRangeFilter";
+import ShiftSchedule from "./ShiftSchedule";
 import ChatContainer from "./chat/ChatContainer";
 import AddBonusDialog from "./AddBonusDialog";
 import UserSettings from "./UserSettings";
