@@ -176,6 +176,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     address: "",
     hourly_rate: 0,
     avatar_url: "",
+    birth_date: null as string | null,
   });
   const [driversLicense, setDriversLicense] = useState<DriversLicense>({
     number: "",
