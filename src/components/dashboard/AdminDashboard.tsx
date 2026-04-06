@@ -67,6 +67,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     customerRefunds: 0,
     paymentQuestions: 0,
     referrals: 0,
+    signupApprovals: 0,
   });
   
   // Date filters for reimbursements
