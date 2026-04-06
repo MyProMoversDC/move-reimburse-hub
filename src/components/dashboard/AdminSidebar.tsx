@@ -17,7 +17,8 @@ import {
   Newspaper,
   Mail,
   UserPlus,
-  Clock
+  Clock,
+  GraduationCap
 } from "lucide-react";
 import {
   Sidebar,
@@ -76,6 +77,7 @@ const menuItems = [
   { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
+  { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
 ];
 
 const formItems = [

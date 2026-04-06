@@ -5,7 +5,7 @@ import ChatContainer from "./chat/ChatContainer";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, MessageSquare, HelpCircle } from "lucide-react";
+import { Download, MessageSquare, HelpCircle, GraduationCap } from "lucide-react";
 import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 
 interface AccountantDashboardProps {
   userId: string;
@@ -73,6 +74,11 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
               )}
             </TabsTrigger>
             <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <GraduationCap className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Knowledge Base</span>
+              <span className="sm:hidden">KB</span>
+            </TabsTrigger>
           </TabsList>
         </div>
         
@@ -103,6 +109,10 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
 
         <TabsContent value="shift-schedule">
           <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
+
+        <TabsContent value="knowledge-base" className="space-y-6">
+          <KnowledgeBaseViewer userId={userId} />
         </TabsContent>
       </Tabs>
     </div>

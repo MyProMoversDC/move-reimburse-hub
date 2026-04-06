@@ -1062,6 +1062,106 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base_folder_shares: {
+        Row: {
+          folder_id: string
+          id: string
+          shared_at: string
+          shared_by: string
+          shared_role: string
+        }
+        Insert: {
+          folder_id: string
+          id?: string
+          shared_at?: string
+          shared_by: string
+          shared_role: string
+        }
+        Update: {
+          folder_id?: string
+          id?: string
+          shared_at?: string
+          shared_by?: string
+          shared_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_folder_shares_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_base_folders: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_base_materials: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          folder_id: string
+          id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          folder_id: string
+          id?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          folder_id?: string
+          id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_materials_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missing_payments: {
         Row: {
           appeal_at: string | null

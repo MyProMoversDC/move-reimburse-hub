@@ -10,7 +10,7 @@ import AddBonusDialog from "./AddBonusDialog";
 import UserSettings from "./UserSettings";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock, GraduationCap } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 
 interface ReviewsAdminDashboardProps {
   userId: string;
@@ -110,6 +111,11 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
               <Clock className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
               Shift Schedule
             </TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <GraduationCap className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Knowledge Base</span>
+              <span className="sm:hidden">KB</span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -182,6 +188,10 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
 
         <TabsContent value="shift-schedule">
           <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
+
+        <TabsContent value="knowledge-base" className="space-y-6">
+          <KnowledgeBaseViewer userId={userId} />
         </TabsContent>
       </Tabs>
     </div>

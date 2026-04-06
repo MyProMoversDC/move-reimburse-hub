@@ -36,6 +36,7 @@ import AdminAlcoholTestList from "./AdminAlcoholTestList";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
 import EmployeeGeneralTab from "./EmployeeGeneralTab";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 import EmployeeInfoTab from "./EmployeeInfoTab";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage as useLang } from "@/contexts/LanguageContext";
@@ -489,6 +490,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
           <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
             <TabsTrigger value="hr-cabinet" className="text-xs md:text-sm px-2 md:px-3 py-1.5">HR Cabinet</TabsTrigger>
             <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Knowledge Base</TabsTrigger>
           </TabsList>
         </div>
 
@@ -845,6 +847,10 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
 
         <TabsContent value="shift-schedule">
           <ShiftSchedule userId={userId} language={language} />
+        </TabsContent>
+
+        <TabsContent value="knowledge-base" className="space-y-6">
+          <KnowledgeBaseViewer userId={userId} />
         </TabsContent>
       </Tabs>
     </div>
