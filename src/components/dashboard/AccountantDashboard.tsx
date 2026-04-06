@@ -74,6 +74,11 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
               )}
             </TabsTrigger>
             <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
+              <GraduationCap className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Knowledge Base</span>
+              <span className="sm:hidden">KB</span>
+            </TabsTrigger>
           </TabsList>
         </div>
         
