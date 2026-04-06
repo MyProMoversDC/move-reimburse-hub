@@ -30,6 +30,7 @@ interface ContactInfo {
   phone: string;
   phoneType: string;
   address: string;
+  birthDate: string | null;
 }
 
 interface EmergencyContact {
