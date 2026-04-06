@@ -191,7 +191,7 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
       // Fetch profile data
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, phone_type, address, title, hourly_rate")
+        .select("first_name, last_name, email, phone, phone_type, address, title, hourly_rate, birth_date")
         .eq("id", employeeId)
         .single();
 
@@ -205,6 +205,7 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
         phone: profile.phone || "",
         phoneType: profile.phone_type || "mobile",
         address: profile.address || "",
+        birthDate: profile.birth_date || null,
       };
 
       setContactInfo(contactData);
