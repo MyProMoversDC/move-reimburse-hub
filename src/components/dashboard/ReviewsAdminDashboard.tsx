@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 
 interface ReviewsAdminDashboardProps {
   userId: string;
