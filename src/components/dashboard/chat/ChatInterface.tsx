@@ -78,7 +78,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       // Also fetch avatar URLs from profiles
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url');
+        .select('id, first_name, last_name, avatar_url, nickname, use_nickname_in_chat');
       
       if (profiles) {
         const map = new Map(
