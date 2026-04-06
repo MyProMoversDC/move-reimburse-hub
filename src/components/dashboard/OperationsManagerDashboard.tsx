@@ -10,6 +10,7 @@ import CustomerRefundForm from "./CustomerRefundForm";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface OperationsManagerDashboardProps {
