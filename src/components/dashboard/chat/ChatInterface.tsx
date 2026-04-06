@@ -372,13 +372,17 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
 
   const getSenderName = (senderId: string) => {
     if (senderId === userId) return t.you;
+    // Check usersMap for nickname preference
+    const user = usersMap.get(senderId);
+    if (user?.use_nickname_in_chat && user.nickname) {
+      return user.nickname;
+    }
     // First try from conversation participants
     const participant = conversation.participants.find(p => p.user_id === senderId);
     if (participant?.profile) {
       return `${participant.profile.first_name} ${participant.profile.last_name}`;
     }
     // Fallback to usersMap
-    const user = usersMap.get(senderId);
     if (user) {
       return `${user.first_name} ${user.last_name}`;
     }
