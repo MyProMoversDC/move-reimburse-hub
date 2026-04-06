@@ -397,6 +397,9 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const getSenderInitials = (senderId: string) => {
     const user = usersMap.get(senderId);
     if (user) {
+      if (user.use_nickname_in_chat && user.nickname) {
+        return user.nickname.substring(0, 2).toUpperCase();
+      }
       const first = user.first_name?.[0] || '';
       const last = user.last_name?.[0] || '';
       return (first + last).toUpperCase() || '?';
