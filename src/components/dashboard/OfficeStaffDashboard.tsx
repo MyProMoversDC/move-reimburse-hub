@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Newspaper, MessageSquare, DollarSign, Clock } from "lucide-react";
+import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import CustomerRefundForm from "./CustomerRefundForm";
