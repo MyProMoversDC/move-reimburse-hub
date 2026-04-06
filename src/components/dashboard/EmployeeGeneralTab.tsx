@@ -65,6 +65,8 @@ const translations = {
     invalidEmail: "Invalid email address",
     invalidPhone: "Invalid phone format",
     unsavedChanges: "You have unsaved changes. Are you sure you want to leave?",
+    birthDate: "Birth Date",
+    selectDate: "Select date",
   },
   es: {
     contactInfo: "Información de Contacto",
