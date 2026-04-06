@@ -82,9 +82,9 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       
       if (profiles) {
         const map = new Map(
-          profiles.map((p: { id: string; first_name: string; last_name: string; avatar_url?: string }) => [
+          profiles.map((p: any) => [
             p.id,
-            { first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url || undefined }
+            { first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url || undefined, nickname: p.nickname || undefined, use_nickname_in_chat: p.use_nickname_in_chat || false }
           ])
         );
         setUsersMap(map);
