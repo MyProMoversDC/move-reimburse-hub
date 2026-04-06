@@ -15,6 +15,7 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 
 interface AccountantDashboardProps {
   userId: string;
