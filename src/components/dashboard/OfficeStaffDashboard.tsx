@@ -20,6 +20,7 @@ const navItems = [
   { id: "customer-refund", label: "Customer Refund", icon: DollarSign },
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
+  { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
 ] as const;
 
 const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
