@@ -120,6 +120,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "customer-refunds") return pendingCounts.customerRefunds;
     if (id === "payment-questions") return pendingCounts.paymentQuestions;
     if (id === "referrals") return pendingCounts.referrals;
+    if (id === "signup-approvals") return pendingCounts.signupApprovals;
     if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests + pendingCounts.customerRefunds + pendingCounts.paymentQuestions + pendingCounts.referrals;
     return 0;
   };
