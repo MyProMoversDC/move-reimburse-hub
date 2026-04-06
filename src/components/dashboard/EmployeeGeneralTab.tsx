@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X, User, Phone, AlertCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Save, X, User, Phone, AlertCircle, CalendarIcon } from "lucide-react";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
 
@@ -26,6 +30,7 @@ interface ContactInfo {
   phone: string;
   phoneType: string;
   address: string;
+  birthDate: string | null;
 }
 
 interface EmergencyContact {
@@ -60,6 +65,8 @@ const translations = {
     invalidEmail: "Invalid email address",
     invalidPhone: "Invalid phone format",
     unsavedChanges: "You have unsaved changes. Are you sure you want to leave?",
+    birthDate: "Birth Date",
+    selectDate: "Select date",
   },
   es: {
     contactInfo: "Información de Contacto",
@@ -84,6 +91,8 @@ const translations = {
     invalidEmail: "Dirección de correo electrónico inválida",
     invalidPhone: "Formato de teléfono inválido",
     unsavedChanges: "Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?",
+    birthDate: "Fecha de Nacimiento",
+    selectDate: "Seleccionar fecha",
   },
   ru: {
     contactInfo: "Контактная Информация",
@@ -108,6 +117,8 @@ const translations = {
     invalidEmail: "Неверный адрес электронной почты",
     invalidPhone: "Неверный формат телефона",
     unsavedChanges: "У вас есть несохраненные изменения. Вы уверены, что хотите уйти?",
+    birthDate: "Дата Рождения",
+    selectDate: "Выберите дату",
   },
 };
 
@@ -134,7 +145,9 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
     phone: "",
     phoneType: "mobile",
     address: "",
+    birthDate: null,
   });
+  const [birthDateOpen, setBirthDateOpen] = useState(false);
 
   const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>({
     name: "",
@@ -178,7 +191,7 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
       // Fetch profile data
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, phone_type, address, title, hourly_rate")
+        .select("first_name, last_name, email, phone, phone_type, address, title, hourly_rate, birth_date")
         .eq("id", employeeId)
         .single();
 
@@ -192,6 +205,7 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
         phone: profile.phone || "",
         phoneType: profile.phone_type || "mobile",
         address: profile.address || "",
+        birthDate: profile.birth_date || null,
       };
 
       setContactInfo(contactData);
@@ -277,6 +291,7 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
           address: contactInfo.address,
           title: contactInfo.title,
           hourly_rate: contactInfo.hourlyRate ? parseFloat(contactInfo.hourlyRate) : null,
+          birth_date: contactInfo.birthDate,
         })
         .eq("id", employeeId);
 
@@ -396,6 +411,38 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
                 onChange={(e) => setContactInfo({ ...contactInfo, hourlyRate: e.target.value })}
                 placeholder="0.00"
               />
+            </div>
+
+            {/* Birth Date */}
+            <div className="space-y-2">
+              <Label>{t.birthDate}</Label>
+              <Popover open={birthDateOpen} onOpenChange={setBirthDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !contactInfo.birthDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {contactInfo.birthDate ? format(new Date(contactInfo.birthDate), "PPP") : t.selectDate}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={contactInfo.birthDate ? new Date(contactInfo.birthDate) : undefined}
+                    onSelect={(date) => {
+                      setContactInfo({ ...contactInfo, birthDate: date ? format(date, "yyyy-MM-dd") : null });
+                      setBirthDateOpen(false);
+                    }}
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Phone Number */}
