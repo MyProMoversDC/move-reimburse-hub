@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
 import { translations } from "@/lib/translations";
 import { handleError } from "@/lib/errorHandler";
-import { Languages } from "lucide-react";
+import { Languages, AlertTriangle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Auth = () => {
@@ -21,16 +22,21 @@ const Auth = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { language, setLanguage } = useLanguage();
+  const isSigningUpRef = useRef(false);
   
   const t = translations[language];
 
   // Signup form
+  const [selectedRole, setSelectedRole] = useState<string>("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [useNicknameInChat, setUseNicknameInChat] = useState(false);
 
   // Login form
   const [identifier, setIdentifier] = useState("");
@@ -41,13 +47,13 @@ const Auth = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && !isSigningUpRef.current) {
         navigate("/dashboard");
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (session && !isSigningUpRef.current) {
         navigate("/dashboard");
       }
     });
@@ -60,8 +66,10 @@ const Auth = () => {
     
     try {
       const signupSchemaWithMessages = z.object({
+        selectedRole: z.string().min(1, t.roleRequired),
         firstName: z.string().trim().min(1, t.firstNameRequired).max(100),
         lastName: z.string().trim().min(1, t.lastNameRequired).max(100),
+        dateOfBirth: z.string().min(1, t.dobRequired),
         email: z.string().trim().email(t.invalidEmail).max(255),
         username: z.string().trim().min(3, t.usernameMinLength).max(50),
         phone: z.string().trim().min(10, t.phoneMinLength).max(20),
@@ -69,10 +77,11 @@ const Auth = () => {
       });
       
       const validated = signupSchemaWithMessages.parse({
-        firstName, lastName, email, username, phone, password
+        selectedRole, firstName, lastName, dateOfBirth, email, username, phone, password
       });
 
       setLoading(true);
+      isSigningUpRef.current = true;
       
       const { error } = await supabase.auth.signUp({
         email: validated.email,
@@ -84,26 +93,55 @@ const Auth = () => {
             first_name: validated.firstName,
             last_name: validated.lastName,
             phone: validated.phone,
+            birth_date: validated.dateOfBirth,
+            nickname: nickname.trim() || null,
+            use_nickname_in_chat: useNicknameInChat,
+            selected_role: validated.selectedRole,
           },
         },
       });
 
       if (error) throw error;
+
+      // Sign out immediately - account is pending approval
+      await supabase.auth.signOut();
+      
+      // Send notification to admins
+      try {
+        await supabase.functions.invoke("send-signup-notification", {
+          body: {
+            firstName: validated.firstName,
+            lastName: validated.lastName,
+            email: validated.email,
+            phone: validated.phone,
+            selectedRole: validated.selectedRole,
+            dateOfBirth: validated.dateOfBirth,
+            nickname: nickname.trim() || null,
+          },
+        });
+      } catch (notifError) {
+        console.error("Failed to send signup notification:", notifError);
+      }
       
       toast.success(t.accountCreated);
       setIsSignup(false);
       
       // Clear form
+      setSelectedRole("");
       setFirstName("");
       setLastName("");
+      setDateOfBirth("");
       setEmail("");
       setUsername("");
       setPhone("");
       setPassword("");
+      setNickname("");
+      setUseNicknameInChat(false);
     } catch (error: unknown) {
       toast.error(handleError(error));
     } finally {
       setLoading(false);
+      isSigningUpRef.current = false;
     }
   };
 
@@ -123,7 +161,6 @@ const Auth = () => {
       const isEmail = validated.identifier.includes("@");
       let loginEmail = validated.identifier;
 
-      // If username provided, fetch email using secure function
       if (!isEmail) {
         const { data, error: rpcError } = await supabase
           .rpc("get_email_by_username", { input_username: validated.identifier });
@@ -140,6 +177,27 @@ const Auth = () => {
       });
 
       if (error) throw error;
+
+      // Check signup_status
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("signup_status")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile && (profile as any).signup_status === "pending") {
+          await supabase.auth.signOut();
+          toast.error(t.accountPendingApproval);
+          return;
+        }
+        if (profile && (profile as any).signup_status === "declined") {
+          await supabase.auth.signOut();
+          toast.error(t.accountDeclined);
+          return;
+        }
+      }
       
       toast.success(t.loggedInSuccess);
     } catch (error: unknown) {
@@ -208,6 +266,26 @@ const Auth = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
+                {/* Role Selection */}
+                <div className="space-y-2">
+                  <Label>{t.selectRole}</Label>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t.selectRole} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mover">{t.mover}</SelectItem>
+                      <SelectItem value="office_staff">{t.officeStaff}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Disclaimer */}
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 text-sm text-amber-800 dark:text-amber-200 flex gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>{t.nameDisclaimer}</span>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">{t.firstName}</Label>
@@ -227,6 +305,17 @@ const Auth = () => {
                       required
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">{t.dateOfBirth}</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    required
+                  />
                 </div>
                 
                 <div className="space-y-2">
@@ -271,6 +360,31 @@ const Auth = () => {
                     required
                   />
                 </div>
+
+                {/* Nickname */}
+                <div className="space-y-2">
+                  <Label htmlFor="nickname">{t.nickname}</Label>
+                  <Input
+                    id="nickname"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    placeholder={t.nicknamePlaceholder}
+                  />
+                </div>
+
+                {/* Use nickname in chat checkbox */}
+                {nickname.trim() && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="useNicknameInChat"
+                      checked={useNicknameInChat}
+                      onCheckedChange={(checked) => setUseNicknameInChat(checked === true)}
+                    />
+                    <Label htmlFor="useNicknameInChat" className="text-sm font-normal cursor-pointer">
+                      {t.useNicknameInChat}
+                    </Label>
+                  </div>
+                )}
                 
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? t.creatingAccount : t.signUpButton}
