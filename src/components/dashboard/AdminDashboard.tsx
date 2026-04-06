@@ -318,6 +318,10 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminTodoList onNavigate={(tab) => { setActiveTab(tab); }} />
           </div>
         );
+      case "signup-approvals":
+        return <AdminSignupApprovals />;
+          </div>
+        );
       case "feed":
         return <FeedManager userId={userId} />;
       case "requests":
