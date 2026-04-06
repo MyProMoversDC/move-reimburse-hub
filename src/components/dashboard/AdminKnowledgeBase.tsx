@@ -387,7 +387,7 @@ const AdminKnowledgeBase = ({ userId }: AdminKnowledgeBaseProps) => {
         const { data: usersToNotify } = await supabase
           .from("user_roles")
           .select("user_id")
-          .in("role", selectedRoles);
+          .in("role", selectedRoles as any[]);
 
         if (usersToNotify && usersToNotify.length > 0) {
           const uniqueUserIds = [...new Set(usersToNotify.map((u) => u.user_id))];
