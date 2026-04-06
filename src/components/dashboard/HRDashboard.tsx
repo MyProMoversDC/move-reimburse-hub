@@ -36,6 +36,7 @@ import AdminAlcoholTestList from "./AdminAlcoholTestList";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
 import EmployeeGeneralTab from "./EmployeeGeneralTab";
+import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 import EmployeeInfoTab from "./EmployeeInfoTab";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage as useLang } from "@/contexts/LanguageContext";
