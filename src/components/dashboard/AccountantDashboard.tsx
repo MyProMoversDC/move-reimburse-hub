@@ -5,7 +5,7 @@ import ChatContainer from "./chat/ChatContainer";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, MessageSquare, HelpCircle } from "lucide-react";
+import { Download, MessageSquare, HelpCircle, GraduationCap } from "lucide-react";
 import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
