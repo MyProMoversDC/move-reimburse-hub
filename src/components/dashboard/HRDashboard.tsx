@@ -490,6 +490,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
           <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
             <TabsTrigger value="hr-cabinet" className="text-xs md:text-sm px-2 md:px-3 py-1.5">HR Cabinet</TabsTrigger>
             <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Knowledge Base</TabsTrigger>
           </TabsList>
         </div>
 
