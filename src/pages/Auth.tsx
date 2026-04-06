@@ -281,7 +281,7 @@ const Auth = () => {
                 </div>
 
                 {/* Disclaimer */}
-                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 text-sm text-amber-800 dark:text-amber-200 flex gap-2">
+                <div className="bg-warning/10 border border-warning/30 rounded-md p-3 text-sm text-warning-foreground flex gap-2">
                   <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <span>{t.nameDisclaimer}</span>
                 </div>

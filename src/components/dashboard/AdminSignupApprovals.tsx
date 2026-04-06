@@ -99,10 +99,10 @@ const AdminSignupApprovals = () => {
 
   const fetchPendingUsers = async () => {
     try {
-      const { data: profiles, error } = await supabase
+      const { data: profiles, error } = await (supabase
         .from("profiles")
-        .select("*")
-        .eq("signup_status" as any, "pending")
+        .select("*") as any)
+        .eq("signup_status", "pending")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
