@@ -91,6 +91,8 @@ const translations = {
     invalidEmail: "Dirección de correo electrónico inválida",
     invalidPhone: "Formato de teléfono inválido",
     unsavedChanges: "Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?",
+    birthDate: "Fecha de Nacimiento",
+    selectDate: "Seleccionar fecha",
   },
   ru: {
     contactInfo: "Контактная Информация",
