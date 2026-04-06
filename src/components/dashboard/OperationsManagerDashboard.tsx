@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Shield, MessageSquare, Wine, DollarSign } from "lucide-react";
+import { FileText, Shield, MessageSquare, Wine, DollarSign, GraduationCap } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PerformanceReportsList from "./PerformanceReportsList";
