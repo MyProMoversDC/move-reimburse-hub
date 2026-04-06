@@ -412,12 +412,14 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       return conversation.name || 'Group Chat';
     }
     const otherParticipant = conversation.participants.find(p => p.user_id !== userId);
-    if (otherParticipant?.profile) {
-      return `${otherParticipant.profile.first_name} ${otherParticipant.profile.last_name}`;
-    }
-    // Fallback to usersMap
     if (otherParticipant) {
       const user = usersMap.get(otherParticipant.user_id);
+      if (user?.use_nickname_in_chat && user.nickname) {
+        return user.nickname;
+      }
+      if (otherParticipant.profile) {
+        return `${otherParticipant.profile.first_name} ${otherParticipant.profile.last_name}`;
+      }
       if (user) {
         return `${user.first_name} ${user.last_name}`;
       }
