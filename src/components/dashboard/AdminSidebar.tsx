@@ -18,7 +18,8 @@ import {
   Mail,
   UserPlus,
   Clock,
-  GraduationCap
+  GraduationCap,
+  UserCheck
 } from "lucide-react";
 import {
   Sidebar,
