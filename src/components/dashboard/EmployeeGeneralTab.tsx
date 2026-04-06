@@ -291,6 +291,7 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
           address: contactInfo.address,
           title: contactInfo.title,
           hourly_rate: contactInfo.hourlyRate ? parseFloat(contactInfo.hourlyRate) : null,
+          birth_date: contactInfo.birthDate,
         })
         .eq("id", employeeId);
 
