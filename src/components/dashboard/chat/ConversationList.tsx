@@ -215,7 +215,11 @@ const ConversationList = ({
     }
     const otherParticipant = conv.participants.find(p => p.user_id !== userId);
     if (otherParticipant?.profile) {
-      return `${otherParticipant.profile.first_name} ${otherParticipant.profile.last_name}`;
+      const profile = otherParticipant.profile as any;
+      if (profile.use_nickname_in_chat && profile.nickname) {
+        return profile.nickname;
+      }
+      return `${profile.first_name} ${profile.last_name}`;
     }
     return 'Chat';
   };
