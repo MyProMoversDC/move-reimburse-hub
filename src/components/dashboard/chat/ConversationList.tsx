@@ -114,24 +114,29 @@ const ConversationList = ({
       // Fetch all users with their names using RPC function
       const { data: allUsers } = await supabase.rpc('list_chat_users_for_picker');
       
-      // Fetch avatar URLs from profiles
+      // Fetch avatar URLs and nickname data from profiles
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, avatar_url');
+        .select('id, avatar_url, nickname, use_nickname_in_chat');
       
-      const avatarMap = new Map(
-        (profilesData || []).map((p: { id: string; avatar_url: string | null }) => [p.id, p.avatar_url])
+      const profileMap = new Map(
+        (profilesData || []).map((p: any) => [p.id, { avatar_url: p.avatar_url, nickname: p.nickname, use_nickname_in_chat: p.use_nickname_in_chat }])
       );
       
       const usersMap = new Map(
-        (allUsers || []).map((u: { id: string; first_name: string; last_name: string }) => [
-          u.id, 
-          { 
-            first_name: u.first_name, 
-            last_name: u.last_name,
-            avatar_url: avatarMap.get(u.id) || null
-          }
-        ])
+        (allUsers || []).map((u: { id: string; first_name: string; last_name: string }) => {
+          const profileInfo = profileMap.get(u.id);
+          return [
+            u.id, 
+            { 
+              first_name: u.first_name, 
+              last_name: u.last_name,
+              avatar_url: profileInfo?.avatar_url || null,
+              nickname: profileInfo?.nickname || null,
+              use_nickname_in_chat: profileInfo?.use_nickname_in_chat || false,
+            }
+          ];
+        })
       );
 
       // Fetch participants and profiles for each conversation
