@@ -145,7 +145,9 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
     phone: "",
     phoneType: "mobile",
     address: "",
+    birthDate: null,
   });
+  const [birthDateOpen, setBirthDateOpen] = useState(false);
 
   const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>({
     name: "",
