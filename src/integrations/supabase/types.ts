@@ -1642,11 +1642,14 @@ export type Database = {
           license_class: string | null
           license_expires: string | null
           license_number: string | null
+          nickname: string | null
           phone: string
           phone_type: string | null
           physical_expires: string | null
+          signup_status: string | null
           termination_date: string | null
           title: string | null
+          use_nickname_in_chat: boolean | null
           username: string
         }
         Insert: {
@@ -1668,11 +1671,14 @@ export type Database = {
           license_class?: string | null
           license_expires?: string | null
           license_number?: string | null
+          nickname?: string | null
           phone: string
           phone_type?: string | null
           physical_expires?: string | null
+          signup_status?: string | null
           termination_date?: string | null
           title?: string | null
+          use_nickname_in_chat?: boolean | null
           username: string
         }
         Update: {
@@ -1694,11 +1700,14 @@ export type Database = {
           license_class?: string | null
           license_expires?: string | null
           license_number?: string | null
+          nickname?: string | null
           phone?: string
           phone_type?: string | null
           physical_expires?: string | null
+          signup_status?: string | null
           termination_date?: string | null
           title?: string | null
+          use_nickname_in_chat?: boolean | null
           username?: string
         }
         Relationships: []
