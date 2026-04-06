@@ -189,6 +189,10 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
         <TabsContent value="shift-schedule">
           <ShiftSchedule userId={userId} language={language} />
         </TabsContent>
+
+        <TabsContent value="knowledge-base" className="space-y-6">
+          <KnowledgeBaseViewer userId={userId} />
+        </TabsContent>
       </Tabs>
     </div>
   );
