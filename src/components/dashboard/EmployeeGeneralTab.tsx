@@ -413,6 +413,38 @@ const EmployeeGeneralTab = ({ userId, employeeId, employeeName }: EmployeeGenera
               />
             </div>
 
+            {/* Birth Date */}
+            <div className="space-y-2">
+              <Label>{t.birthDate}</Label>
+              <Popover open={birthDateOpen} onOpenChange={setBirthDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !contactInfo.birthDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {contactInfo.birthDate ? format(new Date(contactInfo.birthDate), "PPP") : t.selectDate}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={contactInfo.birthDate ? new Date(contactInfo.birthDate) : undefined}
+                    onSelect={(date) => {
+                      setContactInfo({ ...contactInfo, birthDate: date ? format(date, "yyyy-MM-dd") : null });
+                      setBirthDateOpen(false);
+                    }}
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
             {/* Phone Number */}
             <div className="space-y-2">
               <Label htmlFor="contactPhone">{t.phone}</Label>
