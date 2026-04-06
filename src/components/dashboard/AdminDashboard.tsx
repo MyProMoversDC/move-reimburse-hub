@@ -167,6 +167,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true })
         .in("status", ["pending", "bonus_claimed"]);
 
+      // Count pending signup approvals
+      const { count: signupApprovalsCount } = await (supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true }) as any)
+        .eq("signup_status", "pending");
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
@@ -180,6 +186,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         customerRefunds: customerRefundsCount || 0,
         paymentQuestions: paymentQuestionsCount || 0,
         referrals: referralsCount || 0,
+        signupApprovals: signupApprovalsCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
