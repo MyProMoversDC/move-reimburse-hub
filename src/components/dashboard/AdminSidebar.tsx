@@ -151,7 +151,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
             <SidebarMenu>
               {menuItems.map((item) => {
                 const count = getBadgeCount(item.id);
-                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents", "alcohol-tests"].includes(item.id);
+                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents", "alcohol-tests", "signup-approvals"].includes(item.id);
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
