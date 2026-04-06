@@ -133,6 +133,11 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
         {activeTab === "shift-schedule" && (
           <ShiftSchedule userId={userId} language={language} />
         )}
+        {activeTab === "knowledge-base" && (
+          <div className="space-y-6">
+            <KnowledgeBaseViewer userId={userId} />
+          </div>
+        )}
       </div>
     </div>
   );
