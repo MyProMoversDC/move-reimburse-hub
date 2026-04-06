@@ -60,7 +60,7 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string }>>(new Map());
+  const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string; nickname?: string; use_nickname_in_chat?: boolean }>>(new Map());
   const [mentionVisible, setMentionVisible] = useState(false);
   const [mentionFilter, setMentionFilter] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
@@ -78,13 +78,13 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       // Also fetch avatar URLs from profiles
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url');
+        .select('id, first_name, last_name, avatar_url, nickname, use_nickname_in_chat');
       
       if (profiles) {
         const map = new Map(
-          profiles.map((p: { id: string; first_name: string; last_name: string; avatar_url?: string }) => [
+          profiles.map((p: any) => [
             p.id,
-            { first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url || undefined }
+            { first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url || undefined, nickname: p.nickname || undefined, use_nickname_in_chat: p.use_nickname_in_chat || false }
           ])
         );
         setUsersMap(map);
@@ -372,13 +372,17 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
 
   const getSenderName = (senderId: string) => {
     if (senderId === userId) return t.you;
+    // Check usersMap for nickname preference
+    const user = usersMap.get(senderId);
+    if (user?.use_nickname_in_chat && user.nickname) {
+      return user.nickname;
+    }
     // First try from conversation participants
     const participant = conversation.participants.find(p => p.user_id === senderId);
     if (participant?.profile) {
       return `${participant.profile.first_name} ${participant.profile.last_name}`;
     }
     // Fallback to usersMap
-    const user = usersMap.get(senderId);
     if (user) {
       return `${user.first_name} ${user.last_name}`;
     }
@@ -393,6 +397,9 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
   const getSenderInitials = (senderId: string) => {
     const user = usersMap.get(senderId);
     if (user) {
+      if (user.use_nickname_in_chat && user.nickname) {
+        return user.nickname.substring(0, 2).toUpperCase();
+      }
       const first = user.first_name?.[0] || '';
       const last = user.last_name?.[0] || '';
       return (first + last).toUpperCase() || '?';
@@ -405,12 +412,14 @@ const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }:
       return conversation.name || 'Group Chat';
     }
     const otherParticipant = conversation.participants.find(p => p.user_id !== userId);
-    if (otherParticipant?.profile) {
-      return `${otherParticipant.profile.first_name} ${otherParticipant.profile.last_name}`;
-    }
-    // Fallback to usersMap
     if (otherParticipant) {
       const user = usersMap.get(otherParticipant.user_id);
+      if (user?.use_nickname_in_chat && user.nickname) {
+        return user.nickname;
+      }
+      if (otherParticipant.profile) {
+        return `${otherParticipant.profile.first_name} ${otherParticipant.profile.last_name}`;
+      }
       if (user) {
         return `${user.first_name} ${user.last_name}`;
       }

@@ -29,6 +29,7 @@ import AdminCustomerRefundList from "./AdminCustomerRefundList";
 import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
+import AdminSignupApprovals from "./AdminSignupApprovals";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle, Search } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
@@ -66,6 +67,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     customerRefunds: 0,
     paymentQuestions: 0,
     referrals: 0,
+    signupApprovals: 0,
   });
   
   // Date filters for reimbursements
@@ -165,6 +167,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true })
         .in("status", ["pending", "bonus_claimed"]);
 
+      // Count pending signup approvals
+      const { count: signupApprovalsCount } = await (supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true }) as any)
+        .eq("signup_status", "pending");
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
@@ -178,6 +186,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         customerRefunds: customerRefundsCount || 0,
         paymentQuestions: paymentQuestionsCount || 0,
         referrals: referralsCount || 0,
+        signupApprovals: signupApprovalsCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
@@ -309,6 +318,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminTodoList onNavigate={(tab) => { setActiveTab(tab); }} />
           </div>
         );
+      case "signup-approvals":
+        return <AdminSignupApprovals />;
       case "feed":
         return <FeedManager userId={userId} />;
       case "requests":

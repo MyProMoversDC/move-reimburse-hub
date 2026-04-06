@@ -18,7 +18,8 @@ import {
   Mail,
   UserPlus,
   Clock,
-  GraduationCap
+  GraduationCap,
+  UserCheck
 } from "lucide-react";
 import {
   Sidebar,
@@ -57,12 +58,14 @@ interface AdminSidebarProps {
     customerRefunds: number;
     paymentQuestions: number;
     referrals: number;
+    signupApprovals: number;
   };
   hasUnreadMessages?: boolean;
 }
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "signup-approvals", label: "SignUp Approvals", icon: UserCheck },
   { id: "feed", label: "Feed Management", icon: Newspaper },
   { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
@@ -117,6 +120,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
     if (id === "customer-refunds") return pendingCounts.customerRefunds;
     if (id === "payment-questions") return pendingCounts.paymentQuestions;
     if (id === "referrals") return pendingCounts.referrals;
+    if (id === "signup-approvals") return pendingCounts.signupApprovals;
     if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests + pendingCounts.customerRefunds + pendingCounts.paymentQuestions + pendingCounts.referrals;
     return 0;
   };
@@ -147,7 +151,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
             <SidebarMenu>
               {menuItems.map((item) => {
                 const count = getBadgeCount(item.id);
-                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents", "alcohol-tests"].includes(item.id);
+                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents", "alcohol-tests", "signup-approvals"].includes(item.id);
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton

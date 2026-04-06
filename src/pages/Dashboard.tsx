@@ -36,11 +36,23 @@ const Dashboard = () => {
       // Fetch user profile and roles
       const { data: profile } = await supabase
         .from("profiles")
-        .select("first_name, last_name")
+        .select("first_name, last_name, signup_status")
         .eq("id", session.user.id)
         .single();
 
       if (profile) {
+        // Check signup approval status
+        const signupStatus = (profile as any).signup_status;
+        if (signupStatus === "pending") {
+          await supabase.auth.signOut();
+          navigate("/auth");
+          return;
+        }
+        if (signupStatus === "declined") {
+          await supabase.auth.signOut();
+          navigate("/auth");
+          return;
+        }
         setUserName(`${profile.first_name} ${profile.last_name}`);
       }
 
@@ -50,7 +62,7 @@ const Dashboard = () => {
         .eq("user_id", session.user.id);
 
       if (roles && roles.length > 0) {
-        // Priority: admin > reviews_admin > accountant > operations_manager > hr_manager > mover
+        // Priority: admin > reviews_admin > accountant > operations_manager > hr_manager > office_staff > mover
         if (roles.some((r) => r.role === "admin")) {
           setUserRole("admin");
         } else if (roles.some((r) => r.role === "reviews_admin")) {
