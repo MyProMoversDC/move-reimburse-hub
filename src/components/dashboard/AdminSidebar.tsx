@@ -58,6 +58,7 @@ interface AdminSidebarProps {
     customerRefunds: number;
     paymentQuestions: number;
     referrals: number;
+    signupApprovals: number;
   };
   hasUnreadMessages?: boolean;
 }
