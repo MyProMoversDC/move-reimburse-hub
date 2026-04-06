@@ -17,7 +17,8 @@ import {
   Newspaper,
   Mail,
   UserPlus,
-  Clock
+  Clock,
+  GraduationCap
 } from "lucide-react";
 import {
   Sidebar,
