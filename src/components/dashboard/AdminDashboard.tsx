@@ -320,8 +320,6 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         );
       case "signup-approvals":
         return <AdminSignupApprovals />;
-          </div>
-        );
       case "feed":
         return <FeedManager userId={userId} />;
       case "requests":
