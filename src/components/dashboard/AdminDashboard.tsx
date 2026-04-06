@@ -547,6 +547,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         );
       case "shift-schedule":
         return <AdminShiftManagement userId={userId} language={language} />;
+      case "knowledge-base":
+        return (
+          <div className="space-y-6">
+            <AdminKnowledgeBase userId={userId} />
+          </div>
+        );
       case "chat":
         return (
           <div className="space-y-6">
