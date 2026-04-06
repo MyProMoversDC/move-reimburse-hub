@@ -65,6 +65,7 @@ interface AdminSidebarProps {
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "signup-approvals", label: "SignUp Approvals", icon: UserCheck },
   { id: "feed", label: "Feed Management", icon: Newspaper },
   { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
   { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
