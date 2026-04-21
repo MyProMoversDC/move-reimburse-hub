@@ -1728,6 +1728,7 @@ export type Database = {
           decline_reason: string | null
           declined_at: string | null
           hiring_stage: string | null
+          hiring_stage_note: string | null
           id: string
           license_file_name: string | null
           license_url: string | null
@@ -1753,6 +1754,7 @@ export type Database = {
           decline_reason?: string | null
           declined_at?: string | null
           hiring_stage?: string | null
+          hiring_stage_note?: string | null
           id?: string
           license_file_name?: string | null
           license_url?: string | null
@@ -1778,6 +1780,7 @@ export type Database = {
           decline_reason?: string | null
           declined_at?: string | null
           hiring_stage?: string | null
+          hiring_stage_note?: string | null
           id?: string
           license_file_name?: string | null
           license_url?: string | null
