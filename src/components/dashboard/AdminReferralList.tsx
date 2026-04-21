@@ -10,9 +10,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, addMonths } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Check, X, Eye, Gift } from "lucide-react";
+
+const HIRING_STAGES = [
+  { value: "attempting_contact", label: "Attempting Contact" },
+  { value: "in_contact", label: "In Contact" },
+  { value: "interview_scheduled", label: "Interview Scheduled" },
+  { value: "interview_complete", label: "Interview Complete" },
+  { value: "in_training", label: "In Training" },
+  { value: "hired", label: "Hired" },
+];
 
 const AdminReferralList = ({ language }: { language: string }) => {
   const [referrals, setReferrals] = useState<any[]>([]);
@@ -200,6 +210,7 @@ const AdminReferralList = ({ language }: { language: string }) => {
                   <TableHead>Available Date</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Hiring Stage</TableHead>
                   <TableHead>License</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -207,7 +218,7 @@ const AdminReferralList = ({ language }: { language: string }) => {
               <TableBody>
                 {referrals.length === 0 ? (
                   <TableRow>
-                     <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                   <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       No referral requests found
                     </TableCell>
                   </TableRow>
@@ -226,6 +237,33 @@ const AdminReferralList = ({ language }: { language: string }) => {
                           {getStatusBadge(r.status)}
                           {r.bonus_amount && <p className="text-xs text-muted-foreground">${r.bonus_amount}</p>}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={r.hiring_stage || ""}
+                          onValueChange={async (value) => {
+                            try {
+                              const { error } = await supabase
+                                .from("referral_requests" as any)
+                                .update({ hiring_stage: value } as any)
+                                .eq("id", r.id);
+                              if (error) throw error;
+                              toast.success("Hiring stage updated");
+                              fetchReferrals();
+                            } catch (err: any) {
+                              toast.error(err.message);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-[170px]">
+                            <SelectValue placeholder="Select stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HIRING_STAGES.map((s) => (
+                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         {r.license_url && (

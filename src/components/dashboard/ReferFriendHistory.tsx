@@ -119,6 +119,7 @@ const ReferFriendHistory = ({ userId, language, refreshKey }: ReferFriendHistory
                 <TableHead>{t.dateSubmitted}</TableHead>
                 <TableHead>{t.startDate}</TableHead>
                 <TableHead>{t.status}</TableHead>
+                <TableHead>{t.hiringStage}</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -142,6 +143,13 @@ const ReferFriendHistory = ({ userId, language, refreshKey }: ReferFriendHistory
                         <p className="text-xs text-green-600 font-medium">${r.bonus_amount}</p>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {r.hiring_stage ? (
+                      <Badge variant="outline">{t[`stage_${r.hiring_stage}` as keyof typeof t] || r.hiring_stage}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {r.status === "bonus_eligible" && (
