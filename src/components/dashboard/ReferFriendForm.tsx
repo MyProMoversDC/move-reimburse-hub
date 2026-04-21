@@ -28,6 +28,8 @@ const ReferFriendForm = ({ userId, language, onSuccess, onCancel }: ReferFriendF
   const [position, setPosition] = useState<string>("");
   const [availableDate, setAvailableDate] = useState<Date>();
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,7 +50,7 @@ const ReferFriendForm = ({ userId, language, onSuccess, onCancel }: ReferFriendF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!referredName.trim() || !position || !availableDate) return;
+    if (!referredName.trim() || !position || !availableDate || !contactPhone.trim()) return;
     if (position === "driver" && !licenseFile) {
       toast.error(t.licenseRequired);
       return;
@@ -78,6 +80,8 @@ const ReferFriendForm = ({ userId, language, onSuccess, onCancel }: ReferFriendF
           referred_name: referredName.trim(),
           referred_position: position,
           available_date: format(availableDate, "yyyy-MM-dd"),
+          contact_phone: contactPhone.trim(),
+          contact_email: contactEmail.trim() || null,
           license_url: licenseUrl,
           license_file_name: licenseFileName,
         } as any);
@@ -92,6 +96,8 @@ const ReferFriendForm = ({ userId, language, onSuccess, onCancel }: ReferFriendF
           referredName: referredName.trim(),
           position: position === "driver" ? "Driver" : "Moving Helper",
           availableDate: format(availableDate, "MM/dd/yyyy"),
+          contactPhone: contactPhone.trim(),
+          contactEmail: contactEmail.trim() || "N/A",
         },
       });
 
@@ -144,6 +150,27 @@ const ReferFriendForm = ({ userId, language, onSuccess, onCancel }: ReferFriendF
                 <SelectItem value="moving_helper">{t.movingHelper}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t.contactPhone} *</Label>
+            <Input
+              type="tel"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              placeholder={t.contactPhonePlaceholder}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t.contactEmail} ({t.optional})</Label>
+            <Input
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder={t.contactEmailPlaceholder}
+            />
           </div>
 
           <div className="space-y-2">
