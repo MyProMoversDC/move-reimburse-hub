@@ -155,7 +155,32 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    if (type === "hiring_declined") {
+      const { referrerId, referrerName, referredName, note } = body;
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", referrerId)
+        .single();
+
+      if (profile?.email) {
+        const subject = `Hiring Update for Your Referral — ${sanitize(referredName)}`;
+        const noteSection = note
+          ? `<p><strong>Admin Note:</strong> ${sanitize(note)}</p>`
+          : "";
+        const html = `
+          <h2>Referral Hiring Update</h2>
+          <p>We wanted to let you know that the hiring process for your referral <strong>${sanitize(referredName)}</strong> has been <strong>declined</strong>.</p>
+          ${noteSection}
+          <p>Thank you for your referral. Feel free to refer other candidates through the Mover Portal.</p>
+        `;
+        await sendEmail([profile.email], subject, html, "referral_hiring_declined");
+      }
+    }
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

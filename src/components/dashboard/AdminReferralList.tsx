@@ -413,7 +413,72 @@ const AdminReferralList = ({ language }: { language: string }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Hiring Stage Decline Dialog */}
+      <Dialog open={hiringDeclineDialog} onOpenChange={setHiringDeclineDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Decline Hiring</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Mark <strong>{hiringDeclineReferral?.referred_name}</strong> as declined in the hiring process.
+              The referrer will be notified by email.
+            </p>
+            <div className="space-y-2">
+              <Label>Note (optional)</Label>
+              <Textarea
+                value={hiringDeclineNote}
+                onChange={(e) => setHiringDeclineNote(e.target.value)}
+                placeholder="Reason for declining..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHiringDeclineDialog(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={processing}
+              onClick={async () => {
+                if (!hiringDeclineReferral) return;
+                setProcessing(true);
+                try {
+                  const { error } = await supabase
+                    .from("referral_requests" as any)
+                    .update({
+                      hiring_stage: "declined",
+                      hiring_stage_note: hiringDeclineNote.trim() || null,
+                    } as any)
+                    .eq("id", hiringDeclineReferral.id);
+                  if (error) throw error;
+
+                  await supabase.functions.invoke("send-referral-notification", {
+                    body: {
+                      type: "hiring_declined",
+                      referrerId: hiringDeclineReferral.referrer_id,
+                      referrerName: hiringDeclineReferral.referrer_name,
+                      referredName: hiringDeclineReferral.referred_name,
+                      note: hiringDeclineNote.trim() || null,
+                    },
+                  });
+
+                  toast.success("Hiring stage set to declined");
+                  setHiringDeclineDialog(false);
+                  setHiringDeclineReferral(null);
+                  setHiringDeclineNote("");
+                  fetchReferrals();
+                } catch (err: any) {
+                  toast.error(err.message);
+                } finally {
+                  setProcessing(false);
+                }
+              }}
+            >
+              {processing ? "Processing..." : "Confirm Decline"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
   );
 };
 
