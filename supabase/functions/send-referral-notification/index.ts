@@ -181,6 +181,8 @@ Deno.serve(async (req) => {
         await sendEmail([profile.email], subject, html, "referral_hiring_declined");
       }
     }
+
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
