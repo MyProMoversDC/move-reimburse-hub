@@ -56,13 +56,15 @@ Deno.serve(async (req) => {
     const { type } = body;
 
     if (type === "new_referral") {
-      const { referrerName, referredName, position, availableDate } = body;
+      const { referrerName, referredName, position, availableDate, contactPhone, contactEmail } = body;
       const subject = `New Referral Request from ${sanitize(referrerName)}`;
       const html = `
         <h2>New Referral Request</h2>
         <p><strong>Referrer:</strong> ${sanitize(referrerName)}</p>
         <p><strong>Referred Person:</strong> ${sanitize(referredName)}</p>
         <p><strong>Position:</strong> ${sanitize(position)}</p>
+        <p><strong>Contact Phone:</strong> ${sanitize(contactPhone)}</p>
+        <p><strong>Contact Email:</strong> ${sanitize(contactEmail || "N/A")}</p>
         <p><strong>Available Date:</strong> ${sanitize(availableDate)}</p>
         <p>Please log in to the Admin Portal to review this referral.</p>
       `;

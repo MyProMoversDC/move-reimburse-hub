@@ -194,6 +194,8 @@ const AdminReferralList = ({ language }: { language: string }) => {
                 <TableRow>
                   <TableHead>Referrer</TableHead>
                   <TableHead>Referred Person</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Position</TableHead>
                   <TableHead>Available Date</TableHead>
                   <TableHead>Start Date</TableHead>
@@ -205,7 +207,7 @@ const AdminReferralList = ({ language }: { language: string }) => {
               <TableBody>
                 {referrals.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                     <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                       No referral requests found
                     </TableCell>
                   </TableRow>
@@ -214,6 +216,8 @@ const AdminReferralList = ({ language }: { language: string }) => {
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">{r.referrer_name}</TableCell>
                       <TableCell>{r.referred_name}</TableCell>
+                      <TableCell>{r.contact_phone || "-"}</TableCell>
+                      <TableCell>{r.contact_email || "-"}</TableCell>
                       <TableCell>{r.referred_position === "driver" ? "Driver" : "Moving Helper"}</TableCell>
                       <TableCell>{format(new Date(r.available_date), "MM/dd/yyyy")}</TableCell>
                       <TableCell>{r.admin_start_date ? format(new Date(r.admin_start_date), "MM/dd/yyyy") : "-"}</TableCell>
