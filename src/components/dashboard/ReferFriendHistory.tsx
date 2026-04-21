@@ -146,7 +146,14 @@ const ReferFriendHistory = ({ userId, language, refreshKey }: ReferFriendHistory
                   </TableCell>
                   <TableCell>
                     {r.hiring_stage ? (
-                      <Badge variant="outline">{t[`stage_${r.hiring_stage}` as keyof typeof t] || r.hiring_stage}</Badge>
+                      <div className="space-y-1">
+                        <Badge variant={r.hiring_stage === "declined" ? "destructive" : "outline"}>
+                          {t[`stage_${r.hiring_stage}` as keyof typeof t] || r.hiring_stage}
+                        </Badge>
+                        {r.hiring_stage === "declined" && r.hiring_stage_note && (
+                          <p className="text-xs text-muted-foreground">{r.hiring_stage_note}</p>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
