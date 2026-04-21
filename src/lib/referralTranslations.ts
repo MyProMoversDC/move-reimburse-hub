@@ -52,6 +52,7 @@ export const referralTranslations = {
     stage_interview_complete: "Interview Complete",
     stage_in_training: "In Training",
     stage_hired: "Hired",
+    stage_declined: "Declined",
   },
   es: {
     referFriend: "Referir un Amigo",
@@ -106,6 +107,7 @@ export const referralTranslations = {
     stage_interview_complete: "Entrevista Completada",
     stage_in_training: "En Entrenamiento",
     stage_hired: "Contratado",
+    stage_declined: "Rechazado",
   },
   ru: {
     referFriend: "Порекомендовать Друга",
@@ -160,5 +162,6 @@ export const referralTranslations = {
     stage_interview_complete: "Собеседование Завершено",
     stage_in_training: "На Обучении",
     stage_hired: "Нанят",
+    stage_declined: "Отклонён",
   },
 };
