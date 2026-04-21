@@ -479,6 +479,7 @@ const AdminReferralList = ({ language }: { language: string }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
   );
 };
 
