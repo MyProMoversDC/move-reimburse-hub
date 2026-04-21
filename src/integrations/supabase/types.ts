@@ -1722,6 +1722,8 @@ export type Database = {
           bonus_claimed_at: string | null
           bonus_eligible_at: string | null
           bonus_paid_at: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           decline_reason: string | null
           declined_at: string | null
@@ -1744,6 +1746,8 @@ export type Database = {
           bonus_claimed_at?: string | null
           bonus_eligible_at?: string | null
           bonus_paid_at?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           decline_reason?: string | null
           declined_at?: string | null
@@ -1766,6 +1770,8 @@ export type Database = {
           bonus_claimed_at?: string | null
           bonus_eligible_at?: string | null
           bonus_paid_at?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           decline_reason?: string | null
           declined_at?: string | null
