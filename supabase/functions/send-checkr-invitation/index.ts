@@ -4,13 +4,20 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const CHECKR_API_KEY = Deno.env.get("CHECKR_API_KEY")!;
+const CHECKR_API_KEY = Deno.env.get("CHECKR_API_KEY") || "";
 const CHECKR_API_URL = "https://api.checkr.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+function respond(ok: boolean, payload: Record<string, unknown>, statusCode = 200): Response {
+  return new Response(JSON.stringify({ ok, ...payload }), {
+    status: statusCode,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -20,10 +27,12 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "Unauthorized" });
+    }
+
+    if (!CHECKR_API_KEY) {
+      console.error("CHECKR_API_KEY is not set");
+      return respond(false, { error: "Checkr API key is not configured" });
     }
 
     const supabaseAdmin = createClient(
@@ -33,10 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { userId } = await req.json();
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Missing userId" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "Missing userId" });
     }
 
     // Get user profile
@@ -47,10 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "User not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "User not found" });
     }
 
     // Check if already invited
@@ -61,18 +64,18 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (existing) {
-      return new Response(JSON.stringify({ error: "User already sent to Checkr", status: existing.status }), {
-        status: 409,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return respond(false, { error: "User already sent to Checkr", status: existing.status });
     }
 
     // Step 1: Create Checkr candidate
+    const checkrAuth = btoa(CHECKR_API_KEY + ":");
+    console.log("Calling Checkr API to create candidate for:", profile.email);
+    
     const candidateRes = await fetch(`${CHECKR_API_URL}/v1/candidates`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${btoa(CHECKR_API_KEY + ":")}`,
+        Authorization: `Basic ${checkrAuth}`,
       },
       body: JSON.stringify({
         first_name: profile.first_name,
@@ -85,9 +88,13 @@ const handler = async (req: Request): Promise<Response> => {
     const candidateData = await candidateRes.json();
     if (!candidateRes.ok) {
       console.error("Checkr candidate creation failed:", candidateData);
-      return new Response(JSON.stringify({ error: "Failed to create Checkr candidate", details: candidateData }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return respond(false, { 
+        error: "Failed to create Checkr candidate", 
+        details: candidateData,
+        diagnostics: {
+          error_stage: "checkr_candidate_creation",
+          status_code: candidateRes.status,
+        }
       });
     }
 
@@ -96,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${btoa(CHECKR_API_KEY + ":")}`,
+        Authorization: `Basic ${checkrAuth}`,
       },
       body: JSON.stringify({
         candidate_id: candidateData.id,
@@ -107,9 +114,13 @@ const handler = async (req: Request): Promise<Response> => {
     const invitationData = await invitationRes.json();
     if (!invitationRes.ok) {
       console.error("Checkr invitation creation failed:", invitationData);
-      return new Response(JSON.stringify({ error: "Failed to create Checkr invitation", details: invitationData }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return respond(false, { 
+        error: "Failed to create Checkr invitation", 
+        details: invitationData,
+        diagnostics: {
+          error_stage: "checkr_invitation_creation",
+          status_code: invitationRes.status,
+        }
       });
     }
 
@@ -166,16 +177,10 @@ const handler = async (req: Request): Promise<Response> => {
       resend_id: emailResult?.data?.id || null,
     });
 
-    return new Response(JSON.stringify({ success: true, invitationUrl }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(true, { success: true, invitationUrl });
   } catch (error) {
     console.error("Error in send-checkr-invitation:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return respond(false, { error: error.message });
   }
 };
 

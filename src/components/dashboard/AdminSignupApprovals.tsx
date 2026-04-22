@@ -216,12 +216,17 @@ const AdminSignupApprovals = () => {
         body: { userId },
       });
 
-      if (error) throw error;
-      if (data?.error) {
-        if (data.error.includes("already")) {
+      if (error) {
+        // Try to parse error body for details
+        console.error("Checkr invoke error:", error);
+        throw new Error("Failed to send Checkr invitation");
+      }
+      if (data && !data.ok) {
+        if (data.error?.includes("already")) {
           toast.info(t.checkrAlreadySent);
         } else {
-          throw new Error(data.error);
+          const detail = data.details ? JSON.stringify(data.details) : "";
+          throw new Error(data.error + (detail ? `: ${detail}` : ""));
         }
         return;
       }
