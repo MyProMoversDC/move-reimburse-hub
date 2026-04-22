@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Check, X, Loader2, UserPlus } from "lucide-react";
+import { Check, X, Loader2, UserPlus, Send } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -21,6 +21,7 @@ interface PendingUser {
   signup_status: string;
   created_at: string;
   role?: string;
+  checkr_status?: string | null;
 }
 
 const approvalTranslations = {
@@ -43,6 +44,14 @@ const approvalTranslations = {
     mover: "Mover",
     office_staff: "Office Staff",
     pending: "Pending",
+    sendToCheckr: "Send to Checkr",
+    checkrSent: "Checkr invitation sent successfully",
+    checkrAlreadySent: "Already sent to Checkr",
+    checkrInvited: "Checkr Invited",
+    checkrPending: "Checkr Pending",
+    checkrClear: "Checkr Clear",
+    checkrConsider: "Checkr Review",
+    approvedStatus: "Approved",
   },
   es: {
     title: "Aprobaciones de Registro",
@@ -63,6 +72,14 @@ const approvalTranslations = {
     mover: "Mudador",
     office_staff: "Personal de Oficina",
     pending: "Pendiente",
+    sendToCheckr: "Enviar a Checkr",
+    checkrSent: "Invitación de Checkr enviada exitosamente",
+    checkrAlreadySent: "Ya enviado a Checkr",
+    checkrInvited: "Checkr Invitado",
+    checkrPending: "Checkr Pendiente",
+    checkrClear: "Checkr Aprobado",
+    checkrConsider: "Checkr Revisión",
+    approvedStatus: "Aprobado",
   },
   ru: {
     title: "Одобрение Регистраций",
@@ -83,7 +100,27 @@ const approvalTranslations = {
     mover: "Грузчик",
     office_staff: "Офисный Сотрудник",
     pending: "Ожидает",
+    sendToCheckr: "Отправить в Checkr",
+    checkrSent: "Приглашение Checkr отправлено",
+    checkrAlreadySent: "Уже отправлено в Checkr",
+    checkrInvited: "Checkr Приглашён",
+    checkrPending: "Checkr Ожидание",
+    checkrClear: "Checkr Одобрен",
+    checkrConsider: "Checkr Проверка",
+    approvedStatus: "Одобрен",
   },
+};
+
+const getCheckrBadge = (status: string | null | undefined, t: any) => {
+  if (!status) return null;
+  const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    invited: { label: t.checkrInvited, variant: "secondary" },
+    pending: { label: t.checkrPending, variant: "outline" },
+    clear: { label: t.checkrClear, variant: "default" },
+    consider: { label: t.checkrConsider, variant: "destructive" },
+  };
+  const info = map[status] || { label: status, variant: "outline" as const };
+  return <Badge variant={info.variant}>{info.label}</Badge>;
 };
 
 const AdminSignupApprovals = () => {
@@ -92,6 +129,7 @@ const AdminSignupApprovals = () => {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [checkrProcessingId, setCheckrProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPendingUsers();
@@ -102,27 +140,28 @@ const AdminSignupApprovals = () => {
       const { data: profiles, error } = await (supabase
         .from("profiles")
         .select("*") as any)
-        .eq("signup_status", "pending")
+        .in("signup_status", ["pending", "approved"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Fetch roles for each pending user
-      const usersWithRoles = await Promise.all(
+      // Fetch roles and checkr status for each user
+      const usersWithDetails = await Promise.all(
         (profiles || []).map(async (profile: any) => {
-          const { data: roles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", profile.id);
+          const [{ data: roles }, { data: checkrRecord }] = await Promise.all([
+            supabase.from("user_roles").select("role").eq("user_id", profile.id),
+            (supabase.from("checkr_candidates").select("status").eq("user_id", profile.id).maybeSingle() as any),
+          ]);
 
           return {
             ...profile,
             role: roles?.[0]?.role || "mover",
+            checkr_status: checkrRecord?.status || null,
           };
         })
       );
 
-      setPendingUsers(usersWithRoles);
+      setPendingUsers(usersWithDetails);
     } catch (error) {
       console.error("Error fetching pending users:", error);
     } finally {
@@ -141,7 +180,9 @@ const AdminSignupApprovals = () => {
       if (error) throw error;
 
       toast.success(t.approved);
-      setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+      setPendingUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, signup_status: "approved" } : u))
+      );
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -168,6 +209,35 @@ const AdminSignupApprovals = () => {
     }
   };
 
+  const handleSendToCheckr = async (userId: string) => {
+    setCheckrProcessingId(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-checkr-invitation", {
+        body: { userId },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error.includes("already")) {
+          toast.info(t.checkrAlreadySent);
+        } else {
+          throw new Error(data.error);
+        }
+        return;
+      }
+
+      toast.success(t.checkrSent);
+      setPendingUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, checkr_status: "invited" } : u))
+      );
+    } catch (error: any) {
+      console.error("Checkr invitation error:", error);
+      toast.error(error.message || "Failed to send Checkr invitation");
+    } finally {
+      setCheckrProcessingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center p-8">
@@ -176,11 +246,14 @@ const AdminSignupApprovals = () => {
     );
   }
 
+  const pendingList = pendingUsers.filter((u) => u.signup_status === "pending");
+  const approvedList = pendingUsers.filter((u) => u.signup_status === "approved");
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{t.title}</h2>
 
-      {pendingUsers.length === 0 ? (
+      {pendingList.length === 0 && approvedList.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <UserPlus className="h-12 w-12 text-muted-foreground mb-4" />
@@ -189,7 +262,7 @@ const AdminSignupApprovals = () => {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {pendingUsers.map((user) => (
+          {pendingList.map((user) => (
             <Card key={user.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -205,44 +278,7 @@ const AdminSignupApprovals = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
-                  <div>
-                    <span className="font-medium">{t.email}:</span>{" "}
-                    {user.email}
-                  </div>
-                  <div>
-                    <span className="font-medium">{t.phone}:</span>{" "}
-                    {user.phone}
-                  </div>
-                  <div>
-                    <span className="font-medium">{t.username}:</span>{" "}
-                    {user.username}
-                  </div>
-                  <div>
-                    <span className="font-medium">{t.dob}:</span>{" "}
-                    {user.birth_date
-                      ? format(new Date(user.birth_date), "MM/dd/yyyy")
-                      : "N/A"}
-                  </div>
-                  {user.nickname && (
-                    <div>
-                      <span className="font-medium">{t.nickname}:</span>{" "}
-                      {user.nickname}
-                      {user.use_nickname_in_chat && (
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({t.chatNickname})
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <div>
-                    <span className="font-medium">{t.submittedAt}:</span>{" "}
-                    {user.created_at
-                      ? format(new Date(user.created_at), "MM/dd/yyyy HH:mm")
-                      : "N/A"}
-                  </div>
-                </div>
-
+                <UserDetails user={user} t={t} />
                 <div className="flex gap-2 justify-end">
                   <Button
                     variant="outline"
@@ -274,10 +310,82 @@ const AdminSignupApprovals = () => {
               </CardContent>
             </Card>
           ))}
+
+          {approvedList.map((user) => (
+            <Card key={user.id}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">
+                    {user.first_name} {user.last_name}
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {t[user.role as keyof typeof t] || user.role}
+                    </Badge>
+                    <Badge variant="default">{t.approvedStatus}</Badge>
+                    {getCheckrBadge(user.checkr_status, t)}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <UserDetails user={user} t={t} />
+                <div className="flex gap-2 justify-end">
+                  {!user.checkr_status && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSendToCheckr(user.id)}
+                      disabled={checkrProcessingId === user.id}
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                    >
+                      {checkrProcessingId === user.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-1" />
+                      )}
+                      {t.sendToCheckr}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>
   );
 };
+
+const UserDetails = ({ user, t }: { user: PendingUser; t: any }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
+    <div>
+      <span className="font-medium">{t.email}:</span> {user.email}
+    </div>
+    <div>
+      <span className="font-medium">{t.phone}:</span> {user.phone}
+    </div>
+    <div>
+      <span className="font-medium">{t.username}:</span> {user.username}
+    </div>
+    <div>
+      <span className="font-medium">{t.dob}:</span>{" "}
+      {user.birth_date ? format(new Date(user.birth_date), "MM/dd/yyyy") : "N/A"}
+    </div>
+    {user.nickname && (
+      <div>
+        <span className="font-medium">{t.nickname}:</span> {user.nickname}
+        {user.use_nickname_in_chat && (
+          <span className="text-xs text-muted-foreground ml-2">
+            ({t.chatNickname})
+          </span>
+        )}
+      </div>
+    )}
+    <div>
+      <span className="font-medium">{t.submittedAt}:</span>{" "}
+      {user.created_at ? format(new Date(user.created_at), "MM/dd/yyyy HH:mm") : "N/A"}
+    </div>
+  </div>
+);
 
 export default AdminSignupApprovals;
