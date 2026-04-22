@@ -88,9 +88,13 @@ const handler = async (req: Request): Promise<Response> => {
     const candidateData = await candidateRes.json();
     if (!candidateRes.ok) {
       console.error("Checkr candidate creation failed:", candidateData);
+      const isAuthError = candidateData?.error === "Bad authentication error";
       return respond(false, { 
-        error: "Failed to create Checkr candidate", 
+        error: "Failed to create Checkr candidate",
         details: candidateData,
+        hint: isAuthError
+          ? "Check the Checkr secret API key and make sure it matches the correct environment: staging keys only work with api.checkr-staging.com, production keys work with api.checkr.com."
+          : undefined,
         diagnostics: {
           error_stage: "checkr_candidate_creation",
           status_code: candidateRes.status,
