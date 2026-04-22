@@ -53,6 +53,7 @@ const approvalTranslations = {
     checkrClear: "Checkr Clear",
     checkrConsider: "Checkr Review",
     approvedStatus: "Approved",
+    searchPlaceholder: "Search by name, email, or phone...",
   },
   es: {
     title: "Aprobaciones de Registro",
@@ -81,6 +82,7 @@ const approvalTranslations = {
     checkrClear: "Checkr Aprobado",
     checkrConsider: "Checkr Revisión",
     approvedStatus: "Aprobado",
+    searchPlaceholder: "Buscar por nombre, correo o teléfono...",
   },
   ru: {
     title: "Одобрение Регистраций",
@@ -109,6 +111,7 @@ const approvalTranslations = {
     checkrClear: "Checkr Одобрен",
     checkrConsider: "Checkr Проверка",
     approvedStatus: "Одобрен",
+    searchPlaceholder: "Поиск по имени, почте или телефону...",
   },
 };
 
