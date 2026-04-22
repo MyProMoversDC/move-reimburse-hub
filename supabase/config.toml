@@ -50,3 +50,9 @@ verify_jwt = true
 
 [functions.check-missing-alcohol-tests]
 verify_jwt = false
+
+[functions.send-checkr-invitation]
+verify_jwt = true
+
+[functions.checkr-webhook]
+verify_jwt = false
