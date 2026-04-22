@@ -256,8 +256,19 @@ const AdminSignupApprovals = () => {
     );
   }
 
-  const pendingList = pendingUsers.filter((u) => u.signup_status === "pending");
-  const approvedList = pendingUsers.filter((u) => u.signup_status === "approved");
+  const filterBySearch = (users: PendingUser[]) => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase().trim();
+    return users.filter((u) =>
+      `${u.first_name} ${u.last_name}`.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.phone.toLowerCase().includes(q) ||
+      u.username.toLowerCase().includes(q)
+    );
+  };
+
+  const pendingList = filterBySearch(pendingUsers.filter((u) => u.signup_status === "pending"));
+  const approvedList = filterBySearch(pendingUsers.filter((u) => u.signup_status === "approved"));
 
   return (
     <div className="space-y-6">
