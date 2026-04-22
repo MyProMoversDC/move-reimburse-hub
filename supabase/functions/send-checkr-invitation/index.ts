@@ -4,7 +4,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const CHECKR_API_KEY = Deno.env.get("CHECKR_API_KEY") || "";
+const CHECKR_API_KEY = (Deno.env.get("CHECKR_API_KEY") || "").trim();
 const CHECKR_API_URL = "https://api.checkr.com";
 
 const corsHeaders = {
