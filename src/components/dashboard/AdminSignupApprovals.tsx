@@ -274,6 +274,15 @@ const AdminSignupApprovals = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{t.title}</h2>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={t.searchPlaceholder}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
       {pendingList.length === 0 && approvedList.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
