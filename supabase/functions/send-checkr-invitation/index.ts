@@ -4,7 +4,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const CHECKR_API_KEY = Deno.env.get("CHECKR_API_KEY") || "";
+const CHECKR_API_KEY = (Deno.env.get("CHECKR_API_KEY") || "").trim();
 const CHECKR_API_URL = "https://api.checkr.com";
 
 const corsHeaders = {
@@ -88,9 +88,13 @@ const handler = async (req: Request): Promise<Response> => {
     const candidateData = await candidateRes.json();
     if (!candidateRes.ok) {
       console.error("Checkr candidate creation failed:", candidateData);
+      const isAuthError = candidateData?.error === "Bad authentication error";
       return respond(false, { 
-        error: "Failed to create Checkr candidate", 
+        error: "Failed to create Checkr candidate",
         details: candidateData,
+        hint: isAuthError
+          ? "Check the Checkr secret API key and make sure it matches the correct environment: staging keys only work with api.checkr-staging.com, production keys work with api.checkr.com."
+          : undefined,
         diagnostics: {
           error_stage: "checkr_candidate_creation",
           status_code: candidateRes.status,
