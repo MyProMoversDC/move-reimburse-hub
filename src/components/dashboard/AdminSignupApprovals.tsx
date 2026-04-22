@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Check, X, Loader2, UserPlus, Send } from "lucide-react";
+import { Check, X, Loader2, UserPlus, Send, Search } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -52,6 +53,7 @@ const approvalTranslations = {
     checkrClear: "Checkr Clear",
     checkrConsider: "Checkr Review",
     approvedStatus: "Approved",
+    searchPlaceholder: "Search by name, email, or phone...",
   },
   es: {
     title: "Aprobaciones de Registro",
@@ -80,6 +82,7 @@ const approvalTranslations = {
     checkrClear: "Checkr Aprobado",
     checkrConsider: "Checkr Revisión",
     approvedStatus: "Aprobado",
+    searchPlaceholder: "Buscar por nombre, correo o teléfono...",
   },
   ru: {
     title: "Одобрение Регистраций",
@@ -108,6 +111,7 @@ const approvalTranslations = {
     checkrClear: "Checkr Одобрен",
     checkrConsider: "Checkr Проверка",
     approvedStatus: "Одобрен",
+    searchPlaceholder: "Поиск по имени, почте или телефону...",
   },
 };
 
@@ -130,6 +134,7 @@ const AdminSignupApprovals = () => {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [checkrProcessingId, setCheckrProcessingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchPendingUsers();
@@ -251,13 +256,33 @@ const AdminSignupApprovals = () => {
     );
   }
 
-  const pendingList = pendingUsers.filter((u) => u.signup_status === "pending");
-  const approvedList = pendingUsers.filter((u) => u.signup_status === "approved");
+  const filterBySearch = (users: PendingUser[]) => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase().trim();
+    return users.filter((u) =>
+      `${u.first_name} ${u.last_name}`.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.phone.toLowerCase().includes(q) ||
+      u.username.toLowerCase().includes(q)
+    );
+  };
+
+  const pendingList = filterBySearch(pendingUsers.filter((u) => u.signup_status === "pending"));
+  const approvedList = filterBySearch(pendingUsers.filter((u) => u.signup_status === "approved"));
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{t.title}</h2>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={t.searchPlaceholder}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
       {pendingList.length === 0 && approvedList.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
