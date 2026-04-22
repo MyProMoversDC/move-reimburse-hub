@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         candidate_id: candidateData.id,
-        package: "driver_pro",
+        package: "basic_background_check",
       }),
     });
 
