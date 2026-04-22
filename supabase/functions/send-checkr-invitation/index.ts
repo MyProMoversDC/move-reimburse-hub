@@ -5,7 +5,9 @@ import { logEmail } from "../_shared/emailLogger.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const CHECKR_API_KEY = (Deno.env.get("CHECKR_API_KEY") || "").trim();
-const CHECKR_API_URL = "https://api.checkr.com";
+const CHECKR_API_URL = Deno.env.get("CHECKR_ENVIRONMENT") === "production"
+  ? "https://api.checkr.com"
+  : "https://api.checkr-staging.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
