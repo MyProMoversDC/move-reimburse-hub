@@ -228,6 +228,45 @@ export type Database = {
           },
         ]
       }
+      checkr_candidates: {
+        Row: {
+          checkr_candidate_id: string | null
+          checkr_result: string | null
+          created_at: string
+          id: string
+          invitation_id: string | null
+          invitation_url: string | null
+          report_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkr_candidate_id?: string | null
+          checkr_result?: string | null
+          created_at?: string
+          id?: string
+          invitation_id?: string | null
+          invitation_url?: string | null
+          report_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkr_candidate_id?: string | null
+          checkr_result?: string | null
+          created_at?: string
+          id?: string
+          invitation_id?: string | null
+          invitation_url?: string | null
+          report_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       consent_acknowledgments: {
         Row: {
           acknowledged_at: string
