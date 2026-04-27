@@ -10,7 +10,8 @@ import {
   Newspaper,
   ClipboardList,
   HelpCircle,
-  UserPlus
+  UserPlus,
+  Truck
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const translations = {
     navigation: "Navigation",
     feed: "Feed",
     todoList: "To-Do List",
+    myJobs: "My Jobs",
     reimbursements: "Reimbursements",
     reviews: "Customer Reviews",
     missingPayments: "Missing Payments",
@@ -57,6 +59,7 @@ const translations = {
     navigation: "Navegación",
     feed: "Noticias",
     todoList: "Lista de Tareas",
+    myJobs: "Mis Trabajos",
     reimbursements: "Reembolsos",
     reviews: "Reseñas de Clientes",
     missingPayments: "Pagos Faltantes",
@@ -71,6 +74,7 @@ const translations = {
     navigation: "Навигация",
     feed: "Лента",
     todoList: "Список Задач",
+    myJobs: "Мои Заказы",
     reimbursements: "Возмещения",
     reviews: "Отзывы клиентов",
     missingPayments: "Пропущенные платежи",
@@ -135,6 +139,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     { id: "feed", label: t.feed, icon: Newspaper, badgeCount: unacknowledgedCount },
     { id: "refer-friend", label: t.referFriend, icon: UserPlus },
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
+    { id: "my-jobs", label: t.myJobs, icon: Truck },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },
     { id: "missing-payments", label: t.missingPayments, icon: AlertTriangle },

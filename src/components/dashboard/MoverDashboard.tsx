@@ -31,6 +31,7 @@ import ReferFriendForm from "./ReferFriendForm";
 import ReferFriendHistory from "./ReferFriendHistory";
 import MoverSettings from "./MoverSettings";
 import MoverTodoList from "./MoverTodoList";
+import MoverJobAssignments from "./MoverJobAssignments";
 import { MoverNotificationBell } from "./MoverNotificationBell";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -224,6 +225,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       
       case "todo":
         return <MoverTodoList userId={userId} language={language} onNavigateToSettings={handleNavigateToSettings} />;
+
+      case "my-jobs":
+        return <MoverJobAssignments userId={userId} />;
       
       case "reimbursements":
         return (
