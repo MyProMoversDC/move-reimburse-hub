@@ -1101,6 +1101,48 @@ export type Database = {
         }
         Relationships: []
       }
+      job_assignments: {
+        Row: {
+          callback_url: string
+          client_name: string
+          created_at: string
+          external_job_id: string
+          id: string
+          job_number: string
+          move_size: string | null
+          scope_of_work: string | null
+          service_date: string | null
+          truck_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          callback_url: string
+          client_name: string
+          created_at?: string
+          external_job_id: string
+          id?: string
+          job_number: string
+          move_size?: string | null
+          scope_of_work?: string | null
+          service_date?: string | null
+          truck_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          callback_url?: string
+          client_name?: string
+          created_at?: string
+          external_job_id?: string
+          id?: string
+          job_number?: string
+          move_size?: string | null
+          scope_of_work?: string | null
+          service_date?: string | null
+          truck_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       knowledge_base_folder_shares: {
         Row: {
           folder_id: string
@@ -1394,6 +1436,44 @@ export type Database = {
             columns: ["feedback_id"]
             isOneToOne: false
             referencedRelation: "mover_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mover_job_assignments: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          responded_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mover_job_assignments_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "job_assignments"
             referencedColumns: ["id"]
           },
         ]
