@@ -56,3 +56,6 @@ verify_jwt = true
 
 [functions.checkr-webhook]
 verify_jwt = false
+
+[functions.list-movers]
+verify_jwt = false
