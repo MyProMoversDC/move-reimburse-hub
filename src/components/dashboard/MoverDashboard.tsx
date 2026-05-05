@@ -552,6 +552,16 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           </div>
         </Card>
 
+        {/* My Jobs Button for Mobile */}
+        <Button 
+          variant={activeTab === "my-jobs" ? "default" : "outline"}
+          className="w-full justify-start"
+          onClick={() => setActiveTab("my-jobs")}
+        >
+          <Truck className="h-4 w-4 mr-2" />
+          {language === 'ru' ? 'Мои Заказы' : language === 'es' ? 'Mis Trabajos' : 'My Jobs'}
+        </Button>
+
         {/* Refer a Friend Button for Mobile */}
         <Button 
           variant={activeTab === "refer-friend" ? "default" : "outline"}
