@@ -1143,6 +1143,47 @@ export type Database = {
         }
         Relationships: []
       }
+      job_location_pings: {
+        Row: {
+          accuracy: number | null
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          mover_assignment_id: string
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          mover_assignment_id: string
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          mover_assignment_id?: string
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_location_pings_mover_assignment_id_fkey"
+            columns: ["mover_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "mover_job_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base_folder_shares: {
         Row: {
           folder_id: string
@@ -1444,8 +1485,10 @@ export type Database = {
         Row: {
           assignment_id: string
           created_at: string
+          ended_at: string | null
           id: string
           responded_at: string | null
+          started_at: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1453,8 +1496,10 @@ export type Database = {
         Insert: {
           assignment_id: string
           created_at?: string
+          ended_at?: string | null
           id?: string
           responded_at?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1462,8 +1507,10 @@ export type Database = {
         Update: {
           assignment_id?: string
           created_at?: string
+          ended_at?: string | null
           id?: string
           responded_at?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string
