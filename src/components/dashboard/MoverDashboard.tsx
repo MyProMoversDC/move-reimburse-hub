@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -440,7 +440,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     const showFormContent = activeTab !== "feed" && (
       showReimbursementForm || showReviewForm || showMissingPaymentForm || 
       showViolenceForm || showFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
-      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "refer-friend"
+      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "refer-friend" || activeTab === "my-jobs"
     );
 
     const handleBackToFeed = () => {
@@ -551,6 +551,16 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             </Button>
           </div>
         </Card>
+
+        {/* My Jobs Button for Mobile */}
+        <Button 
+          variant={activeTab === "my-jobs" ? "default" : "outline"}
+          className="w-full justify-start"
+          onClick={() => setActiveTab("my-jobs")}
+        >
+          <Truck className="h-4 w-4 mr-2" />
+          {language === 'ru' ? 'Мои Заказы' : language === 'es' ? 'Mis Trabajos' : 'My Jobs'}
+        </Button>
 
         {/* Refer a Friend Button for Mobile */}
         <Button 
