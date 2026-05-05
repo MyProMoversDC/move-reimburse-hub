@@ -208,7 +208,7 @@ export default function MoverJobAssignments({ userId }: Props) {
             <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div className="min-w-0">
                 <CardTitle className="break-words text-base sm:text-lg">Job #{a.job_number} — {a.client_name}</CardTitle>
-                <CardDescription className="mt-1 flex flex-wrap items-center gap-2">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   {a.service_date && (
                     <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDateEST(a.service_date)}</span>
                   )}
@@ -216,7 +216,7 @@ export default function MoverJobAssignments({ userId }: Props) {
                     <span className="inline-flex items-center gap-1"><Truck className="h-3 w-3" />Truck {a.truck_number}</span>
                   )}
                   {a.move_size && <Badge variant="outline">{a.move_size}</Badge>}
-                </CardDescription>
+                </div>
               </div>
               <StatusBadge status={r.status} />
             </CardHeader>
