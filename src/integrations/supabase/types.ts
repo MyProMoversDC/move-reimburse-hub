@@ -1485,6 +1485,7 @@ export type Database = {
         Row: {
           assignment_id: string
           created_at: string
+          decline_reason: string | null
           ended_at: string | null
           id: string
           responded_at: string | null
@@ -1496,6 +1497,7 @@ export type Database = {
         Insert: {
           assignment_id: string
           created_at?: string
+          decline_reason?: string | null
           ended_at?: string | null
           id?: string
           responded_at?: string | null
@@ -1507,6 +1509,7 @@ export type Database = {
         Update: {
           assignment_id?: string
           created_at?: string
+          decline_reason?: string | null
           ended_at?: string | null
           id?: string
           responded_at?: string | null
