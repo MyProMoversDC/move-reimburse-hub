@@ -149,14 +149,28 @@ export default function MoverJobAssignments({ userId }: Props) {
   useEffect(() => () => stopTracking(), []);
 
   // ---------- actions ----------
-  async function respond(rowId: string, assignmentId: string, status: "confirmed" | "declined") {
+  async function respond(rowId: string, assignmentId: string, status: "confirmed" | "declined", reason?: string) {
     setBusyId(rowId);
     const { error } = await supabase.functions.invoke("confirm-job", {
-      body: { assignment_id: assignmentId, status },
+      body: { assignment_id: assignmentId, status, decline_reason: reason },
     });
     setBusyId(null);
     if (error) toast({ title: "Could not submit", description: error.message, variant: "destructive" });
     else { toast({ title: status === "confirmed" ? "Job confirmed" : "Job declined" }); load(); }
+  }
+
+  function openDecline() {
+    setDeclineReason("");
+    setDeclineError("");
+    setDeclineOpen(true);
+  }
+
+  async function submitDecline() {
+    if (!selected) return;
+    const trimmed = declineReason.trim();
+    if (!trimmed) { setDeclineError("A reason is required to decline."); return; }
+    await respond(selected.id, selected.assignment.id, "declined", trimmed);
+    setDeclineOpen(false);
   }
 
   function requestGeoPermission(): Promise<boolean> {
