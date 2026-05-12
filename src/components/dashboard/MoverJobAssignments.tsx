@@ -45,6 +45,7 @@ interface JobRow {
   responded_at: string | null;
   started_at: string | null;
   ended_at: string | null;
+  decline_reason: string | null;
   assignment: JobAssignment;
 }
 
@@ -73,7 +74,7 @@ export default function MoverJobAssignments({ userId }: Props) {
     const { data, error } = await supabase
       .from("mover_job_assignments")
       .select(
-        "id, status, responded_at, started_at, ended_at, assignment:job_assignments(id, job_number, client_name, service_date, move_size, scope_of_work, truck_number)"
+        "id, status, responded_at, started_at, ended_at, decline_reason, assignment:job_assignments(id, job_number, client_name, service_date, move_size, scope_of_work, truck_number)"
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
