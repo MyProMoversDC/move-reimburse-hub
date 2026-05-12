@@ -9,9 +9,10 @@ const corsHeaders = {
 
 interface Body {
   assignment_id: string;
-  status: "confirmed" | "declined";
+  status: "confirmed" | "declined" | "arrived_parking" | "arrived_site";
   decline_reason?: string;
 }
+const ALLOWED = ["confirmed", "declined", "arrived_parking", "arrived_site"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
