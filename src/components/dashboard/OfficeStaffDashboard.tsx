@@ -3,6 +3,7 @@ import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap } from "luci
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import CustomerRefundForm from "./CustomerRefundForm";
+import CustomerRefundHistory from "./CustomerRefundHistory";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import FeedList from "./feed/FeedList";
