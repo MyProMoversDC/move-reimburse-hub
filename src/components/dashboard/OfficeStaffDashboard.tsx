@@ -126,7 +126,10 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           </div>
         )}
         {activeTab === "customer-refund" && (
-          <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey(prev => prev + 1)} />
+          <div className="space-y-6">
+            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey(prev => prev + 1)} />
+            <CustomerRefundHistory userId={userId} language={language} refreshKey={refreshKey} />
+          </div>
         )}
         {activeTab === "chat" && (
           <div className="space-y-6">
