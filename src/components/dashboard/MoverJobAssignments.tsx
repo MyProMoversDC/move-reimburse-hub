@@ -332,6 +332,20 @@ export default function MoverJobAssignments({ userId }: Props) {
                     {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}Start Job
                   </Button>
                 )}
+                {(selected.status === "confirmed" || selected.status === "in_progress") && (
+                  <>
+                    <Button variant="outline" className="w-full sm:w-auto"
+                      onClick={() => reportArrival(selected, "arrived_parking")}
+                      disabled={busyId === selected.id || !!selected.arrived_parking_at}>
+                      🅿️ {selected.arrived_parking_at ? "Parking confirmed" : "I'm at parking lot"}
+                    </Button>
+                    <Button variant="outline" className="w-full sm:w-auto"
+                      onClick={() => reportArrival(selected, "arrived_site")}
+                      disabled={busyId === selected.id || !!selected.arrived_site_at}>
+                      📍 {selected.arrived_site_at ? "Site confirmed" : "I'm at job site"}
+                    </Button>
+                  </>
+                )}
                 {selected.status === "in_progress" && (
                   <Button variant="destructive" className="w-full sm:w-auto" onClick={() => endJob(selected)} disabled={busyId === selected.id}>
                     {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Square className="h-4 w-4 mr-2" />}End Job
