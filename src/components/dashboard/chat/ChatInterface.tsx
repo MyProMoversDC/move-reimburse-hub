@@ -6,7 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music } from "lucide-react";
+import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings } from "lucide-react";
+import ManageGroupDialog from "./ManageGroupDialog";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
@@ -47,12 +48,16 @@ interface Conversation {
 interface ChatInterfaceProps {
   conversation: Conversation;
   userId: string;
+  userRole?: string;
   language: ChatLanguage;
   onBack: () => void;
   isUserOnline?: (userId: string) => boolean;
 }
 
-const ChatInterface = ({ conversation, userId, language, onBack, isUserOnline }: ChatInterfaceProps) => {
+const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUserOnline }: ChatInterfaceProps) => {
+  const [manageOpen, setManageOpen] = useState(false);
+  const [participants, setParticipants] = useState(conversation.participants);
+  const isAdmin = userRole === 'admin';
   const t = chatTranslations[language];
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
