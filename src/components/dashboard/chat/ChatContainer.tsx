@@ -86,6 +86,7 @@ const ChatContainer = ({ userId, userRole, language }: ChatContainerProps) => {
         <ChatInterface
           conversation={selectedConversation}
           userId={userId}
+          userRole={userRole}
           language={language}
           onBack={handleBack}
           isUserOnline={isUserOnline}
