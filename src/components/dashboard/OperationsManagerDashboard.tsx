@@ -105,7 +105,10 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
             <AlcoholTestReportForm userId={userId} language={language} />
           )}
           {activeTab === "customer-refund" && (
-            <CustomerRefundForm userId={userId} language={language} />
+            <div className="space-y-4">
+              <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey(prev => prev + 1)} />
+              <CustomerRefundHistory userId={userId} language={language} refreshKey={refreshKey} />
+            </div>
           )}
           {activeTab === "chat" && (
             <>
