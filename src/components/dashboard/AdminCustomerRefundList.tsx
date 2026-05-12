@@ -104,6 +104,11 @@ const AdminCustomerRefundList = () => {
     setDeclineOpen(true);
   };
 
+  const openDetails = (r: Refund) => {
+    setDetailsTarget(r);
+    setDetailsOpen(true);
+  };
+
   const submitDecline = async () => {
     if (!declineTarget) return;
     if (!declineReason.trim()) {
