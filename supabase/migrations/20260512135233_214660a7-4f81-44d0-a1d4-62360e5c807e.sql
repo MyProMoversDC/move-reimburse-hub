@@ -1,0 +1,1 @@
+ALTER TABLE public.mover_job_assignments ADD COLUMN IF NOT EXISTS decline_reason text;

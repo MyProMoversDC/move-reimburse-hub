@@ -10,6 +10,7 @@ const corsHeaders = {
 interface Body {
   assignment_id: string;
   status: "confirmed" | "declined";
+  decline_reason?: string;
 }
 
 Deno.serve(async (req) => {
@@ -35,13 +36,21 @@ Deno.serve(async (req) => {
     if (!body?.assignment_id || !["confirmed", "declined"].includes(body.status)) {
       return json({ error: "Invalid payload" }, 400);
     }
+    const declineReason = (body.decline_reason ?? "").trim();
+    if (body.status === "declined" && !declineReason) {
+      return json({ error: "Decline reason is required" }, 400);
+    }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const responded_at = new Date().toISOString();
 
+    const updatePayload: Record<string, unknown> = { status: body.status, responded_at };
+    if (body.status === "declined") updatePayload.decline_reason = declineReason;
+    else updatePayload.decline_reason = null;
+
     const { data: updated, error: upErr } = await admin
       .from("mover_job_assignments")
-      .update({ status: body.status, responded_at })
+      .update(updatePayload)
       .eq("assignment_id", body.assignment_id)
       .eq("user_id", userId)
       .select("id, assignment_id")
@@ -66,6 +75,7 @@ Deno.serve(async (req) => {
             external_user_id: userId,
             status: body.status,
             responded_at,
+            decline_reason: body.status === "declined" ? declineReason : null,
           }),
         });
         const text = await resp.text();
