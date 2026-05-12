@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import DateRangeFilter from "./DateRangeFilter";
@@ -27,6 +27,7 @@ interface Refund {
   status: string;
   decline_reason: string | null;
   reviewed_at: string | null;
+  reviewed_by: string | null;
 }
 
 interface SubmitterProfile {
@@ -50,6 +51,9 @@ const AdminCustomerRefundList = () => {
   const [declineReason, setDeclineReason] = useState("");
   const [declineErr, setDeclineErr] = useState("");
   const [actioning, setActioning] = useState<string | null>(null);
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsTarget, setDetailsTarget] = useState<Refund | null>(null);
 
   useEffect(() => {
     fetchRefunds();
@@ -98,6 +102,11 @@ const AdminCustomerRefundList = () => {
     setDeclineReason("");
     setDeclineErr("");
     setDeclineOpen(true);
+  };
+
+  const openDetails = (r: Refund) => {
+    setDetailsTarget(r);
+    setDetailsOpen(true);
   };
 
   const submitDecline = async () => {
@@ -271,31 +280,41 @@ const AdminCustomerRefundList = () => {
                         </TableCell>
                         <TableCell>{format(new Date(refund.created_at), "MM/dd/yyyy hh:mm a")}</TableCell>
                         <TableCell className="text-right">
-                          {status === "pending" ? (
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                size="sm"
-                                onClick={() => markCompleted(refund)}
-                                disabled={actioning === refund.id}
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                                Refund Completed
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => openDecline(refund)}
-                                disabled={actioning === refund.id}
-                              >
-                                <XCircle className="h-3.5 w-3.5 mr-1" />
-                                Decline
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">
-                              {refund.reviewed_at ? format(new Date(refund.reviewed_at), "MM/dd/yyyy hh:mm a") : "—"}
-                            </span>
-                          )}
+                          <div className="flex gap-2 justify-end items-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openDetails(refund)}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              View
+                            </Button>
+                            {status === "pending" ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => markCompleted(refund)}
+                                  disabled={actioning === refund.id}
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                  Refund Completed
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => openDecline(refund)}
+                                  disabled={actioning === refund.id}
+                                >
+                                  <XCircle className="h-3.5 w-3.5 mr-1" />
+                                  Decline
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {refund.reviewed_at ? format(new Date(refund.reviewed_at), "MM/dd/yyyy hh:mm a") : "—"}
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -329,6 +348,87 @@ const AdminCustomerRefundList = () => {
             <Button variant="destructive" onClick={submitDecline} disabled={actioning === declineTarget?.id}>
               Decline
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Refund Request Details</DialogTitle>
+          </DialogHeader>
+          {detailsTarget && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Submitted By</p>
+                  <p className="font-medium">{getSubmitterName(detailsTarget.submitted_by)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Submitted On</p>
+                  <p className="font-medium">{format(new Date(detailsTarget.created_at), "MM/dd/yyyy hh:mm a")}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Customer Name</p>
+                  <p className="font-medium">{detailsTarget.customer_name}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Request Date</p>
+                  <p className="font-medium">{format(new Date(detailsTarget.request_date), "MM/dd/yyyy")}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Amount</p>
+                  <p className="font-medium">${Number(detailsTarget.amount).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Payment Method</p>
+                  <p className="font-medium">
+                    {detailsTarget.payment_method_other || detailsTarget.payment_method.charAt(0).toUpperCase() + detailsTarget.payment_method.slice(1)}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Status</p>
+                  <div className="mt-1">{statusBadge(detailsTarget.status || "pending")}</div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-muted-foreground text-sm mb-1">Reason</p>
+                <p className="text-sm bg-muted rounded-md p-3">{detailsTarget.reimbursement_reason}</p>
+              </div>
+
+              {detailsTarget.comments && (
+                <div>
+                  <p className="text-muted-foreground text-sm mb-1">Comments</p>
+                  <p className="text-sm bg-muted rounded-md p-3">{detailsTarget.comments}</p>
+                </div>
+              )}
+
+              {detailsTarget.status === "declined" && detailsTarget.decline_reason && (
+                <div>
+                  <p className="text-muted-foreground text-sm mb-1">Decline Reason</p>
+                  <p className="text-sm bg-destructive/10 text-destructive rounded-md p-3">{detailsTarget.decline_reason}</p>
+                </div>
+              )}
+
+              {detailsTarget.reviewed_at && (
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Reviewed At</p>
+                    <p className="font-medium">{format(new Date(detailsTarget.reviewed_at), "MM/dd/yyyy hh:mm a")}</p>
+                  </div>
+                  {detailsTarget.reviewed_by && (
+                    <div>
+                      <p className="text-muted-foreground">Reviewed By</p>
+                      <p className="font-medium">{getSubmitterName(detailsTarget.reviewed_by)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
