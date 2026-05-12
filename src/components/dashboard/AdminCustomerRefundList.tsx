@@ -52,6 +52,9 @@ const AdminCustomerRefundList = () => {
   const [declineErr, setDeclineErr] = useState("");
   const [actioning, setActioning] = useState<string | null>(null);
 
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsTarget, setDetailsTarget] = useState<Refund | null>(null);
+
   useEffect(() => {
     fetchRefunds();
     fetchSubmitters();
