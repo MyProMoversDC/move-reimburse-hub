@@ -67,6 +67,9 @@ export default function MoverJobAssignments({ userId }: Props) {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<JobRow | null>(null);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
+  const [declineError, setDeclineError] = useState("");
   const trackingRef = useRef<{ rowId: string; timer: number } | null>(null);
 
   async function load() {
