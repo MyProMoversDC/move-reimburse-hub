@@ -280,31 +280,41 @@ const AdminCustomerRefundList = () => {
                         </TableCell>
                         <TableCell>{format(new Date(refund.created_at), "MM/dd/yyyy hh:mm a")}</TableCell>
                         <TableCell className="text-right">
-                          {status === "pending" ? (
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                size="sm"
-                                onClick={() => markCompleted(refund)}
-                                disabled={actioning === refund.id}
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                                Refund Completed
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => openDecline(refund)}
-                                disabled={actioning === refund.id}
-                              >
-                                <XCircle className="h-3.5 w-3.5 mr-1" />
-                                Decline
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">
-                              {refund.reviewed_at ? format(new Date(refund.reviewed_at), "MM/dd/yyyy hh:mm a") : "—"}
-                            </span>
-                          )}
+                          <div className="flex gap-2 justify-end items-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openDetails(refund)}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              View
+                            </Button>
+                            {status === "pending" ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => markCompleted(refund)}
+                                  disabled={actioning === refund.id}
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                  Refund Completed
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => openDecline(refund)}
+                                  disabled={actioning === refund.id}
+                                >
+                                  <XCircle className="h-3.5 w-3.5 mr-1" />
+                                  Decline
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {refund.reviewed_at ? format(new Date(refund.reviewed_at), "MM/dd/yyyy hh:mm a") : "—"}
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
