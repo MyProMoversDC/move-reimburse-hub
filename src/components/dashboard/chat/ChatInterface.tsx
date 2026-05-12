@@ -56,7 +56,6 @@ interface ChatInterfaceProps {
 
 const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUserOnline }: ChatInterfaceProps) => {
   const [manageOpen, setManageOpen] = useState(false);
-  const [participants, setParticipants] = useState(conversation.participants);
   const isAdmin = userRole === 'admin';
   const t = chatTranslations[language];
   const [messages, setMessages] = useState<Message[]>([]);
@@ -578,7 +577,23 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             </p>
           )}
         </div>
+        {isAdmin && conversation.is_group && (
+          <Button variant="ghost" size="icon" onClick={() => setManageOpen(true)} title="Manage Group">
+            <Settings className="h-4 w-4 md:h-5 md:w-5" />
+          </Button>
+        )}
       </div>
+
+      {isAdmin && conversation.is_group && (
+        <ManageGroupDialog
+          open={manageOpen}
+          onClose={() => setManageOpen(false)}
+          conversationId={conversation.id}
+          conversationName={conversation.name}
+          currentUserId={userId}
+          onMembersChanged={() => { /* refresh on next navigation */ }}
+        />
+      )}
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
