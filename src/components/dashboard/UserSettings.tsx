@@ -738,6 +738,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                   onChange={(e) =>
                     setProfile({ ...profile, first_name: e.target.value })
                   }
+                  disabled={!!profile.first_name?.trim()}
+                  className={profile.first_name?.trim() ? "bg-muted" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -748,6 +750,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                   onChange={(e) =>
                     setProfile({ ...profile, last_name: e.target.value })
                   }
+                  disabled={!!profile.last_name?.trim()}
+                  className={profile.last_name?.trim() ? "bg-muted" : ""}
                 />
               </div>
             </div>
