@@ -46,6 +46,8 @@ interface JobRow {
   started_at: string | null;
   ended_at: string | null;
   decline_reason: string | null;
+  arrived_parking_at: string | null;
+  arrived_site_at: string | null;
   assignment: JobAssignment;
 }
 
