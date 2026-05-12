@@ -27,6 +27,7 @@ interface Refund {
   status: string;
   decline_reason: string | null;
   reviewed_at: string | null;
+  reviewed_by: string | null;
 }
 
 interface SubmitterProfile {
