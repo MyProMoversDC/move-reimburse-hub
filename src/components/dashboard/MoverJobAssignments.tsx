@@ -175,6 +175,16 @@ export default function MoverJobAssignments({ userId }: Props) {
     setDeclineOpen(false);
   }
 
+  async function reportArrival(row: JobRow, kind: "arrived_parking" | "arrived_site") {
+    setBusyId(row.id);
+    const { error } = await supabase.functions.invoke("confirm-job", {
+      body: { assignment_id: row.assignment.id, status: kind },
+    });
+    setBusyId(null);
+    if (error) toast({ title: "Could not submit", description: error.message, variant: "destructive" });
+    else { toast({ title: kind === "arrived_parking" ? "Parking lot arrival sent" : "Job site arrival sent" }); load(); }
+  }
+
   function requestGeoPermission(): Promise<boolean> {
     return new Promise((resolve) => {
       if (!("geolocation" in navigator)) return resolve(false);
