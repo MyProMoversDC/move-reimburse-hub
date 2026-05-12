@@ -324,6 +324,38 @@ export default function MoverJobAssignments({ userId }: Props) {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={declineOpen} onOpenChange={(o) => !o && setDeclineOpen(false)}>
+        <DialogContent className="max-w-md w-[95vw] sm:w-full">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <XCircle className="h-5 w-5" /> Decline Job
+            </DialogTitle>
+            <DialogDescription>
+              Please explain why you are declining this job. Your note will be sent to the Planning Manager.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="decline-note">Reason *</Label>
+            <Textarea
+              id="decline-note"
+              rows={4}
+              value={declineReason}
+              onChange={(e) => { setDeclineReason(e.target.value); if (declineError) setDeclineError(""); }}
+              placeholder="Enter the reason for declining..."
+              className={declineError ? "border-destructive" : ""}
+            />
+            {declineError && <p className="text-sm text-destructive">{declineError}</p>}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeclineOpen(false)} disabled={busyId === selected?.id}>Cancel</Button>
+            <Button variant="destructive" onClick={submitDecline} disabled={busyId === selected?.id}>
+              {busyId === selected?.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+              Decline Job
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
