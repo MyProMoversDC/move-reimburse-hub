@@ -290,12 +290,18 @@ export default function MoverJobAssignments({ userId }: Props) {
                 {selected.responded_at && selected.status === "declined" && (
                   <p className="text-xs text-muted-foreground">Responded {new Date(selected.responded_at).toLocaleString()}</p>
                 )}
+                {selected.status === "declined" && selected.decline_reason && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+                    <Label className="text-destructive">Decline Reason</Label>
+                    <p className="text-sm mt-1 whitespace-pre-wrap break-words">{selected.decline_reason}</p>
+                  </div>
+                )}
               </div>
 
               <DialogFooter className="flex-col sm:flex-row gap-2">
                 {selected.status === "pending" && (
                   <>
-                    <Button variant="outline" className="w-full sm:w-auto" onClick={() => respond(selected.id, selected.assignment.id, "declined")} disabled={busyId === selected.id}>
+                    <Button variant="outline" className="w-full sm:w-auto" onClick={openDecline} disabled={busyId === selected.id}>
                       {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}Decline
                     </Button>
                     <Button className="w-full sm:w-auto" onClick={() => respond(selected.id, selected.assignment.id, "confirmed")} disabled={busyId === selected.id}>
