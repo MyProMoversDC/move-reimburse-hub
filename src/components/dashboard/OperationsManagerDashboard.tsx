@@ -6,6 +6,7 @@ import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AlcoholTestReportForm from "./AlcoholTestReportForm";
 import CustomerRefundForm from "./CustomerRefundForm";
+import CustomerRefundHistory from "./CustomerRefundHistory";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
@@ -104,7 +105,10 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
             <AlcoholTestReportForm userId={userId} language={language} />
           )}
           {activeTab === "customer-refund" && (
-            <CustomerRefundForm userId={userId} language={language} />
+            <div className="space-y-4">
+              <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey(prev => prev + 1)} />
+              <CustomerRefundHistory userId={userId} language={language} refreshKey={refreshKey} />
+            </div>
           )}
           {activeTab === "chat" && (
             <>
@@ -149,7 +153,8 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
         )}
         {activeTab === "customer-refund" && (
           <div className="space-y-6">
-            <CustomerRefundForm userId={userId} language={language} />
+            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey(prev => prev + 1)} />
+            <CustomerRefundHistory userId={userId} language={language} refreshKey={refreshKey} />
           </div>
         )}
         {activeTab === "chat" && (

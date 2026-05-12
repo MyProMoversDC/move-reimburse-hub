@@ -403,11 +403,15 @@ export type Database = {
           comments: string | null
           created_at: string
           customer_name: string
+          decline_reason: string | null
           id: string
           payment_method: string
           payment_method_other: string | null
           reimbursement_reason: string
           request_date: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
           submitted_by: string
         }
         Insert: {
@@ -415,11 +419,15 @@ export type Database = {
           comments?: string | null
           created_at?: string
           customer_name: string
+          decline_reason?: string | null
           id?: string
           payment_method: string
           payment_method_other?: string | null
           reimbursement_reason: string
           request_date: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           submitted_by: string
         }
         Update: {
@@ -427,11 +435,15 @@ export type Database = {
           comments?: string | null
           created_at?: string
           customer_name?: string
+          decline_reason?: string | null
           id?: string
           payment_method?: string
           payment_method_other?: string | null
           reimbursement_reason?: string
           request_date?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           submitted_by?: string
         }
         Relationships: []
