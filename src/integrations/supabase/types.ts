@@ -1483,6 +1483,8 @@ export type Database = {
       }
       mover_job_assignments: {
         Row: {
+          arrived_parking_at: string | null
+          arrived_site_at: string | null
           assignment_id: string
           created_at: string
           decline_reason: string | null
@@ -1495,6 +1497,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          arrived_parking_at?: string | null
+          arrived_site_at?: string | null
           assignment_id: string
           created_at?: string
           decline_reason?: string | null
@@ -1507,6 +1511,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          arrived_parking_at?: string | null
+          arrived_site_at?: string | null
           assignment_id?: string
           created_at?: string
           decline_reason?: string | null
