@@ -46,6 +46,8 @@ interface JobRow {
   started_at: string | null;
   ended_at: string | null;
   decline_reason: string | null;
+  arrived_parking_at: string | null;
+  arrived_site_at: string | null;
   assignment: JobAssignment;
 }
 
@@ -77,7 +79,7 @@ export default function MoverJobAssignments({ userId }: Props) {
     const { data, error } = await supabase
       .from("mover_job_assignments")
       .select(
-        "id, status, responded_at, started_at, ended_at, decline_reason, assignment:job_assignments(id, job_number, client_name, service_date, move_size, scope_of_work, truck_number)"
+        "id, status, responded_at, started_at, ended_at, decline_reason, arrived_parking_at, arrived_site_at, assignment:job_assignments(id, job_number, client_name, service_date, move_size, scope_of_work, truck_number)"
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -171,6 +173,16 @@ export default function MoverJobAssignments({ userId }: Props) {
     if (!trimmed) { setDeclineError("A reason is required to decline."); return; }
     await respond(selected.id, selected.assignment.id, "declined", trimmed);
     setDeclineOpen(false);
+  }
+
+  async function reportArrival(row: JobRow, kind: "arrived_parking" | "arrived_site") {
+    setBusyId(row.id);
+    const { error } = await supabase.functions.invoke("confirm-job", {
+      body: { assignment_id: row.assignment.id, status: kind },
+    });
+    setBusyId(null);
+    if (error) toast({ title: "Could not submit", description: error.message, variant: "destructive" });
+    else { toast({ title: kind === "arrived_parking" ? "Parking lot arrival sent" : "Job site arrival sent" }); load(); }
   }
 
   function requestGeoPermission(): Promise<boolean> {
@@ -287,6 +299,12 @@ export default function MoverJobAssignments({ userId }: Props) {
                 {selected.ended_at && (
                   <p className="text-xs text-muted-foreground">Ended {new Date(selected.ended_at).toLocaleString()}</p>
                 )}
+                {selected.arrived_parking_at && (
+                  <p className="text-xs text-muted-foreground">Arrived at parking {new Date(selected.arrived_parking_at).toLocaleString()}</p>
+                )}
+                {selected.arrived_site_at && (
+                  <p className="text-xs text-muted-foreground">Arrived at job site {new Date(selected.arrived_site_at).toLocaleString()}</p>
+                )}
                 {selected.responded_at && selected.status === "declined" && (
                   <p className="text-xs text-muted-foreground">Responded {new Date(selected.responded_at).toLocaleString()}</p>
                 )}
@@ -313,6 +331,20 @@ export default function MoverJobAssignments({ userId }: Props) {
                   <Button className="w-full sm:w-auto bg-green-600 hover:bg-green-700" onClick={() => startJob(selected)} disabled={busyId === selected.id}>
                     {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}Start Job
                   </Button>
+                )}
+                {(selected.status === "confirmed" || selected.status === "in_progress") && (
+                  <>
+                    <Button variant="outline" className="w-full sm:w-auto"
+                      onClick={() => reportArrival(selected, "arrived_parking")}
+                      disabled={busyId === selected.id || !!selected.arrived_parking_at}>
+                      🅿️ {selected.arrived_parking_at ? "Parking confirmed" : "I'm at parking lot"}
+                    </Button>
+                    <Button variant="outline" className="w-full sm:w-auto"
+                      onClick={() => reportArrival(selected, "arrived_site")}
+                      disabled={busyId === selected.id || !!selected.arrived_site_at}>
+                      📍 {selected.arrived_site_at ? "Site confirmed" : "I'm at job site"}
+                    </Button>
+                  </>
                 )}
                 {selected.status === "in_progress" && (
                   <Button variant="destructive" className="w-full sm:w-auto" onClick={() => endJob(selected)} disabled={busyId === selected.id}>

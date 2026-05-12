@@ -9,9 +9,10 @@ const corsHeaders = {
 
 interface Body {
   assignment_id: string;
-  status: "confirmed" | "declined";
+  status: "confirmed" | "declined" | "arrived_parking" | "arrived_site";
   decline_reason?: string;
 }
+const ALLOWED = ["confirmed", "declined", "arrived_parking", "arrived_site"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
     const userId = userData.user.id;
 
     const body = (await req.json()) as Body;
-    if (!body?.assignment_id || !["confirmed", "declined"].includes(body.status)) {
+    if (!body?.assignment_id || !ALLOWED.includes(body.status)) {
       return json({ error: "Invalid payload" }, 400);
     }
     const declineReason = (body.decline_reason ?? "").trim();
@@ -44,9 +45,16 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const responded_at = new Date().toISOString();
 
-    const updatePayload: Record<string, unknown> = { status: body.status, responded_at };
-    if (body.status === "declined") updatePayload.decline_reason = declineReason;
-    else updatePayload.decline_reason = null;
+    const updatePayload: Record<string, unknown> = {};
+    if (body.status === "confirmed" || body.status === "declined") {
+      updatePayload.status = body.status;
+      updatePayload.responded_at = responded_at;
+      updatePayload.decline_reason = body.status === "declined" ? declineReason : null;
+    } else if (body.status === "arrived_parking") {
+      updatePayload.arrived_parking_at = responded_at;
+    } else if (body.status === "arrived_site") {
+      updatePayload.arrived_site_at = responded_at;
+    }
 
     const { data: updated, error: upErr } = await admin
       .from("mover_job_assignments")
