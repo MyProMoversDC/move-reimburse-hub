@@ -6,6 +6,7 @@ import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AlcoholTestReportForm from "./AlcoholTestReportForm";
 import CustomerRefundForm from "./CustomerRefundForm";
+import CustomerRefundHistory from "./CustomerRefundHistory";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
