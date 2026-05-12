@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateEST } from "@/lib/dateUtils";
+import { Textarea } from "@/components/ui/textarea";
 
 interface JobAssignment {
   id: string;
