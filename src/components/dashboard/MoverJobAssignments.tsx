@@ -299,6 +299,12 @@ export default function MoverJobAssignments({ userId }: Props) {
                 {selected.ended_at && (
                   <p className="text-xs text-muted-foreground">Ended {new Date(selected.ended_at).toLocaleString()}</p>
                 )}
+                {selected.arrived_parking_at && (
+                  <p className="text-xs text-muted-foreground">Arrived at parking {new Date(selected.arrived_parking_at).toLocaleString()}</p>
+                )}
+                {selected.arrived_site_at && (
+                  <p className="text-xs text-muted-foreground">Arrived at job site {new Date(selected.arrived_site_at).toLocaleString()}</p>
+                )}
                 {selected.responded_at && selected.status === "declined" && (
                   <p className="text-xs text-muted-foreground">Responded {new Date(selected.responded_at).toLocaleString()}</p>
                 )}
