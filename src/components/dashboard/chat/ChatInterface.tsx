@@ -373,19 +373,35 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const total = selectedFiles.length + files.length;
+
+    // Reject videos that are too large to upload reasonably from a phone.
+    const accepted: File[] = [];
+    for (const f of files) {
+      if (f.type.startsWith('video/') && f.size > MAX_VIDEO_BYTES) {
+        toast.error(`"${f.name}" is ${formatBytes(f.size)}. Please trim videos to under ${formatBytes(MAX_VIDEO_BYTES)}.`);
+        continue;
+      }
+      accepted.push(f);
+    }
+
+    const total = selectedFiles.length + accepted.length;
     if (total > 10) {
       toast.error("Maximum 10 files allowed");
-      const allowed = files.slice(0, 10 - selectedFiles.length);
+      const allowed = accepted.slice(0, 10 - selectedFiles.length);
       setSelectedFiles(prev => [...prev, ...allowed]);
     } else {
-      setSelectedFiles(prev => [...prev, ...files]);
+      setSelectedFiles(prev => [...prev, ...accepted]);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadProgress(prev => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
   };
 
   // Mention helpers
