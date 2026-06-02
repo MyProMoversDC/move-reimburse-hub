@@ -547,8 +547,36 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "customer-refunds":
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Customer Refunds</h2>
-            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey((k) => k + 1)} />
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-bold">Customer Refunds</h2>
+              <Button
+                onClick={() => setShowRefundForm((prev) => !prev)}
+                variant={showRefundForm ? "outline" : "default"}
+                size="sm"
+              >
+                {showRefundForm ? (
+                  <>
+                    <X className="h-4 w-4 mr-2" />
+                    Hide Form
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Submit Refund
+                  </>
+                )}
+              </Button>
+            </div>
+            {showRefundForm && (
+              <CustomerRefundForm
+                userId={userId}
+                language={language}
+                onSubmitted={() => {
+                  setRefreshKey((k) => k + 1);
+                  setShowRefundForm(false);
+                }}
+              />
+            )}
             <AdminCustomerRefundList key={refreshKey} />
           </div>
         );
