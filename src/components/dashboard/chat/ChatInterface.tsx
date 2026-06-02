@@ -1187,7 +1187,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                                         <AvatarImage src={getSenderAvatar(r.user_id) || undefined} />
                                         <AvatarFallback className="text-[10px]">{getSenderInitials(r.user_id)}</AvatarFallback>
                                       </Avatar>
-                                      <span className="truncate">{r.user_id === userId ? 'You' : getSenderName(r.user_id)}</span>
+                                      <span className={`truncate ${getSenderColorClass(r.user_id)}`}>{r.user_id === userId ? 'You' : getSenderName(r.user_id)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1260,7 +1260,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         <div className="px-3 md:px-4 py-2 border-t bg-muted/40 flex items-center gap-2">
           <Reply className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
-            <p className="text-xs font-semibold text-primary">Replying to {getSenderName(replyTo.sender_id)}</p>
+            <p className="text-xs font-semibold">Replying to <span className={getSenderColorClass(replyTo.sender_id) || 'text-primary'}>{getSenderName(replyTo.sender_id)}</span></p>
             <p className="text-xs text-muted-foreground truncate">
               {replyTo.content || (replyTo.attachments?.length ? `📎 ${replyTo.attachments.length} attachment(s)` : '')}
             </p>
