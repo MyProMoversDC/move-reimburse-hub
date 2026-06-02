@@ -26,6 +26,7 @@ import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import AdminCustomerRefundList from "./AdminCustomerRefundList";
+import CustomerRefundForm from "./CustomerRefundForm";
 import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
@@ -546,7 +547,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Customer Refunds</h2>
-            <AdminCustomerRefundList />
+            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey((k) => k + 1)} />
+            <AdminCustomerRefundList key={refreshKey} />
           </div>
         );
       case "referrals":
