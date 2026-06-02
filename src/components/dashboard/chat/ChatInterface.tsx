@@ -13,7 +13,26 @@ import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
 import { getSignedUrlsBatch } from "@/lib/storageUtils";
 import { compressImage, makeThumbnail } from "@/lib/imageCompression";
+import { runWithConcurrency } from "@/lib/uploadQueue";
 import { playMessageNotification } from "@/lib/notificationSound";
+
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB hard cap
+const UPLOAD_CONCURRENCY = 4;
+
+type UploadStatus = "pending" | "compressing" | "uploading" | "done" | "error";
+interface UploadProgress {
+  status: UploadStatus;
+  originalSize: number;
+  outputSize?: number;
+  startedAt?: number;
+  durationMs?: number;
+}
+
+const formatBytes = (n: number) => {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+};
 import MentionDropdown, { type MentionUser } from "./MentionDropdown";
 
 interface Attachment {
