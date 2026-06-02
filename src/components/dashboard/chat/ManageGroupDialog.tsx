@@ -28,6 +28,7 @@ interface Attachment {
   file_size?: number;
   created_at: string;
   signed_url?: string;
+  thumb_url?: string;
 }
 
 interface Props {
