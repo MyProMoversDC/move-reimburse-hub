@@ -54,6 +54,7 @@ interface FeedListProps {
   userId: string;
   isAdmin: boolean;
   language: 'en' | 'es' | 'ru';
+  canSavePosts?: boolean;
 }
 
 const translations = {
