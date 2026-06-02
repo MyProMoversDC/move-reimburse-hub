@@ -145,6 +145,9 @@ const FeedPost = ({
   prefetchedPoll,
   prefetchedAuthor,
   prefetchedAcknowledged,
+  canSavePosts = false,
+  prefetchedSaved = false,
+  onSaveChange,
 }: FeedPostProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>(prefetchedAttachments || []);
   const [poll, setPoll] = useState<Poll | null>(prefetchedPoll || null);
@@ -154,6 +157,8 @@ const FeedPost = ({
   const [authorProfile, setAuthorProfile] = useState<AuthorProfile | null>(prefetchedAuthor || null);
   const [hasAcknowledged, setHasAcknowledged] = useState<boolean>(prefetchedAcknowledged || false);
   const [isAcknowledging, setIsAcknowledging] = useState(false);
+  const [isSaved, setIsSaved] = useState<boolean>(prefetchedSaved);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
