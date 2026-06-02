@@ -76,7 +76,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
                 )}
               >
                 <item.icon className="h-3 w-3 shrink-0" />
-                {item.id === "customer-refund" ? "Refund" : item.label}
+                {item.id === "customer-refund" ? "Refund" : item.id === "saved-posts" ? "Saved" : item.label}
                 {item.id === "chat" && hasUnreadMessages && (
                   <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
                 )}
