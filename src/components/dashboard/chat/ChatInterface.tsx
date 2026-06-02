@@ -806,23 +806,57 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             </p>
           )}
         </div>
-        {isAdmin && conversation.is_group && (
-          <Button variant="ghost" size="icon" onClick={() => setManageOpen(true)} title="Manage Group">
-            <Settings className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-        )}
+        <Button variant="ghost" size="icon" onClick={() => setManageOpen(true)} title={conversation.is_group && isAdmin ? "Manage Group" : "Chat Media"}>
+          <Settings className="h-4 w-4 md:h-5 md:w-5" />
+        </Button>
       </div>
 
-      {isAdmin && conversation.is_group && (
-        <ManageGroupDialog
-          open={manageOpen}
-          onClose={() => setManageOpen(false)}
-          conversationId={conversation.id}
-          conversationName={conversation.name}
-          currentUserId={userId}
-          onMembersChanged={() => { /* refresh on next navigation */ }}
-        />
+      <ManageGroupDialog
+        open={manageOpen}
+        onClose={() => setManageOpen(false)}
+        conversationId={conversation.id}
+        conversationName={conversation.name}
+        currentUserId={userId}
+        isGroup={conversation.is_group && isAdmin}
+        onMembersChanged={() => { /* refresh on next navigation */ }}
+      />
+
+      {/* Bulk selection action bar (WhatsApp-style) */}
+      {selectionMode && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-muted/50">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={exitSelection} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium">{selectedAttIds.size} selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (selectedAttIds.size === allAttachments.length) exitSelection();
+                else setSelectedAttIds(new Set(allAttachments.map((a) => a.id)));
+              }}
+            >
+              <CheckSquare className="h-4 w-4 mr-1" />
+              {selectedAttIds.size === allAttachments.length ? "Clear" : "Select all"}
+            </Button>
+            <Button
+              size="sm"
+              disabled={selectedAttIds.size === 0 || bulkDownloading}
+              onClick={handleBulkDownload}
+            >
+              {bulkDownloading ? (
+                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {bulkProgress ? `${bulkProgress.done}/${bulkProgress.total}` : "..."}</>
+              ) : (
+                <><Download className="h-4 w-4 mr-1" /> Download ({selectedAttIds.size})</>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
+
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
