@@ -212,6 +212,36 @@ const FeedPost = ({
     }
   };
 
+  const handleToggleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("feed_post_saves")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("user_id", userId);
+        if (error) throw error;
+        setIsSaved(false);
+        onSaveChange?.(post.id, false);
+        toast.success(t.removed);
+      } else {
+        const { error } = await supabase
+          .from("feed_post_saves")
+          .insert({ post_id: post.id, user_id: userId });
+        if (error) throw error;
+        setIsSaved(true);
+        onSaveChange?.(post.id, true);
+        toast.success(t.saved);
+      }
+    } catch (error) {
+      console.error("Error toggling saved post:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const fetchMissingData = async () => {
     // Fetch author profile if not prefetched
     if (!prefetchedAuthor) {
