@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { playMessageNotification } from '@/lib/notificationSound';
 
 export const useUnreadMessages = (userId: string) => {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -63,8 +64,9 @@ export const useUnreadMessages = (userId: string) => {
         },
         (payload) => {
           const newMessage = payload.new as { sender_id: string };
-          // If the message is from someone else, refresh the count
+          // If the message is from someone else, play sound + refresh the count
           if (newMessage.sender_id !== userId) {
+            playMessageNotification();
             fetchUnreadCount();
           }
         }

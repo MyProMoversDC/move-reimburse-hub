@@ -181,7 +181,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
           setMessages(prev => [...prev, { ...newMsg, attachments: signedAtts }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
-            playMessageNotification();
+            // sound played globally by useUnreadMessages
           }
         }
 
