@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, UserMinus, UserPlus, Image as ImageIcon, FileText, Film, Music, Download } from "lucide-react";
 import { toast } from "sonner";
-import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { getSignedUrlsBatch } from "@/lib/storageUtils";
 
 interface User {
   id: string;
