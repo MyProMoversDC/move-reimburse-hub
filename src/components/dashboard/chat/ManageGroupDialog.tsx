@@ -62,11 +62,17 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [{ data: parts }, { data: pickerUsers }, { data: msgs }] = await Promise.all([
-        supabase.from("conversation_participants").select("user_id").eq("conversation_id", conversationId),
-        supabase.rpc("list_chat_users_for_picker"),
+      const memberPromise = isGroup
+        ? Promise.all([
+            supabase.from("conversation_participants").select("user_id").eq("conversation_id", conversationId),
+            supabase.rpc("list_chat_users_for_picker"),
+          ])
+        : Promise.resolve([{ data: [] as any[] }, { data: [] as any[] }] as const);
+      const [[{ data: parts }, { data: pickerUsers }], { data: msgs }] = await Promise.all([
+        memberPromise,
         supabase.from("chat_messages").select("id").eq("conversation_id", conversationId),
       ]);
+
 
       const memberIds = (parts || []).map((p: any) => p.user_id);
       const userIds = Array.from(new Set([...memberIds, ...((pickerUsers as any[]) || []).map((u) => u.id)]));
