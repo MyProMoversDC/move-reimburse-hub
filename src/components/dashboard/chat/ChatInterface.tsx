@@ -160,7 +160,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     fetchMessages();
     markAsRead();
 
-    // Subscribe to new messages
+    // Subscribe to message inserts/updates/deletes and reaction changes
     const channel = supabase
       .channel(`messages-${conversation.id}`)
       .on(
@@ -173,7 +173,6 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          // Fetch attachments for the new message
           const { data: attachments } = await supabase
             .from('chat_message_attachments')
             .select('*')
@@ -196,13 +195,44 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             }));
           }
 
-          setMessages(prev => [...prev, { ...newMsg, attachments: signedAtts }]);
+          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, attachments: signedAtts, reactions: [] }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
-            // sound played globally by useUnreadMessages
           }
         }
-
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_messages', filter: `conversation_id=eq.${conversation.id}` },
+        (payload) => {
+          const updated = payload.new as Message;
+          setMessages(prev => prev.map(m => m.id === updated.id ? { ...m, content: updated.content, edited_at: updated.edited_at } : m));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'chat_messages', filter: `conversation_id=eq.${conversation.id}` },
+        (payload) => {
+          const old = payload.old as { id: string };
+          setMessages(prev => prev.filter(m => m.id !== old.id));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_message_reactions' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const r = payload.new as Reaction;
+            setMessages(prev => prev.map(m => m.id === r.message_id
+              ? { ...m, reactions: [...(m.reactions || []).filter(x => x.id !== r.id), r] }
+              : m));
+          } else if (payload.eventType === 'DELETE') {
+            const r = payload.old as Reaction;
+            setMessages(prev => prev.map(m => m.id === r.message_id
+              ? { ...m, reactions: (m.reactions || []).filter(x => x.id !== r.id) }
+              : m));
+          }
+        }
       )
       .subscribe();
 
