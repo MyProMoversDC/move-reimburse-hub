@@ -118,6 +118,10 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   // Fetch all users for name and avatar display
   useEffect(() => {
