@@ -704,6 +704,8 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     const idx = hashString(senderId) % USER_NAME_COLORS.length;
     return USER_NAME_COLORS[idx];
   };
+
+  const getSenderAvatar = (senderId: string) => {
     const user = usersMap.get(senderId);
     return user?.avatar_url || null;
   };
