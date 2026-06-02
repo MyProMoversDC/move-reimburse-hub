@@ -291,9 +291,20 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         }
       }
 
+      const { data: reactionsData } = messageIds.length > 0
+        ? await supabase.from('chat_message_reactions').select('*').in('message_id', messageIds)
+        : { data: [] as any[] };
+      const reactionsByMsg = new Map<string, Reaction[]>();
+      for (const r of (reactionsData || [])) {
+        const arr = reactionsByMsg.get(r.message_id) || [];
+        arr.push(r);
+        reactionsByMsg.set(r.message_id, arr);
+      }
+
       const messagesWithAttachments = (messagesData || []).map((msg: any) => ({
         ...msg,
         attachments: attachmentsByMsg.get(msg.id) || [],
+        reactions: reactionsByMsg.get(msg.id) || [],
       }));
 
       setMessages(messagesWithAttachments);
