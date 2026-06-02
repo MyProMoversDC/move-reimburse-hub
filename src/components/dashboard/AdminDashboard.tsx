@@ -32,7 +32,7 @@ import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
 import AdminSignupApprovals from "./AdminSignupApprovals";
 import { Button } from "@/components/ui/button";
-import { Download, PlayCircle, Search } from "lucide-react";
+import { Download, PlayCircle, Search, Plus, X } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -50,6 +50,7 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showRefundForm, setShowRefundForm] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportingReviews, setExportingReviews] = useState(false);
   const [runningAlcoholCheck, setRunningAlcoholCheck] = useState(false);
@@ -546,8 +547,36 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "customer-refunds":
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Customer Refunds</h2>
-            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey((k) => k + 1)} />
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-bold">Customer Refunds</h2>
+              <Button
+                onClick={() => setShowRefundForm((prev) => !prev)}
+                variant={showRefundForm ? "outline" : "default"}
+                size="sm"
+              >
+                {showRefundForm ? (
+                  <>
+                    <X className="h-4 w-4 mr-2" />
+                    Hide Form
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Submit Refund
+                  </>
+                )}
+              </Button>
+            </div>
+            {showRefundForm && (
+              <CustomerRefundForm
+                userId={userId}
+                language={language}
+                onSubmitted={() => {
+                  setRefreshKey((k) => k + 1);
+                  setShowRefundForm(false);
+                }}
+              />
+            )}
             <AdminCustomerRefundList key={refreshKey} />
           </div>
         );
