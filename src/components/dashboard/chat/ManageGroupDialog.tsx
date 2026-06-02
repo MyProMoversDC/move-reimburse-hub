@@ -44,7 +44,7 @@ interface Props {
 }
 
 
-const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, currentUserId, onMembersChanged }: Props) => {
+const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, currentUserId, onMembersChanged, isGroup = true }: Props) => {
   const [members, setMembers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [media, setMedia] = useState<Attachment[]>([]);
