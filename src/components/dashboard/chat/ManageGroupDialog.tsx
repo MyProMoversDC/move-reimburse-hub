@@ -272,38 +272,109 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="media">
-              <ScrollArea className="h-[440px] border rounded-md p-3">
+            <TabsContent value="media" className="space-y-2">
+              {media.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (selectedMedia.size === media.length) setSelectedMedia(new Set());
+                        else setSelectedMedia(new Set(media.map((m) => m.id)));
+                      }}
+                    >
+                      {selectedMedia.size === media.length ? (
+                        <><CheckSquare className="h-4 w-4 mr-1" /> Deselect all</>
+                      ) : (
+                        <><Square className="h-4 w-4 mr-1" /> Select all</>
+                      )}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {selectedMedia.size} of {media.length} selected
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={selectedMedia.size === 0 || downloading}
+                    onClick={async () => {
+                      const items = media
+                        .filter((m) => selectedMedia.has(m.id))
+                        .map((m) => ({ url: m.file_url, fileName: m.file_name }));
+                      setDownloading(true);
+                      setDownloadProgress({ done: 0, total: items.length });
+                      try {
+                        await downloadFilesAsZip(
+                          items,
+                          `${(conversationName || "chat").replace(/[^a-z0-9-_]+/gi, "_")}-media.zip`,
+                          (done, total) => setDownloadProgress({ done, total })
+                        );
+                        toast.success(`Downloaded ${items.length} file${items.length === 1 ? "" : "s"}`);
+                      } catch (e) {
+                        console.error(e);
+                        toast.error("Download failed");
+                      } finally {
+                        setDownloading(false);
+                        setDownloadProgress(null);
+                      }
+                    }}
+                  >
+                    {downloading ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {downloadProgress ? `${downloadProgress.done}/${downloadProgress.total}` : "Preparing..."}</>
+                    ) : (
+                      <><Download className="h-4 w-4 mr-1" /> Download selected ({selectedMedia.size})</>
+                    )}
+                  </Button>
+                </div>
+              )}
+              <ScrollArea className="h-[400px] border rounded-md p-3">
                 {media.length === 0 ? (
                   <p className="text-center text-sm text-muted-foreground p-4">No files shared yet</p>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                    {media.map((a) => (
-                      <div key={a.id} className="border rounded-md overflow-hidden">
-                        {a.file_type.startsWith("image/") ? (
-                          <a href={a.file_url} target="_blank" rel="noreferrer">
-                            <img src={a.thumb_url || a.file_url} alt={a.file_name} loading="lazy" className="w-full h-24 object-cover" />
-                          </a>
-                        ) : a.file_type.startsWith("video/") ? (
-                          <video src={a.file_url} controls preload="metadata" className="w-full h-24 object-cover" />
-                        ) : (
-                          <div className="h-24 flex items-center justify-center bg-muted">
-                            {fileIcon(a.file_type)}
-                          </div>
-                        )}
-                        <a
-                          href={a.file_url}
-                          download={a.file_name}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1 text-xs p-1.5 truncate hover:bg-muted"
-                          title={a.file_name}
+                    {media.map((a) => {
+                      const isSelected = selectedMedia.has(a.id);
+                      const toggle = () => {
+                        setSelectedMedia((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(a.id)) next.delete(a.id);
+                          else next.add(a.id);
+                          return next;
+                        });
+                      };
+                      return (
+                        <div
+                          key={a.id}
+                          className={`relative border rounded-md overflow-hidden transition ${isSelected ? "ring-2 ring-primary" : ""}`}
                         >
-                          <Download className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{a.file_name}</span>
-                        </a>
-                      </div>
-                    ))}
+                          <div className="absolute top-1 left-1 z-10 bg-background/80 rounded p-0.5">
+                            <Checkbox checked={isSelected} onCheckedChange={toggle} />
+                          </div>
+                          {a.file_type.startsWith("image/") ? (
+                            <button type="button" onClick={toggle} className="block w-full">
+                              <img src={a.thumb_url || a.file_url} alt={a.file_name} loading="lazy" className="w-full h-24 object-cover" />
+                            </button>
+                          ) : a.file_type.startsWith("video/") ? (
+                            <video src={a.file_url} controls preload="metadata" className="w-full h-24 object-cover" />
+                          ) : (
+                            <button type="button" onClick={toggle} className="h-24 w-full flex items-center justify-center bg-muted">
+                              {fileIcon(a.file_type)}
+                            </button>
+                          )}
+                          <a
+                            href={a.file_url}
+                            download={a.file_name}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-xs p-1.5 truncate hover:bg-muted"
+                            title={a.file_name}
+                          >
+                            <Download className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{a.file_name}</span>
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </ScrollArea>
