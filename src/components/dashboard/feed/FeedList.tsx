@@ -54,6 +54,7 @@ interface FeedListProps {
   userId: string;
   isAdmin: boolean;
   language: 'en' | 'es' | 'ru';
+  canSavePosts?: boolean;
 }
 
 const translations = {
@@ -95,12 +96,13 @@ const translations = {
   },
 };
 
-const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
+const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [attachmentsMap, setAttachmentsMap] = useState<Record<string, Attachment[]>>({});
   const [pollsMap, setPollsMap] = useState<Record<string, Poll>>({});
   const [authorsMap, setAuthorsMap] = useState<Record<string, AuthorProfile>>({});
   const [acknowledgedMap, setAcknowledgedMap] = useState<Record<string, boolean>>({});
+  const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editPost, setEditPost] = useState<Post | null>(null);
@@ -162,6 +164,18 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
         ackMap[ack.post_id] = true;
       });
       setAcknowledgedMap(ackMap);
+    }
+
+    // Fetch saved-post status if save feature enabled
+    if (canSavePosts) {
+      const { data: savedData } = await supabase
+        .from("feed_post_saves")
+        .select("post_id")
+        .eq("user_id", userId)
+        .in("post_id", postIds);
+      const sMap: Record<string, boolean> = {};
+      savedData?.forEach((s) => { sMap[s.post_id] = true; });
+      setSavedMap(sMap);
     }
 
     // Build attachments map
@@ -276,6 +290,9 @@ const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
                 prefetchedPoll={formattedPoll}
                 prefetchedAuthor={postAuthor || null}
                 prefetchedAcknowledged={!isAdmin ? acknowledgedMap[post.id] || false : undefined}
+                canSavePosts={canSavePosts}
+                prefetchedSaved={!!savedMap[post.id]}
+                onSaveChange={(id, saved) => setSavedMap((m) => ({ ...m, [id]: saved }))}
               />
             );
           })}

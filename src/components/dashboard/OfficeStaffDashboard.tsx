@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap } from "lucide-react";
+import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap, Bookmark } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import CustomerRefundForm from "./CustomerRefundForm";
@@ -7,6 +7,7 @@ import CustomerRefundHistory from "./CustomerRefundHistory";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import FeedList from "./feed/FeedList";
+import SavedFeedPosts from "./feed/SavedFeedPosts";
 import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -18,6 +19,7 @@ interface OfficeStaffDashboardProps {
 
 const navItems = [
   { id: "feed", label: "Feed", icon: Newspaper },
+  { id: "saved-posts", label: "Saved Feed Posts", icon: Bookmark },
   { id: "customer-refund", label: "Customer Refund", icon: DollarSign },
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
@@ -74,7 +76,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
                 )}
               >
                 <item.icon className="h-3 w-3 shrink-0" />
-                {item.id === "customer-refund" ? "Refund" : item.label}
+                {item.id === "customer-refund" ? "Refund" : item.id === "saved-posts" ? "Saved" : item.label}
                 {item.id === "chat" && hasUnreadMessages && (
                   <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
                 )}
@@ -88,8 +90,11 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           {activeTab === "feed" && (
             <>
               <h2 className="text-lg font-bold">Feed</h2>
-              <FeedList userId={userId} language={language} isAdmin={false} />
+              <FeedList userId={userId} language={language} isAdmin={false} canSavePosts={true} />
             </>
+          )}
+          {activeTab === "saved-posts" && (
+            <SavedFeedPosts userId={userId} language={language} />
           )}
           {activeTab === "customer-refund" && (
             <div className="space-y-4">
@@ -122,7 +127,12 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
         {activeTab === "feed" && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Feed</h2>
-            <FeedList userId={userId} language={language} isAdmin={false} />
+            <FeedList userId={userId} language={language} isAdmin={false} canSavePosts={true} />
+          </div>
+        )}
+        {activeTab === "saved-posts" && (
+          <div className="space-y-6">
+            <SavedFeedPosts userId={userId} language={language} />
           </div>
         )}
         {activeTab === "customer-refund" && (

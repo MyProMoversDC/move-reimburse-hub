@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Image, FileText, Video, MoreVertical, Pencil, Trash2, Eye, Users, CheckCircle } from "lucide-react";
+import { Image, FileText, Video, MoreVertical, Pencil, Trash2, Eye, Users, CheckCircle, Bookmark, BookmarkCheck } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +75,9 @@ interface FeedPostProps {
   prefetchedPoll?: Poll | null;
   prefetchedAuthor?: AuthorProfile | null;
   prefetchedAcknowledged?: boolean;
+  canSavePosts?: boolean;
+  prefetchedSaved?: boolean;
+  onSaveChange?: (postId: string, saved: boolean) => void;
 }
 
 const translations = {
@@ -89,6 +93,10 @@ const translations = {
     translatedTo: "Translated to",
     iUnderstand: "I have read and understand",
     acknowledged: "Acknowledged",
+    savePost: "Save post",
+    unsave: "Unsave",
+    saved: "Saved to your collection",
+    removed: "Removed from saved posts",
   },
   es: {
     postedBy: "Publicado por Admin",
@@ -102,6 +110,10 @@ const translations = {
     translatedTo: "Traducido a",
     iUnderstand: "He leído y entiendo",
     acknowledged: "Reconocido",
+    savePost: "Guardar publicación",
+    unsave: "Quitar",
+    saved: "Guardado en tu colección",
+    removed: "Eliminado de guardados",
   },
   ru: {
     postedBy: "Опубликовано Админом",
@@ -115,6 +127,10 @@ const translations = {
     translatedTo: "Переведено на",
     iUnderstand: "Я прочитал и понимаю",
     acknowledged: "Подтверждено",
+    savePost: "Сохранить пост",
+    unsave: "Убрать",
+    saved: "Сохранено в коллекции",
+    removed: "Удалено из сохранённых",
   },
 };
 
@@ -129,6 +145,9 @@ const FeedPost = ({
   prefetchedPoll,
   prefetchedAuthor,
   prefetchedAcknowledged,
+  canSavePosts = false,
+  prefetchedSaved = false,
+  onSaveChange,
 }: FeedPostProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>(prefetchedAttachments || []);
   const [poll, setPoll] = useState<Poll | null>(prefetchedPoll || null);
@@ -138,6 +157,8 @@ const FeedPost = ({
   const [authorProfile, setAuthorProfile] = useState<AuthorProfile | null>(prefetchedAuthor || null);
   const [hasAcknowledged, setHasAcknowledged] = useState<boolean>(prefetchedAcknowledged || false);
   const [isAcknowledging, setIsAcknowledging] = useState(false);
+  const [isSaved, setIsSaved] = useState<boolean>(prefetchedSaved);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Translation state
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -188,6 +209,36 @@ const FeedPost = ({
       console.error("Error acknowledging post:", error);
     } finally {
       setIsAcknowledging(false);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("feed_post_saves")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("user_id", userId);
+        if (error) throw error;
+        setIsSaved(false);
+        onSaveChange?.(post.id, false);
+        toast.success(t.removed);
+      } else {
+        const { error } = await supabase
+          .from("feed_post_saves")
+          .insert({ post_id: post.id, user_id: userId });
+        if (error) throw error;
+        setIsSaved(true);
+        onSaveChange?.(post.id, true);
+        toast.success(t.saved);
+      }
+    } catch (error) {
+      console.error("Error toggling saved post:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -445,9 +496,24 @@ const FeedPost = ({
       <CardFooter className="pt-0 flex-col items-start gap-3">
         <FeedReactions postId={post.id} userId={userId} />
         
-        {/* Comments */}
+        {/* Comments + Save */}
         <div className="w-full pt-2 border-t">
           <FeedComments postId={post.id} userId={userId} isAdmin={isAdmin} language={language} />
+          {canSavePosts && (
+            <div className="mt-2">
+              <Button
+                type="button"
+                variant={isSaved ? "secondary" : "outline"}
+                size="sm"
+                onClick={handleToggleSave}
+                disabled={isSaving}
+                className="gap-2"
+              >
+                {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+                {isSaved ? t.unsave : t.savePost}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Acknowledgment button for movers */}
