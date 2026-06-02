@@ -26,6 +26,32 @@ const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB hard cap
 const UPLOAD_CONCURRENCY = 4;
 
+const USER_NAME_COLORS = [
+  "text-emerald-600 dark:text-emerald-400",
+  "text-amber-600 dark:text-amber-400",
+  "text-rose-600 dark:text-rose-400",
+  "text-violet-600 dark:text-violet-400",
+  "text-cyan-600 dark:text-cyan-400",
+  "text-orange-600 dark:text-orange-400",
+  "text-pink-600 dark:text-pink-400",
+  "text-teal-600 dark:text-teal-400",
+  "text-indigo-600 dark:text-indigo-400",
+  "text-sky-600 dark:text-sky-400",
+  "text-lime-600 dark:text-lime-400",
+  "text-fuchsia-600 dark:text-fuchsia-400",
+];
+
+const hashString = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+};
+
+
 type UploadStatus = "pending" | "compressing" | "uploading" | "done" | "error";
 interface UploadProgress {
   status: UploadStatus;
@@ -673,6 +699,12 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     return 'Unknown';
   };
 
+  const getSenderColorClass = (senderId: string) => {
+    if (!conversation.is_group || senderId === userId) return '';
+    const idx = hashString(senderId) % USER_NAME_COLORS.length;
+    return USER_NAME_COLORS[idx];
+  };
+
   const getSenderAvatar = (senderId: string) => {
     const user = usersMap.get(senderId);
     return user?.avatar_url || null;
@@ -1070,7 +1102,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                   {isOwnMessage && actions}
                   <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {!isOwnMessage && (
-                      <p className="text-xs text-muted-foreground mb-1 font-medium">
+                      <p className={`text-xs mb-1 font-medium ${getSenderColorClass(message.sender_id) || 'text-muted-foreground'}`}>
                         {getSenderName(message.sender_id)}
                       </p>
                     )}
@@ -1088,7 +1120,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                             isOwnMessage ? 'border-primary-foreground/60 bg-primary-foreground/10' : 'border-primary bg-background/60'
                           }`}
                         >
-                          <div className="font-semibold opacity-80">{getSenderName(repliedMsg.sender_id)}</div>
+                          <div className={`font-semibold opacity-80 ${getSenderColorClass(repliedMsg.sender_id)}`}>{getSenderName(repliedMsg.sender_id)}</div>
                           <div className="opacity-70 truncate max-w-[240px]">
                             {repliedMsg.content || (repliedMsg.attachments?.length ? `📎 ${repliedMsg.attachments.length} attachment(s)` : '')}
                           </div>
@@ -1155,7 +1187,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                                         <AvatarImage src={getSenderAvatar(r.user_id) || undefined} />
                                         <AvatarFallback className="text-[10px]">{getSenderInitials(r.user_id)}</AvatarFallback>
                                       </Avatar>
-                                      <span className="truncate">{r.user_id === userId ? 'You' : getSenderName(r.user_id)}</span>
+                                      <span className={`truncate ${getSenderColorClass(r.user_id)}`}>{r.user_id === userId ? 'You' : getSenderName(r.user_id)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1228,7 +1260,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         <div className="px-3 md:px-4 py-2 border-t bg-muted/40 flex items-center gap-2">
           <Reply className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
-            <p className="text-xs font-semibold text-primary">Replying to {getSenderName(replyTo.sender_id)}</p>
+            <p className="text-xs font-semibold">Replying to <span className={getSenderColorClass(replyTo.sender_id) || 'text-primary'}>{getSenderName(replyTo.sender_id)}</span></p>
             <p className="text-xs text-muted-foreground truncate">
               {replyTo.content || (replyTo.attachments?.length ? `📎 ${replyTo.attachments.length} attachment(s)` : '')}
             </p>
