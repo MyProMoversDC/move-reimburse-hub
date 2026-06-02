@@ -280,7 +280,7 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                             <img src={a.thumb_url || a.file_url} alt={a.file_name} loading="lazy" className="w-full h-24 object-cover" />
                           </a>
                         ) : a.file_type.startsWith("video/") ? (
-                          <video src={a.file_url} controls className="w-full h-24 object-cover" />
+                          <video src={a.file_url} controls preload="metadata" className="w-full h-24 object-cover" />
                         ) : (
                           <div className="h-24 flex items-center justify-center bg-muted">
                             {fileIcon(a.file_type)}
