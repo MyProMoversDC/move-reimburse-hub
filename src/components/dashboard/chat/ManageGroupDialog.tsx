@@ -108,8 +108,21 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
           .in("message_id", messageIds)
           .order("created_at", { ascending: false });
         if (atts && atts.length > 0) {
-          const signed = await getSignedUrlsForAttachments(atts as any, "chat-attachments");
-          setMedia(signed.map((a: any) => ({ ...a, file_url: a.signed_url })));
+          const paths: string[] = [];
+          for (const a of atts as any[]) {
+            paths.push(a.file_url);
+            if (a.file_type?.startsWith("image/")) paths.push(`${a.file_url}.thumb.jpg`);
+          }
+          const signed = await getSignedUrlsBatch("chat-attachments", paths);
+          setMedia(
+            (atts as any[]).map((a) => ({
+              ...a,
+              file_url: signed.get(a.file_url) || a.file_url,
+              thumb_url: a.file_type?.startsWith("image/")
+                ? signed.get(`${a.file_url}.thumb.jpg`) || undefined
+                : undefined,
+            }))
+          );
         } else {
           setMedia([]);
         }
