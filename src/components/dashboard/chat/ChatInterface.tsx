@@ -16,17 +16,20 @@ import { compressImage, makeThumbnail } from "@/lib/imageCompression";
 import { playMessageNotification } from "@/lib/notificationSound";
 import MentionDropdown, { type MentionUser } from "./MentionDropdown";
 
+interface Attachment {
+  id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  thumb_url?: string;
+}
+
 interface Message {
   id: string;
   content: string | null;
   sender_id: string;
   created_at: string;
-  attachments?: {
-    id: string;
-    file_url: string;
-    file_name: string;
-    file_type: string;
-  }[];
+  attachments?: Attachment[];
 }
 
 interface Participant {
