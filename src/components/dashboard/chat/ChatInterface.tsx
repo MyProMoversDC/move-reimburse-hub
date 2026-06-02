@@ -699,7 +699,11 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     return 'Unknown';
   };
 
-  const getSenderAvatar = (senderId: string) => {
+  const getSenderColorClass = (senderId: string) => {
+    if (!conversation.is_group || senderId === userId) return '';
+    const idx = hashString(senderId) % USER_NAME_COLORS.length;
+    return USER_NAME_COLORS[idx];
+  };
     const user = usersMap.get(senderId);
     return user?.avatar_url || null;
   };
