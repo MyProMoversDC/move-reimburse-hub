@@ -19,6 +19,7 @@ interface OfficeStaffDashboardProps {
 
 const navItems = [
   { id: "feed", label: "Feed", icon: Newspaper },
+  { id: "saved-posts", label: "Saved Feed Posts", icon: Bookmark },
   { id: "customer-refund", label: "Customer Refund", icon: DollarSign },
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
