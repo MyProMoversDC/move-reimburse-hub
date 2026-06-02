@@ -50,12 +50,22 @@ interface Attachment {
   thumb_url?: string;
 }
 
+interface Reaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+}
+
 interface Message {
   id: string;
   content: string | null;
   sender_id: string;
   created_at: string;
+  edited_at?: string | null;
+  reply_to_message_id?: string | null;
   attachments?: Attachment[];
+  reactions?: Reaction[];
 }
 
 interface Participant {
