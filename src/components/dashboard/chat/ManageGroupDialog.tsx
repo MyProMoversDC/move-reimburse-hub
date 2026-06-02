@@ -280,7 +280,8 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                   </div>
                 ))}
               </ScrollArea>
-            </TabsContent>
+            </TabsContent>}
+
 
             <TabsContent value="media" className="space-y-2">
               {media.length > 0 && (
