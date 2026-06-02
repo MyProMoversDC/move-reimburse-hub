@@ -93,6 +93,10 @@ const translations = {
     translatedTo: "Translated to",
     iUnderstand: "I have read and understand",
     acknowledged: "Acknowledged",
+    savePost: "Save post",
+    unsave: "Unsave",
+    saved: "Saved to your collection",
+    removed: "Removed from saved posts",
   },
   es: {
     postedBy: "Publicado por Admin",
@@ -106,6 +110,10 @@ const translations = {
     translatedTo: "Traducido a",
     iUnderstand: "He leído y entiendo",
     acknowledged: "Reconocido",
+    savePost: "Guardar publicación",
+    unsave: "Quitar",
+    saved: "Guardado en tu colección",
+    removed: "Eliminado de guardados",
   },
   ru: {
     postedBy: "Опубликовано Админом",
@@ -119,6 +127,10 @@ const translations = {
     translatedTo: "Переведено на",
     iUnderstand: "Я прочитал и понимаю",
     acknowledged: "Подтверждено",
+    savePost: "Сохранить пост",
+    unsave: "Убрать",
+    saved: "Сохранено в коллекции",
+    removed: "Удалено из сохранённых",
   },
 };
 
