@@ -1223,6 +1223,22 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         </div>
       )}
 
+      {/* Reply preview */}
+      {replyTo && (
+        <div className="px-3 md:px-4 py-2 border-t bg-muted/40 flex items-center gap-2">
+          <Reply className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
+            <p className="text-xs font-semibold text-primary">Replying to {getSenderName(replyTo.sender_id)}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {replyTo.content || (replyTo.attachments?.length ? `📎 ${replyTo.attachments.length} attachment(s)` : '')}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setReplyTo(null)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-3 md:p-4 border-t relative">
         {/* Mention dropdown */}
