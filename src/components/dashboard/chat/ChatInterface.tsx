@@ -992,12 +992,73 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
           <div className="space-y-4">
             {messages.map((message) => {
               const isOwnMessage = message.sender_id === userId;
+              const isEditing = editingId === message.id;
+              const repliedMsg = message.reply_to_message_id
+                ? messages.find(m => m.id === message.reply_to_message_id)
+                : null;
+
+              // Group reactions by emoji
+              const groupedReactions = new Map<string, Reaction[]>();
+              for (const r of (message.reactions || [])) {
+                const arr = groupedReactions.get(r.emoji) || [];
+                arr.push(r);
+                groupedReactions.set(r.emoji, arr);
+              }
+
+              const actions = (
+                <div className={`flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${isOwnMessage ? 'order-first mr-1' : 'ml-1'}`}>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="p-1 rounded hover:bg-muted" title="React">
+                        <SmilePlus className="h-3.5 w-3.5" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-1 flex gap-1" align="center">
+                      {REACTION_EMOJIS.map(e => (
+                        <button
+                          key={e}
+                          onClick={() => handleToggleReaction(message.id, e)}
+                          className="text-lg p-1 rounded hover:bg-muted transition-colors"
+                        >
+                          {e}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  <button onClick={() => setReplyTo(message)} className="p-1 rounded hover:bg-muted" title="Reply">
+                    <Reply className="h-3.5 w-3.5" />
+                  </button>
+                  {isOwnMessage && message.content && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1 rounded hover:bg-muted" title="More">
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleStartEdit(message)}>
+                          <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteMessage(message.id)} className="text-destructive">
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {isOwnMessage && !message.content && (
+                    <button onClick={() => handleDeleteMessage(message.id)} className="p-1 rounded hover:bg-muted text-destructive" title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  id={`msg-${message.id}`}
+                  className={`group flex gap-2 rounded-md transition-shadow ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
-                  {/* Avatar for other users */}
                   {!isOwnMessage && (
                     <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarImage src={getSenderAvatar(message.sender_id) || undefined} />
@@ -1006,8 +1067,8 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  <div className={`max-w-[85%] md:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-                    {/* Always show sender name for messages from others */}
+                  {isOwnMessage && actions}
+                  <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {!isOwnMessage && (
                       <p className="text-xs text-muted-foreground mb-1 font-medium">
                         {getSenderName(message.sender_id)}
@@ -1020,19 +1081,102 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                           : 'bg-muted'
                       }`}
                     >
-                      {message.content && <p className="text-sm">{renderMessageContent(message.content)}</p>}
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {message.attachments.map((att) => (
-                            <div key={att.id}>{renderAttachment(att)}</div>
-                          ))}
+                      {repliedMsg && (
+                        <button
+                          onClick={() => scrollToMessage(repliedMsg.id)}
+                          className={`block w-full text-left mb-2 pl-2 border-l-2 text-xs rounded px-2 py-1 ${
+                            isOwnMessage ? 'border-primary-foreground/60 bg-primary-foreground/10' : 'border-primary bg-background/60'
+                          }`}
+                        >
+                          <div className="font-semibold opacity-80">{getSenderName(repliedMsg.sender_id)}</div>
+                          <div className="opacity-70 truncate max-w-[240px]">
+                            {repliedMsg.content || (repliedMsg.attachments?.length ? `📎 ${repliedMsg.attachments.length} attachment(s)` : '')}
+                          </div>
+                        </button>
+                      )}
+                      {isEditing ? (
+                        <div className="flex flex-col gap-2 min-w-[200px]">
+                          <Input
+                            ref={editInputRef}
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); }
+                              if (e.key === 'Escape') { setEditingId(null); setEditingContent(""); }
+                            }}
+                            className="text-sm text-foreground"
+                          />
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditingContent(""); }}>Cancel</Button>
+                            <Button size="sm" onClick={handleSaveEdit}><Check className="h-3.5 w-3.5 mr-1" />Save</Button>
+                          </div>
                         </div>
+                      ) : (
+                        <>
+                          {message.content && <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>}
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {message.attachments.map((att) => (
+                                <div key={att.id}>{renderAttachment(att)}</div>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
+
+                    {/* Reactions */}
+                    {groupedReactions.size > 0 && (
+                      <div className={`flex flex-wrap gap-1 mt-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                        {Array.from(groupedReactions.entries()).map(([emoji, list]) => {
+                          const reactedByMe = list.some(r => r.user_id === userId);
+                          return (
+                            <Popover key={emoji}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs border transition-colors ${
+                                    reactedByMe ? 'bg-primary/10 border-primary text-primary' : 'bg-muted border-border hover:bg-muted/80'
+                                  }`}
+                                  onDoubleClick={() => handleToggleReaction(message.id, emoji)}
+                                >
+                                  <span>{emoji}</span>
+                                  <span className="font-medium">{list.length}</span>
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-56 p-2" align={isOwnMessage ? 'end' : 'start'}>
+                                <div className="text-xs font-semibold mb-1 flex items-center gap-1">
+                                  <span className="text-base">{emoji}</span>
+                                  <span>{list.length} reaction{list.length === 1 ? '' : 's'}</span>
+                                </div>
+                                <div className="space-y-1 max-h-40 overflow-y-auto">
+                                  {list.map(r => (
+                                    <div key={r.id} className="flex items-center gap-2 text-sm">
+                                      <Avatar className="h-5 w-5">
+                                        <AvatarImage src={getSenderAvatar(r.user_id) || undefined} />
+                                        <AvatarFallback className="text-[10px]">{getSenderInitials(r.user_id)}</AvatarFallback>
+                                      </Avatar>
+                                      <span className="truncate">{r.user_id === userId ? 'You' : getSenderName(r.user_id)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {reactedByMe && (
+                                  <Button size="sm" variant="ghost" className="w-full mt-2 h-7 text-xs" onClick={() => handleToggleReaction(message.id, emoji)}>
+                                    Remove your reaction
+                                  </Button>
+                                )}
+                              </PopoverContent>
+                            </Popover>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatMessageDate(message.created_at)}
+                      {message.edited_at && <span className="ml-1 italic">(edited)</span>}
                     </p>
                   </div>
+                  {!isOwnMessage && actions}
                 </div>
               );
             })}
