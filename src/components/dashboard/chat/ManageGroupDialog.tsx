@@ -40,7 +40,9 @@ interface Props {
   conversationName: string | null;
   currentUserId: string;
   onMembersChanged: () => void;
+  isGroup?: boolean;
 }
+
 
 const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, currentUserId, onMembersChanged }: Props) => {
   const [members, setMembers] = useState<User[]>([]);
