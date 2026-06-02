@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { playMessageNotification } from '@/lib/notificationSound';
 
 export const useUnreadMessages = (userId: string) => {
   const [unreadCount, setUnreadCount] = useState(0);
