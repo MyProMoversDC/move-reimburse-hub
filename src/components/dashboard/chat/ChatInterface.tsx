@@ -82,7 +82,12 @@ interface ChatInterfaceProps {
 
 const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUserOnline }: ChatInterfaceProps) => {
   const [manageOpen, setManageOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedAttIds, setSelectedAttIds] = useState<Set<string>>(new Set());
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
   const isAdmin = userRole === 'admin';
+
   const t = chatTranslations[language];
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
