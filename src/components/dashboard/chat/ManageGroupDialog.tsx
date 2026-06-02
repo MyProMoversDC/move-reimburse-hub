@@ -246,9 +246,10 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                   </div>
                 ))}
               </ScrollArea>
-            </TabsContent>
+            </TabsContent>}
 
-            <TabsContent value="add" className="space-y-2">
+            {isGroup && <TabsContent value="add" className="space-y-2">
+
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users" className="pl-8" />
