@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, UserMinus, UserPlus, Image as ImageIcon, FileText, Film, Music, Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Search, UserMinus, UserPlus, Image as ImageIcon, FileText, Film, Music, Download, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import { getSignedUrlsBatch } from "@/lib/storageUtils";
+import { downloadFilesAsZip } from "@/lib/bulkDownload";
 
 interface User {
   id: string;
