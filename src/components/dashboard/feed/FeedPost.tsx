@@ -75,6 +75,9 @@ interface FeedPostProps {
   prefetchedPoll?: Poll | null;
   prefetchedAuthor?: AuthorProfile | null;
   prefetchedAcknowledged?: boolean;
+  canSavePosts?: boolean;
+  prefetchedSaved?: boolean;
+  onSaveChange?: (postId: string, saved: boolean) => void;
 }
 
 const translations = {
