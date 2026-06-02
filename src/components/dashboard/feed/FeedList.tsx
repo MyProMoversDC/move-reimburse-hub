@@ -166,6 +166,18 @@ const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListP
       setAcknowledgedMap(ackMap);
     }
 
+    // Fetch saved-post status if save feature enabled
+    if (canSavePosts) {
+      const { data: savedData } = await supabase
+        .from("feed_post_saves")
+        .select("post_id")
+        .eq("user_id", userId)
+        .in("post_id", postIds);
+      const sMap: Record<string, boolean> = {};
+      savedData?.forEach((s) => { sMap[s.post_id] = true; });
+      setSavedMap(sMap);
+    }
+
     // Build attachments map
     const attMap: Record<string, Attachment[]> = {};
     attachmentsRes.data?.forEach(att => {
