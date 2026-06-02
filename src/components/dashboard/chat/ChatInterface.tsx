@@ -6,7 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings } from "lucide-react";
+import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings, CheckSquare } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import ManageGroupDialog from "./ManageGroupDialog";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
@@ -15,6 +16,8 @@ import { getSignedUrlsBatch } from "@/lib/storageUtils";
 import { compressImage, makeThumbnail } from "@/lib/imageCompression";
 import { runWithConcurrency } from "@/lib/uploadQueue";
 import { playMessageNotification } from "@/lib/notificationSound";
+import { downloadFilesAsZip } from "@/lib/bulkDownload";
+
 
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB hard cap
 const UPLOAD_CONCURRENCY = 4;
