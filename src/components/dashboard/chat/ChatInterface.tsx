@@ -87,6 +87,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<Record<number, UploadProgress>>({});
   const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string; nickname?: string; use_nickname_in_chat?: boolean }>>(new Map());
   const [mentionVisible, setMentionVisible] = useState(false);
   const [mentionFilter, setMentionFilter] = useState("");
