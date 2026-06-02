@@ -7,6 +7,7 @@ import CustomerRefundHistory from "./CustomerRefundHistory";
 import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import FeedList from "./feed/FeedList";
+import SavedFeedPosts from "./feed/SavedFeedPosts";
 import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
