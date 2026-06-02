@@ -1120,7 +1120,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                             isOwnMessage ? 'border-primary-foreground/60 bg-primary-foreground/10' : 'border-primary bg-background/60'
                           }`}
                         >
-                          <div className="font-semibold opacity-80">{getSenderName(repliedMsg.sender_id)}</div>
+                          <div className={`font-semibold opacity-80 ${getSenderColorClass(repliedMsg.sender_id)}`}>{getSenderName(repliedMsg.sender_id)}</div>
                           <div className="opacity-70 truncate max-w-[240px]">
                             {repliedMsg.content || (repliedMsg.attachments?.length ? `📎 ${repliedMsg.attachments.length} attachment(s)` : '')}
                           </div>
