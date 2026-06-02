@@ -49,6 +49,9 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set());
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ done: number; total: number } | null>(null);
 
   useEffect(() => {
     if (open) loadAll();
