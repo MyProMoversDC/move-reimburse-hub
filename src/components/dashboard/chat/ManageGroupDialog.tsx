@@ -40,9 +40,11 @@ interface Props {
   conversationName: string | null;
   currentUserId: string;
   onMembersChanged: () => void;
+  isGroup?: boolean;
 }
 
-const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, currentUserId, onMembersChanged }: Props) => {
+
+const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, currentUserId, onMembersChanged, isGroup = true }: Props) => {
   const [members, setMembers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [media, setMedia] = useState<Attachment[]>([]);
@@ -60,11 +62,17 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [{ data: parts }, { data: pickerUsers }, { data: msgs }] = await Promise.all([
-        supabase.from("conversation_participants").select("user_id").eq("conversation_id", conversationId),
-        supabase.rpc("list_chat_users_for_picker"),
+      const memberPromise = isGroup
+        ? Promise.all([
+            supabase.from("conversation_participants").select("user_id").eq("conversation_id", conversationId),
+            supabase.rpc("list_chat_users_for_picker"),
+          ])
+        : Promise.resolve([{ data: [] as any[] }, { data: [] as any[] }] as const);
+      const [[{ data: parts }, { data: pickerUsers }], { data: msgs }] = await Promise.all([
+        memberPromise,
         supabase.from("chat_messages").select("id").eq("conversation_id", conversationId),
       ]);
+
 
       const memberIds = (parts || []).map((p: any) => p.user_id);
       const userIds = Array.from(new Set([...memberIds, ...((pickerUsers as any[]) || []).map((u) => u.id)]));
@@ -192,20 +200,21 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Manage Group: {conversationName || "Group Chat"}</DialogTitle>
+          <DialogTitle>{isGroup ? `Manage Group: ${conversationName || "Group Chat"}` : `Chat Media`}</DialogTitle>
         </DialogHeader>
 
         {loading ? (
           <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : (
-          <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
-              <TabsTrigger value="add">Add People</TabsTrigger>
+          <Tabs defaultValue={isGroup ? "members" : "media"} className="w-full">
+            <TabsList className={`grid w-full ${isGroup ? "grid-cols-3" : "grid-cols-1"}`}>
+              {isGroup && <TabsTrigger value="members">Members ({members.length})</TabsTrigger>}
+              {isGroup && <TabsTrigger value="add">Add People</TabsTrigger>}
               <TabsTrigger value="media">Media ({media.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="members" className="space-y-2">
+
+            {isGroup && <TabsContent value="members" className="space-y-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search members" className="pl-8" />
@@ -237,9 +246,10 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                   </div>
                 ))}
               </ScrollArea>
-            </TabsContent>
+            </TabsContent>}
 
-            <TabsContent value="add" className="space-y-2">
+            {isGroup && <TabsContent value="add" className="space-y-2">
+
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users" className="pl-8" />
@@ -270,7 +280,8 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                   </div>
                 ))}
               </ScrollArea>
-            </TabsContent>
+            </TabsContent>}
+
 
             <TabsContent value="media" className="space-y-2">
               {media.length > 0 && (

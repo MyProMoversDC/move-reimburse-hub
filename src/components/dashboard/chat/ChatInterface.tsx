@@ -6,7 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings } from "lucide-react";
+import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings, CheckSquare } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import ManageGroupDialog from "./ManageGroupDialog";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
@@ -15,6 +16,8 @@ import { getSignedUrlsBatch } from "@/lib/storageUtils";
 import { compressImage, makeThumbnail } from "@/lib/imageCompression";
 import { runWithConcurrency } from "@/lib/uploadQueue";
 import { playMessageNotification } from "@/lib/notificationSound";
+import { downloadFilesAsZip } from "@/lib/bulkDownload";
+
 
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB hard cap
 const UPLOAD_CONCURRENCY = 4;
@@ -79,7 +82,12 @@ interface ChatInterfaceProps {
 
 const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUserOnline }: ChatInterfaceProps) => {
   const [manageOpen, setManageOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedAttIds, setSelectedAttIds] = useState<Set<string>>(new Set());
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
   const isAdmin = userRole === 'admin';
+
   const t = chatTranslations[language];
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -622,7 +630,76 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     document.body.removeChild(a);
   };
 
+  const toggleAttSelection = (id: string) => {
+    setSelectedAttIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      if (next.size > 0) setSelectionMode(true);
+      return next;
+    });
+  };
+
+  const exitSelection = () => {
+    setSelectionMode(false);
+    setSelectedAttIds(new Set());
+  };
+
+  const allAttachments: Attachment[] = messages.flatMap((m) => m.attachments || []);
+
+  const handleBulkDownload = async () => {
+    const items = allAttachments
+      .filter((a) => selectedAttIds.has(a.id))
+      .map((a) => ({ url: a.file_url, fileName: a.file_name }));
+    if (items.length === 0) return;
+    setBulkDownloading(true);
+    setBulkProgress({ done: 0, total: items.length });
+    try {
+      await downloadFilesAsZip(
+        items,
+        `chat-media-${Date.now()}.zip`,
+        (done, total) => setBulkProgress({ done, total })
+      );
+      toast.success(`Downloaded ${items.length} file${items.length === 1 ? "" : "s"}`);
+      exitSelection();
+    } catch (e) {
+      console.error(e);
+      toast.error("Download failed");
+    } finally {
+      setBulkDownloading(false);
+      setBulkProgress(null);
+    }
+  };
+
   const renderAttachment = (attachment: Attachment) => {
+    const isSelected = selectedAttIds.has(attachment.id);
+    const overlay = (
+      <div
+        className={`absolute top-1 left-1 z-10 bg-background/80 rounded p-0.5 transition-opacity ${
+          selectionMode || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleAttSelection(attachment.id); }}
+      >
+        <Checkbox checked={isSelected} />
+      </div>
+    );
+
+    const wrap = (child: React.ReactNode) => (
+      <div
+        className={`group relative inline-block ${isSelected ? "ring-2 ring-primary rounded-lg" : ""}`}
+        onClickCapture={(e) => {
+          if (selectionMode) {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleAttSelection(attachment.id);
+          }
+        }}
+      >
+        {overlay}
+        {child}
+      </div>
+    );
+
     const downloadBtn = (
       <button
         onClick={(e) => { e.stopPropagation(); triggerDownload(attachment.file_url, attachment.file_name); }}
@@ -636,7 +713,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     if (attachment.file_type.startsWith('image/')) {
       const previewSrc = attachment.thumb_url || attachment.file_url;
-      return (
+      return wrap(
         <div>
           <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
             <img
@@ -652,7 +729,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     }
 
     if (attachment.file_type.startsWith('video/')) {
-      return (
+      return wrap(
         <div>
           <video
             src={attachment.file_url}
@@ -666,7 +743,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     }
 
     if (attachment.file_type.startsWith('audio/')) {
-      return (
+      return wrap(
         <div>
           <audio src={attachment.file_url} controls preload="metadata" className="max-w-[280px]" />
           {downloadBtn}
@@ -674,7 +751,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       );
     }
 
-    return (
+    return wrap(
       <button
         onClick={() => triggerDownload(attachment.file_url, attachment.file_name)}
         className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
@@ -685,6 +762,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       </button>
     );
   };
+
 
 
   const renderMessageContent = (content: string) => {
@@ -728,23 +806,57 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             </p>
           )}
         </div>
-        {isAdmin && conversation.is_group && (
-          <Button variant="ghost" size="icon" onClick={() => setManageOpen(true)} title="Manage Group">
-            <Settings className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-        )}
+        <Button variant="ghost" size="icon" onClick={() => setManageOpen(true)} title={conversation.is_group && isAdmin ? "Manage Group" : "Chat Media"}>
+          <Settings className="h-4 w-4 md:h-5 md:w-5" />
+        </Button>
       </div>
 
-      {isAdmin && conversation.is_group && (
-        <ManageGroupDialog
-          open={manageOpen}
-          onClose={() => setManageOpen(false)}
-          conversationId={conversation.id}
-          conversationName={conversation.name}
-          currentUserId={userId}
-          onMembersChanged={() => { /* refresh on next navigation */ }}
-        />
+      <ManageGroupDialog
+        open={manageOpen}
+        onClose={() => setManageOpen(false)}
+        conversationId={conversation.id}
+        conversationName={conversation.name}
+        currentUserId={userId}
+        isGroup={conversation.is_group && isAdmin}
+        onMembersChanged={() => { /* refresh on next navigation */ }}
+      />
+
+      {/* Bulk selection action bar (WhatsApp-style) */}
+      {selectionMode && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-muted/50">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={exitSelection} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium">{selectedAttIds.size} selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (selectedAttIds.size === allAttachments.length) exitSelection();
+                else setSelectedAttIds(new Set(allAttachments.map((a) => a.id)));
+              }}
+            >
+              <CheckSquare className="h-4 w-4 mr-1" />
+              {selectedAttIds.size === allAttachments.length ? "Clear" : "Select all"}
+            </Button>
+            <Button
+              size="sm"
+              disabled={selectedAttIds.size === 0 || bulkDownloading}
+              onClick={handleBulkDownload}
+            >
+              {bulkDownloading ? (
+                <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {bulkProgress ? `${bulkProgress.done}/${bulkProgress.total}` : "..."}</>
+              ) : (
+                <><Download className="h-4 w-4 mr-1" /> Download ({selectedAttIds.size})</>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
+
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
