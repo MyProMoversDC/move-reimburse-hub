@@ -290,6 +290,9 @@ const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListP
                 prefetchedPoll={formattedPoll}
                 prefetchedAuthor={postAuthor || null}
                 prefetchedAcknowledged={!isAdmin ? acknowledgedMap[post.id] || false : undefined}
+                canSavePosts={canSavePosts}
+                prefetchedSaved={!!savedMap[post.id]}
+                onSaveChange={(id, saved) => setSavedMap((m) => ({ ...m, [id]: saved }))}
               />
             );
           })}
