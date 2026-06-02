@@ -341,6 +341,13 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
   const handleSend = async () => {
     if (!newMessage.trim() && selectedFiles.length === 0) return;
 
+    // Snapshot composer state, then clear UI immediately for snappy feel
+    const contentToSend = newMessage.trim() || null;
+    const filesToUpload = selectedFiles;
+    setNewMessage("");
+    setSelectedFiles([]);
+    setUploadProgress({});
+
     setSending(true);
     try {
       const { data: message, error } = await supabase
@@ -348,25 +355,52 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         .insert({
           conversation_id: conversation.id,
           sender_id: userId,
-          content: newMessage.trim() || null,
+          content: contentToSend,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      if (selectedFiles.length > 0) {
+      // Re-bind selectedFiles for the uploadFiles closure (it reads state)
+      if (filesToUpload.length > 0) {
+        setSelectedFiles(filesToUpload);
         setUploading(true);
-        await uploadFiles(message.id);
-        setUploading(false);
+        try {
+          await uploadFiles(message.id);
+          // Refresh this message's attachments locally so they appear without waiting for refetch
+          const { data: atts } = await supabase
+            .from('chat_message_attachments')
+            .select('*')
+            .eq('message_id', message.id);
+          if (atts && atts.length > 0) {
+            const paths: string[] = [];
+            for (const a of atts) {
+              paths.push(a.file_url);
+              if (a.file_type?.startsWith('image/')) paths.push(thumbPathFor(a.file_url));
+            }
+            const signed = await getSignedUrlsBatch('chat-attachments', paths);
+            const signedAtts = atts.map((a: any) => ({
+              ...a,
+              file_url: signed.get(a.file_url) || a.file_url,
+              thumb_url: a.file_type?.startsWith('image/')
+                ? signed.get(thumbPathFor(a.file_url)) || undefined
+                : undefined,
+            }));
+            setMessages(prev => prev.map(m => m.id === message.id ? { ...m, attachments: signedAtts } : m));
+          }
+        } finally {
+          setUploading(false);
+          setSelectedFiles([]);
+          setUploadProgress({});
+        }
       }
-
-      setNewMessage("");
-      setSelectedFiles([]);
-      setUploadProgress({});
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error(t.errorSendingMessage);
+      // Restore composer so user doesn't lose their input
+      setNewMessage(contentToSend || "");
+      setSelectedFiles(filesToUpload);
     } finally {
       setSending(false);
     }
