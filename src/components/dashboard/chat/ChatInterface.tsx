@@ -779,15 +779,38 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       {/* Selected files preview */}
       {selectedFiles.length > 0 && (
         <div className="px-4 py-2 border-t flex flex-wrap gap-2">
-          {selectedFiles.map((file, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-              {getFileIcon(file.type)}
-              <span className="truncate max-w-[100px]">{file.name}</span>
-              <button onClick={() => removeFile(index)}>
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+          {selectedFiles.map((file, index) => {
+            const p = uploadProgress[index];
+            const statusLabel =
+              p?.status === "compressing" ? "compressing…" :
+              p?.status === "uploading" ? "uploading…" :
+              p?.status === "done" ? `done ${p.durationMs ? `${Math.round(p.durationMs / 100) / 10}s` : ""}` :
+              p?.status === "error" ? "failed" : null;
+            const sizeLabel = p?.outputSize
+              ? `${formatBytes(p.originalSize)} → ${formatBytes(p.outputSize)}`
+              : formatBytes(file.size);
+            return (
+              <Badge
+                key={index}
+                variant={p?.status === "error" ? "destructive" : "secondary"}
+                className="flex items-center gap-1.5"
+              >
+                {p?.status === "compressing" || p?.status === "uploading" ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  getFileIcon(file.type)
+                )}
+                <span className="truncate max-w-[140px]">{file.name}</span>
+                <span className="text-[10px] opacity-70">{sizeLabel}</span>
+                {statusLabel && <span className="text-[10px] opacity-70">· {statusLabel}</span>}
+                {!uploading && (
+                  <button onClick={() => removeFile(index)}>
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </Badge>
+            );
+          })}
         </div>
       )}
 
