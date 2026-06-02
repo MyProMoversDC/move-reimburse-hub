@@ -411,9 +411,11 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     // Snapshot composer state, then clear UI immediately for snappy feel
     const contentToSend = newMessage.trim() || null;
     const filesToUpload = selectedFiles;
+    const replyToId = replyTo?.id || null;
     setNewMessage("");
     setSelectedFiles([]);
     setUploadProgress({});
+    setReplyTo(null);
 
     setSending(true);
     try {
@@ -423,7 +425,8 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
           conversation_id: conversation.id,
           sender_id: userId,
           content: contentToSend,
-        })
+          reply_to_message_id: replyToId,
+        } as any)
         .select()
         .single();
 
