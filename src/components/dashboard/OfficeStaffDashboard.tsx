@@ -127,7 +127,12 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
         {activeTab === "feed" && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Feed</h2>
-            <FeedList userId={userId} language={language} isAdmin={false} />
+            <FeedList userId={userId} language={language} isAdmin={false} canSavePosts={true} />
+          </div>
+        )}
+        {activeTab === "saved-posts" && (
+          <div className="space-y-6">
+            <SavedFeedPosts userId={userId} language={language} />
           </div>
         )}
         {activeTab === "customer-refund" && (
