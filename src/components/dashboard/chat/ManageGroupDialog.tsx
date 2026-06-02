@@ -214,7 +214,7 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
             </TabsList>
 
 
-            <TabsContent value="members" className="space-y-2">
+            {isGroup && <TabsContent value="members" className="space-y-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search members" className="pl-8" />
