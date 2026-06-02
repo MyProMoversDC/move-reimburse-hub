@@ -516,27 +516,21 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     return <FileText className="h-4 w-4" />;
   };
 
-  const handleDownload = async (url: string, fileName: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(url, '_blank');
-    }
+  const triggerDownload = (url: string, fileName: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
-  const renderAttachment = (attachment: { file_url: string; file_name: string; file_type: string }) => {
+  const renderAttachment = (attachment: Attachment) => {
     const downloadBtn = (
       <button
-        onClick={(e) => { e.stopPropagation(); handleDownload(attachment.file_url, attachment.file_name); }}
+        onClick={(e) => { e.stopPropagation(); triggerDownload(attachment.file_url, attachment.file_name); }}
         className="flex items-center gap-1 text-xs mt-1 opacity-70 hover:opacity-100 transition-opacity"
         title="Download"
       >
@@ -546,12 +540,14 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     );
 
     if (attachment.file_type.startsWith('image/')) {
+      const previewSrc = attachment.thumb_url || attachment.file_url;
       return (
         <div>
           <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
-            <img 
-              src={attachment.file_url} 
+            <img
+              src={previewSrc}
               alt={attachment.file_name}
+              loading="lazy"
               className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
             />
           </a>
@@ -559,13 +555,14 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         </div>
       );
     }
-    
+
     if (attachment.file_type.startsWith('video/')) {
       return (
         <div>
-          <video 
-            src={attachment.file_url} 
-            controls 
+          <video
+            src={attachment.file_url}
+            controls
+            preload="metadata"
             className="max-w-[300px] rounded-lg"
           />
           {downloadBtn}
@@ -576,7 +573,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     if (attachment.file_type.startsWith('audio/')) {
       return (
         <div>
-          <audio src={attachment.file_url} controls className="max-w-[280px]" />
+          <audio src={attachment.file_url} controls preload="metadata" className="max-w-[280px]" />
           {downloadBtn}
         </div>
       );
@@ -584,7 +581,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     return (
       <button
-        onClick={() => handleDownload(attachment.file_url, attachment.file_name)}
+        onClick={() => triggerDownload(attachment.file_url, attachment.file_name)}
         className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
       >
         {getFileIcon(attachment.file_type)}
@@ -593,6 +590,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       </button>
     );
   };
+
 
   const renderMessageContent = (content: string) => {
     // Highlight @mentions
