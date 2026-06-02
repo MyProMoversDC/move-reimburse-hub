@@ -11,7 +11,8 @@ import ManageGroupDialog from "./ManageGroupDialog";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
-import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { getSignedUrlsBatch } from "@/lib/storageUtils";
+import { compressImage, makeThumbnail } from "@/lib/imageCompression";
 import { playMessageNotification } from "@/lib/notificationSound";
 import MentionDropdown, { type MentionUser } from "./MentionDropdown";
 
