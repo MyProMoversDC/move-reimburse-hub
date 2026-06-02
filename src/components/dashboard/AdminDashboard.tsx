@@ -32,7 +32,7 @@ import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
 import AdminSignupApprovals from "./AdminSignupApprovals";
 import { Button } from "@/components/ui/button";
-import { Download, PlayCircle, Search } from "lucide-react";
+import { Download, PlayCircle, Search, Plus, X } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
