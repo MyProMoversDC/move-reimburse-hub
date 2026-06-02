@@ -256,55 +256,78 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       .eq('user_id', userId);
   };
 
+  const updateProgress = (idx: number, patch: Partial<UploadProgress>) => {
+    setUploadProgress((prev) => ({ ...prev, [idx]: { ...(prev[idx] || { status: "pending", originalSize: 0 }), ...patch } }));
+  };
+
   const uploadFiles = async (messageId: string) => {
-    const uploadedFiles = [];
+    const indexed = selectedFiles.map((f, i) => ({ file: f, index: i }));
 
-    // Process files in parallel for faster uploads
-    const results = await Promise.all(
-      selectedFiles.map(async (rawFile) => {
-        // Compress large images before upload
-        const file = await compressImage(rawFile);
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `${userId}/${conversation.id}/${fileName}`;
-
-        // Generate thumbnail for images (in parallel with original upload below)
-        const thumbPromise = file.type.startsWith('image/')
-          ? makeThumbnail(file).then((thumbBlob) => {
-              if (!thumbBlob) return null;
-              return supabase.storage
-                .from('chat-attachments')
-                .upload(thumbPathFor(filePath), thumbBlob, {
-                  contentType: 'image/jpeg',
-                  upsert: true,
-                })
-                .then(() => null);
-            })
-          : Promise.resolve(null);
-
-        const { error: uploadError } = await supabase.storage
-          .from('chat-attachments')
-          .upload(filePath, file);
-
-        await thumbPromise;
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          return null;
-        }
-
-        return {
-          message_id: messageId,
-          file_url: filePath,
-          file_name: rawFile.name,
-          file_type: file.type,
-          file_size: file.size,
-        };
-      })
+    // Initialize progress
+    setUploadProgress(
+      Object.fromEntries(
+        indexed.map(({ file, index }) => [index, { status: "pending" as UploadStatus, originalSize: file.size }])
+      )
     );
 
-    for (const r of results) if (r) uploadedFiles.push(r);
+    const results = await runWithConcurrency(indexed, UPLOAD_CONCURRENCY, async ({ file: rawFile, index }) => {
+      const startedAt = performance.now();
+      updateProgress(index, { status: "compressing", startedAt });
+
+      // Compress images (HEIC → JPEG, then resize/compress); videos pass through
+      const file = await compressImage(rawFile, (s) => {
+        updateProgress(index, { outputSize: s.outputSize });
+        console.log(
+          `[upload] ${rawFile.name}: ${formatBytes(s.originalSize)} → ${formatBytes(s.outputSize)} in ${Math.round(s.durationMs)}ms`
+        );
+      });
+
+      updateProgress(index, { status: "uploading", outputSize: file.size });
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${userId}/${conversation.id}/${fileName}`;
+
+      // Generate + upload thumbnail in parallel with the main upload
+      const thumbPromise = file.type.startsWith('image/')
+        ? makeThumbnail(file).then((thumbBlob) => {
+            if (!thumbBlob) return null;
+            return supabase.storage
+              .from('chat-attachments')
+              .upload(thumbPathFor(filePath), thumbBlob, {
+                contentType: 'image/jpeg',
+                upsert: true,
+              })
+              .then(() => null);
+          })
+        : Promise.resolve(null);
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, file);
+
+      await thumbPromise;
+
+      const durationMs = performance.now() - startedAt;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        updateProgress(index, { status: "error", durationMs });
+        return null;
+      }
+
+      updateProgress(index, { status: "done", durationMs });
+      console.log(`[upload] ${rawFile.name}: total ${Math.round(durationMs)}ms`);
+
+      return {
+        message_id: messageId,
+        file_url: filePath,
+        file_name: rawFile.name,
+        file_type: file.type,
+        file_size: file.size,
+      };
+    });
+
+    const uploadedFiles = results.filter((r): r is NonNullable<typeof r> => r !== null);
 
     if (uploadedFiles.length > 0) {
       await supabase.from('chat_message_attachments').insert(uploadedFiles);
@@ -312,6 +335,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     return uploadedFiles;
   };
+
 
 
   const handleSend = async () => {
