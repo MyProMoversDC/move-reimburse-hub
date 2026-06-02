@@ -323,6 +323,63 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       .eq('user_id', userId);
   };
 
+  const handleStartEdit = (msg: Message) => {
+    setEditingId(msg.id);
+    setEditingContent(msg.content || "");
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    const newContent = editingContent.trim();
+    if (!newContent) { toast.error("Message cannot be empty"); return; }
+    const id = editingId;
+    setEditingId(null);
+    setEditingContent("");
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ content: newContent, edited_at: new Date().toISOString() } as any)
+      .eq('id', id)
+      .eq('sender_id', userId);
+    if (error) { toast.error("Failed to edit"); console.error(error); }
+    else setMessages(prev => prev.map(m => m.id === id ? { ...m, content: newContent, edited_at: new Date().toISOString() } : m));
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!confirm("Delete this message?")) return;
+    const { error } = await supabase.from('chat_messages').delete().eq('id', id).eq('sender_id', userId);
+    if (error) { toast.error("Failed to delete"); console.error(error); }
+    else setMessages(prev => prev.filter(m => m.id !== id));
+  };
+
+  const handleToggleReaction = async (messageId: string, emoji: string) => {
+    const msg = messages.find(m => m.id === messageId);
+    const existing = msg?.reactions?.find(r => r.user_id === userId && r.emoji === emoji);
+    if (existing) {
+      // optimistic
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reactions: (m.reactions || []).filter(r => r.id !== existing.id) } : m));
+      const { error } = await supabase.from('chat_message_reactions').delete().eq('id', existing.id);
+      if (error) { toast.error("Failed"); console.error(error); }
+    } else {
+      const { data, error } = await supabase.from('chat_message_reactions').insert({
+        message_id: messageId, user_id: userId, emoji,
+      }).select().single();
+      if (error) { toast.error("Failed to react"); console.error(error); return; }
+      setMessages(prev => prev.map(m => m.id === messageId
+        ? { ...m, reactions: [...(m.reactions || []).filter(r => r.id !== data.id), data as Reaction] }
+        : m));
+    }
+  };
+
+  const scrollToMessage = (id: string) => {
+    const el = document.getElementById(`msg-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-primary');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary'), 1500);
+    }
+  };
+
   const updateProgress = (idx: number, patch: Partial<UploadProgress>) => {
     setUploadProgress((prev) => ({ ...prev, [idx]: { ...(prev[idx] || { status: "pending", originalSize: 0 }), ...patch } }));
   };
