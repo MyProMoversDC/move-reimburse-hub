@@ -547,8 +547,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Customer Refunds</h2>
-            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefundRefreshKey((k) => k + 1)} />
-            <AdminCustomerRefundList key={refundRefreshKey} />
+            <CustomerRefundForm userId={userId} language={language} onSubmitted={() => setRefreshKey((k) => k + 1)} />
+            <AdminCustomerRefundList key={refreshKey} />
           </div>
         );
       case "referrals":
