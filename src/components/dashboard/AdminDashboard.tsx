@@ -26,6 +26,7 @@ import { FeedManager } from "./feed/FeedManager";
 import AdminEmailLogs from "./AdminEmailLogs";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import AdminCustomerRefundList from "./AdminCustomerRefundList";
+import CustomerRefundForm from "./CustomerRefundForm";
 import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
