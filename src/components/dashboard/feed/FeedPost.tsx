@@ -466,9 +466,24 @@ const FeedPost = ({
       <CardFooter className="pt-0 flex-col items-start gap-3">
         <FeedReactions postId={post.id} userId={userId} />
         
-        {/* Comments */}
+        {/* Comments + Save */}
         <div className="w-full pt-2 border-t">
           <FeedComments postId={post.id} userId={userId} isAdmin={isAdmin} language={language} />
+          {canSavePosts && (
+            <div className="mt-2">
+              <Button
+                type="button"
+                variant={isSaved ? "secondary" : "outline"}
+                size="sm"
+                onClick={handleToggleSave}
+                disabled={isSaving}
+                className="gap-2"
+              >
+                {isSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+                {isSaved ? t.unsave : t.savePost}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Acknowledgment button for movers */}
