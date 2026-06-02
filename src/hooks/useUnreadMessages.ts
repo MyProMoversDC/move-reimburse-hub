@@ -64,8 +64,9 @@ export const useUnreadMessages = (userId: string) => {
         },
         (payload) => {
           const newMessage = payload.new as { sender_id: string };
-          // If the message is from someone else, refresh the count
+          // If the message is from someone else, play sound + refresh the count
           if (newMessage.sender_id !== userId) {
+            playMessageNotification();
             fetchUnreadCount();
           }
         }
