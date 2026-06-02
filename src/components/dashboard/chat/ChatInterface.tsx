@@ -6,8 +6,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings, CheckSquare } from "lucide-react";
+import { Loader2, Send, Paperclip, ArrowLeft, Image, FileText, Film, X, Download, Music, Settings, CheckSquare, SmilePlus, Reply, Pencil, Trash2, MoreHorizontal, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ManageGroupDialog from "./ManageGroupDialog";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
@@ -17,6 +19,8 @@ import { compressImage, makeThumbnail } from "@/lib/imageCompression";
 import { runWithConcurrency } from "@/lib/uploadQueue";
 import { playMessageNotification } from "@/lib/notificationSound";
 import { downloadFilesAsZip } from "@/lib/bulkDownload";
+
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB hard cap
@@ -46,12 +50,22 @@ interface Attachment {
   thumb_url?: string;
 }
 
+interface Reaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+}
+
 interface Message {
   id: string;
   content: string | null;
   sender_id: string;
   created_at: string;
+  edited_at?: string | null;
+  reply_to_message_id?: string | null;
   attachments?: Attachment[];
+  reactions?: Reaction[];
 }
 
 interface Participant {
@@ -104,6 +118,10 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   // Fetch all users for name and avatar display
   useEffect(() => {
@@ -142,7 +160,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     fetchMessages();
     markAsRead();
 
-    // Subscribe to new messages
+    // Subscribe to message inserts/updates/deletes and reaction changes
     const channel = supabase
       .channel(`messages-${conversation.id}`)
       .on(
@@ -155,7 +173,6 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          // Fetch attachments for the new message
           const { data: attachments } = await supabase
             .from('chat_message_attachments')
             .select('*')
@@ -178,13 +195,44 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             }));
           }
 
-          setMessages(prev => [...prev, { ...newMsg, attachments: signedAtts }]);
+          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, attachments: signedAtts, reactions: [] }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
-            // sound played globally by useUnreadMessages
           }
         }
-
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_messages', filter: `conversation_id=eq.${conversation.id}` },
+        (payload) => {
+          const updated = payload.new as Message;
+          setMessages(prev => prev.map(m => m.id === updated.id ? { ...m, content: updated.content, edited_at: updated.edited_at } : m));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'chat_messages', filter: `conversation_id=eq.${conversation.id}` },
+        (payload) => {
+          const old = payload.old as { id: string };
+          setMessages(prev => prev.filter(m => m.id !== old.id));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chat_message_reactions' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const r = payload.new as Reaction;
+            setMessages(prev => prev.map(m => m.id === r.message_id
+              ? { ...m, reactions: [...(m.reactions || []).filter(x => x.id !== r.id), r] }
+              : m));
+          } else if (payload.eventType === 'DELETE') {
+            const r = payload.old as Reaction;
+            setMessages(prev => prev.map(m => m.id === r.message_id
+              ? { ...m, reactions: (m.reactions || []).filter(x => x.id !== r.id) }
+              : m));
+          }
+        }
       )
       .subscribe();
 
@@ -243,9 +291,20 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         }
       }
 
+      const { data: reactionsData } = messageIds.length > 0
+        ? await supabase.from('chat_message_reactions').select('*').in('message_id', messageIds)
+        : { data: [] as any[] };
+      const reactionsByMsg = new Map<string, Reaction[]>();
+      for (const r of (reactionsData || [])) {
+        const arr = reactionsByMsg.get(r.message_id) || [];
+        arr.push(r);
+        reactionsByMsg.set(r.message_id, arr);
+      }
+
       const messagesWithAttachments = (messagesData || []).map((msg: any) => ({
         ...msg,
         attachments: attachmentsByMsg.get(msg.id) || [],
+        reactions: reactionsByMsg.get(msg.id) || [],
       }));
 
       setMessages(messagesWithAttachments);
@@ -262,6 +321,63 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       .update({ last_read_at: new Date().toISOString() })
       .eq('conversation_id', conversation.id)
       .eq('user_id', userId);
+  };
+
+  const handleStartEdit = (msg: Message) => {
+    setEditingId(msg.id);
+    setEditingContent(msg.content || "");
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    const newContent = editingContent.trim();
+    if (!newContent) { toast.error("Message cannot be empty"); return; }
+    const id = editingId;
+    setEditingId(null);
+    setEditingContent("");
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ content: newContent, edited_at: new Date().toISOString() } as any)
+      .eq('id', id)
+      .eq('sender_id', userId);
+    if (error) { toast.error("Failed to edit"); console.error(error); }
+    else setMessages(prev => prev.map(m => m.id === id ? { ...m, content: newContent, edited_at: new Date().toISOString() } : m));
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!confirm("Delete this message?")) return;
+    const { error } = await supabase.from('chat_messages').delete().eq('id', id).eq('sender_id', userId);
+    if (error) { toast.error("Failed to delete"); console.error(error); }
+    else setMessages(prev => prev.filter(m => m.id !== id));
+  };
+
+  const handleToggleReaction = async (messageId: string, emoji: string) => {
+    const msg = messages.find(m => m.id === messageId);
+    const existing = msg?.reactions?.find(r => r.user_id === userId && r.emoji === emoji);
+    if (existing) {
+      // optimistic
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reactions: (m.reactions || []).filter(r => r.id !== existing.id) } : m));
+      const { error } = await supabase.from('chat_message_reactions').delete().eq('id', existing.id);
+      if (error) { toast.error("Failed"); console.error(error); }
+    } else {
+      const { data, error } = await supabase.from('chat_message_reactions').insert({
+        message_id: messageId, user_id: userId, emoji,
+      }).select().single();
+      if (error) { toast.error("Failed to react"); console.error(error); return; }
+      setMessages(prev => prev.map(m => m.id === messageId
+        ? { ...m, reactions: [...(m.reactions || []).filter(r => r.id !== data.id), data as Reaction] }
+        : m));
+    }
+  };
+
+  const scrollToMessage = (id: string) => {
+    const el = document.getElementById(`msg-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-primary');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary'), 1500);
+    }
   };
 
   const updateProgress = (idx: number, patch: Partial<UploadProgress>) => {
@@ -352,9 +468,11 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     // Snapshot composer state, then clear UI immediately for snappy feel
     const contentToSend = newMessage.trim() || null;
     const filesToUpload = selectedFiles;
+    const replyToId = replyTo?.id || null;
     setNewMessage("");
     setSelectedFiles([]);
     setUploadProgress({});
+    setReplyTo(null);
 
     setSending(true);
     try {
@@ -364,7 +482,8 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
           conversation_id: conversation.id,
           sender_id: userId,
           content: contentToSend,
-        })
+          reply_to_message_id: replyToId,
+        } as any)
         .select()
         .single();
 
@@ -873,12 +992,73 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
           <div className="space-y-4">
             {messages.map((message) => {
               const isOwnMessage = message.sender_id === userId;
+              const isEditing = editingId === message.id;
+              const repliedMsg = message.reply_to_message_id
+                ? messages.find(m => m.id === message.reply_to_message_id)
+                : null;
+
+              // Group reactions by emoji
+              const groupedReactions = new Map<string, Reaction[]>();
+              for (const r of (message.reactions || [])) {
+                const arr = groupedReactions.get(r.emoji) || [];
+                arr.push(r);
+                groupedReactions.set(r.emoji, arr);
+              }
+
+              const actions = (
+                <div className={`flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ${isOwnMessage ? 'order-first mr-1' : 'ml-1'}`}>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="p-1 rounded hover:bg-muted" title="React">
+                        <SmilePlus className="h-3.5 w-3.5" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-1 flex gap-1" align="center">
+                      {REACTION_EMOJIS.map(e => (
+                        <button
+                          key={e}
+                          onClick={() => handleToggleReaction(message.id, e)}
+                          className="text-lg p-1 rounded hover:bg-muted transition-colors"
+                        >
+                          {e}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  <button onClick={() => setReplyTo(message)} className="p-1 rounded hover:bg-muted" title="Reply">
+                    <Reply className="h-3.5 w-3.5" />
+                  </button>
+                  {isOwnMessage && message.content && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1 rounded hover:bg-muted" title="More">
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleStartEdit(message)}>
+                          <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteMessage(message.id)} className="text-destructive">
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {isOwnMessage && !message.content && (
+                    <button onClick={() => handleDeleteMessage(message.id)} className="p-1 rounded hover:bg-muted text-destructive" title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  id={`msg-${message.id}`}
+                  className={`group flex gap-2 rounded-md transition-shadow ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
-                  {/* Avatar for other users */}
                   {!isOwnMessage && (
                     <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarImage src={getSenderAvatar(message.sender_id) || undefined} />
@@ -887,8 +1067,8 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  <div className={`max-w-[85%] md:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-                    {/* Always show sender name for messages from others */}
+                  {isOwnMessage && actions}
+                  <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {!isOwnMessage && (
                       <p className="text-xs text-muted-foreground mb-1 font-medium">
                         {getSenderName(message.sender_id)}
@@ -901,19 +1081,102 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                           : 'bg-muted'
                       }`}
                     >
-                      {message.content && <p className="text-sm">{renderMessageContent(message.content)}</p>}
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {message.attachments.map((att) => (
-                            <div key={att.id}>{renderAttachment(att)}</div>
-                          ))}
+                      {repliedMsg && (
+                        <button
+                          onClick={() => scrollToMessage(repliedMsg.id)}
+                          className={`block w-full text-left mb-2 pl-2 border-l-2 text-xs rounded px-2 py-1 ${
+                            isOwnMessage ? 'border-primary-foreground/60 bg-primary-foreground/10' : 'border-primary bg-background/60'
+                          }`}
+                        >
+                          <div className="font-semibold opacity-80">{getSenderName(repliedMsg.sender_id)}</div>
+                          <div className="opacity-70 truncate max-w-[240px]">
+                            {repliedMsg.content || (repliedMsg.attachments?.length ? `📎 ${repliedMsg.attachments.length} attachment(s)` : '')}
+                          </div>
+                        </button>
+                      )}
+                      {isEditing ? (
+                        <div className="flex flex-col gap-2 min-w-[200px]">
+                          <Input
+                            ref={editInputRef}
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); }
+                              if (e.key === 'Escape') { setEditingId(null); setEditingContent(""); }
+                            }}
+                            className="text-sm text-foreground"
+                          />
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditingContent(""); }}>Cancel</Button>
+                            <Button size="sm" onClick={handleSaveEdit}><Check className="h-3.5 w-3.5 mr-1" />Save</Button>
+                          </div>
                         </div>
+                      ) : (
+                        <>
+                          {message.content && <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>}
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {message.attachments.map((att) => (
+                                <div key={att.id}>{renderAttachment(att)}</div>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
+
+                    {/* Reactions */}
+                    {groupedReactions.size > 0 && (
+                      <div className={`flex flex-wrap gap-1 mt-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                        {Array.from(groupedReactions.entries()).map(([emoji, list]) => {
+                          const reactedByMe = list.some(r => r.user_id === userId);
+                          return (
+                            <Popover key={emoji}>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs border transition-colors ${
+                                    reactedByMe ? 'bg-primary/10 border-primary text-primary' : 'bg-muted border-border hover:bg-muted/80'
+                                  }`}
+                                  onDoubleClick={() => handleToggleReaction(message.id, emoji)}
+                                >
+                                  <span>{emoji}</span>
+                                  <span className="font-medium">{list.length}</span>
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-56 p-2" align={isOwnMessage ? 'end' : 'start'}>
+                                <div className="text-xs font-semibold mb-1 flex items-center gap-1">
+                                  <span className="text-base">{emoji}</span>
+                                  <span>{list.length} reaction{list.length === 1 ? '' : 's'}</span>
+                                </div>
+                                <div className="space-y-1 max-h-40 overflow-y-auto">
+                                  {list.map(r => (
+                                    <div key={r.id} className="flex items-center gap-2 text-sm">
+                                      <Avatar className="h-5 w-5">
+                                        <AvatarImage src={getSenderAvatar(r.user_id) || undefined} />
+                                        <AvatarFallback className="text-[10px]">{getSenderInitials(r.user_id)}</AvatarFallback>
+                                      </Avatar>
+                                      <span className="truncate">{r.user_id === userId ? 'You' : getSenderName(r.user_id)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {reactedByMe && (
+                                  <Button size="sm" variant="ghost" className="w-full mt-2 h-7 text-xs" onClick={() => handleToggleReaction(message.id, emoji)}>
+                                    Remove your reaction
+                                  </Button>
+                                )}
+                              </PopoverContent>
+                            </Popover>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatMessageDate(message.created_at)}
+                      {message.edited_at && <span className="ml-1 italic">(edited)</span>}
                     </p>
                   </div>
+                  {!isOwnMessage && actions}
                 </div>
               );
             })}
@@ -957,6 +1220,22 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
               </Badge>
             );
           })}
+        </div>
+      )}
+
+      {/* Reply preview */}
+      {replyTo && (
+        <div className="px-3 md:px-4 py-2 border-t bg-muted/40 flex items-center gap-2">
+          <Reply className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
+            <p className="text-xs font-semibold text-primary">Replying to {getSenderName(replyTo.sender_id)}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {replyTo.content || (replyTo.attachments?.length ? `📎 ${replyTo.attachments.length} attachment(s)` : '')}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setReplyTo(null)}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
