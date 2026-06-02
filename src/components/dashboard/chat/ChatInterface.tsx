@@ -363,6 +363,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
       setNewMessage("");
       setSelectedFiles([]);
+      setUploadProgress({});
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error(t.errorSendingMessage);
