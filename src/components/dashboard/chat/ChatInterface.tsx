@@ -1102,7 +1102,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
                   {isOwnMessage && actions}
                   <div className={`max-w-[85%] md:max-w-[70%] flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                     {!isOwnMessage && (
-                      <p className="text-xs text-muted-foreground mb-1 font-medium">
+                      <p className={`text-xs mb-1 font-medium ${getSenderColorClass(message.sender_id) || 'text-muted-foreground'}`}>
                         {getSenderName(message.sender_id)}
                       </p>
                     )}
