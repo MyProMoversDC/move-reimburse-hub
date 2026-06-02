@@ -630,7 +630,76 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     document.body.removeChild(a);
   };
 
+  const toggleAttSelection = (id: string) => {
+    setSelectedAttIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      if (next.size > 0) setSelectionMode(true);
+      return next;
+    });
+  };
+
+  const exitSelection = () => {
+    setSelectionMode(false);
+    setSelectedAttIds(new Set());
+  };
+
+  const allAttachments: Attachment[] = messages.flatMap((m) => m.attachments || []);
+
+  const handleBulkDownload = async () => {
+    const items = allAttachments
+      .filter((a) => selectedAttIds.has(a.id))
+      .map((a) => ({ url: a.file_url, fileName: a.file_name }));
+    if (items.length === 0) return;
+    setBulkDownloading(true);
+    setBulkProgress({ done: 0, total: items.length });
+    try {
+      await downloadFilesAsZip(
+        items,
+        `chat-media-${Date.now()}.zip`,
+        (done, total) => setBulkProgress({ done, total })
+      );
+      toast.success(`Downloaded ${items.length} file${items.length === 1 ? "" : "s"}`);
+      exitSelection();
+    } catch (e) {
+      console.error(e);
+      toast.error("Download failed");
+    } finally {
+      setBulkDownloading(false);
+      setBulkProgress(null);
+    }
+  };
+
   const renderAttachment = (attachment: Attachment) => {
+    const isSelected = selectedAttIds.has(attachment.id);
+    const overlay = (
+      <div
+        className={`absolute top-1 left-1 z-10 bg-background/80 rounded p-0.5 transition-opacity ${
+          selectionMode || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleAttSelection(attachment.id); }}
+      >
+        <Checkbox checked={isSelected} />
+      </div>
+    );
+
+    const wrap = (child: React.ReactNode) => (
+      <div
+        className={`group relative inline-block ${isSelected ? "ring-2 ring-primary rounded-lg" : ""}`}
+        onClickCapture={(e) => {
+          if (selectionMode) {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleAttSelection(attachment.id);
+          }
+        }}
+      >
+        {overlay}
+        {child}
+      </div>
+    );
+
     const downloadBtn = (
       <button
         onClick={(e) => { e.stopPropagation(); triggerDownload(attachment.file_url, attachment.file_name); }}
@@ -644,7 +713,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     if (attachment.file_type.startsWith('image/')) {
       const previewSrc = attachment.thumb_url || attachment.file_url;
-      return (
+      return wrap(
         <div>
           <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
             <img
@@ -660,7 +729,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     }
 
     if (attachment.file_type.startsWith('video/')) {
-      return (
+      return wrap(
         <div>
           <video
             src={attachment.file_url}
@@ -674,7 +743,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     }
 
     if (attachment.file_type.startsWith('audio/')) {
-      return (
+      return wrap(
         <div>
           <audio src={attachment.file_url} controls preload="metadata" className="max-w-[280px]" />
           {downloadBtn}
@@ -682,7 +751,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       );
     }
 
-    return (
+    return wrap(
       <button
         onClick={() => triggerDownload(attachment.file_url, attachment.file_name)}
         className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
@@ -693,6 +762,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       </button>
     );
   };
+
 
 
   const renderMessageContent = (content: string) => {
