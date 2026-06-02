@@ -277,7 +277,7 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                       <div key={a.id} className="border rounded-md overflow-hidden">
                         {a.file_type.startsWith("image/") ? (
                           <a href={a.file_url} target="_blank" rel="noreferrer">
-                            <img src={a.file_url} alt={a.file_name} className="w-full h-24 object-cover" />
+                            <img src={a.thumb_url || a.file_url} alt={a.file_name} loading="lazy" className="w-full h-24 object-cover" />
                           </a>
                         ) : a.file_type.startsWith("video/") ? (
                           <video src={a.file_url} controls className="w-full h-24 object-cover" />
