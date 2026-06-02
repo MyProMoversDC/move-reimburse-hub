@@ -13,7 +13,26 @@ import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
 import { getSignedUrlsBatch } from "@/lib/storageUtils";
 import { compressImage, makeThumbnail } from "@/lib/imageCompression";
+import { runWithConcurrency } from "@/lib/uploadQueue";
 import { playMessageNotification } from "@/lib/notificationSound";
+
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25 MB hard cap
+const UPLOAD_CONCURRENCY = 4;
+
+type UploadStatus = "pending" | "compressing" | "uploading" | "done" | "error";
+interface UploadProgress {
+  status: UploadStatus;
+  originalSize: number;
+  outputSize?: number;
+  startedAt?: number;
+  durationMs?: number;
+}
+
+const formatBytes = (n: number) => {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+};
 import MentionDropdown, { type MentionUser } from "./MentionDropdown";
 
 interface Attachment {
@@ -68,6 +87,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<Record<number, UploadProgress>>({});
   const [usersMap, setUsersMap] = useState<Map<string, { first_name: string; last_name: string; avatar_url?: string; nickname?: string; use_nickname_in_chat?: boolean }>>(new Map());
   const [mentionVisible, setMentionVisible] = useState(false);
   const [mentionFilter, setMentionFilter] = useState("");
@@ -236,55 +256,78 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       .eq('user_id', userId);
   };
 
+  const updateProgress = (idx: number, patch: Partial<UploadProgress>) => {
+    setUploadProgress((prev) => ({ ...prev, [idx]: { ...(prev[idx] || { status: "pending", originalSize: 0 }), ...patch } }));
+  };
+
   const uploadFiles = async (messageId: string) => {
-    const uploadedFiles = [];
+    const indexed = selectedFiles.map((f, i) => ({ file: f, index: i }));
 
-    // Process files in parallel for faster uploads
-    const results = await Promise.all(
-      selectedFiles.map(async (rawFile) => {
-        // Compress large images before upload
-        const file = await compressImage(rawFile);
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `${userId}/${conversation.id}/${fileName}`;
-
-        // Generate thumbnail for images (in parallel with original upload below)
-        const thumbPromise = file.type.startsWith('image/')
-          ? makeThumbnail(file).then((thumbBlob) => {
-              if (!thumbBlob) return null;
-              return supabase.storage
-                .from('chat-attachments')
-                .upload(thumbPathFor(filePath), thumbBlob, {
-                  contentType: 'image/jpeg',
-                  upsert: true,
-                })
-                .then(() => null);
-            })
-          : Promise.resolve(null);
-
-        const { error: uploadError } = await supabase.storage
-          .from('chat-attachments')
-          .upload(filePath, file);
-
-        await thumbPromise;
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          return null;
-        }
-
-        return {
-          message_id: messageId,
-          file_url: filePath,
-          file_name: rawFile.name,
-          file_type: file.type,
-          file_size: file.size,
-        };
-      })
+    // Initialize progress
+    setUploadProgress(
+      Object.fromEntries(
+        indexed.map(({ file, index }) => [index, { status: "pending" as UploadStatus, originalSize: file.size }])
+      )
     );
 
-    for (const r of results) if (r) uploadedFiles.push(r);
+    const results = await runWithConcurrency(indexed, UPLOAD_CONCURRENCY, async ({ file: rawFile, index }) => {
+      const startedAt = performance.now();
+      updateProgress(index, { status: "compressing", startedAt });
+
+      // Compress images (HEIC → JPEG, then resize/compress); videos pass through
+      const file = await compressImage(rawFile, (s) => {
+        updateProgress(index, { outputSize: s.outputSize });
+        console.log(
+          `[upload] ${rawFile.name}: ${formatBytes(s.originalSize)} → ${formatBytes(s.outputSize)} in ${Math.round(s.durationMs)}ms`
+        );
+      });
+
+      updateProgress(index, { status: "uploading", outputSize: file.size });
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${userId}/${conversation.id}/${fileName}`;
+
+      // Generate + upload thumbnail in parallel with the main upload
+      const thumbPromise = file.type.startsWith('image/')
+        ? makeThumbnail(file).then((thumbBlob) => {
+            if (!thumbBlob) return null;
+            return supabase.storage
+              .from('chat-attachments')
+              .upload(thumbPathFor(filePath), thumbBlob, {
+                contentType: 'image/jpeg',
+                upsert: true,
+              })
+              .then(() => null);
+          })
+        : Promise.resolve(null);
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, file);
+
+      await thumbPromise;
+
+      const durationMs = performance.now() - startedAt;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        updateProgress(index, { status: "error", durationMs });
+        return null;
+      }
+
+      updateProgress(index, { status: "done", durationMs });
+      console.log(`[upload] ${rawFile.name}: total ${Math.round(durationMs)}ms`);
+
+      return {
+        message_id: messageId,
+        file_url: filePath,
+        file_name: rawFile.name,
+        file_type: file.type,
+        file_size: file.size,
+      };
+    });
+
+    const uploadedFiles = results.filter((r): r is NonNullable<typeof r> => r !== null);
 
     if (uploadedFiles.length > 0) {
       await supabase.from('chat_message_attachments').insert(uploadedFiles);
@@ -292,6 +335,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     return uploadedFiles;
   };
+
 
 
   const handleSend = async () => {
@@ -319,6 +363,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
       setNewMessage("");
       setSelectedFiles([]);
+      setUploadProgress({});
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error(t.errorSendingMessage);
@@ -329,19 +374,35 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const total = selectedFiles.length + files.length;
+
+    // Reject videos that are too large to upload reasonably from a phone.
+    const accepted: File[] = [];
+    for (const f of files) {
+      if (f.type.startsWith('video/') && f.size > MAX_VIDEO_BYTES) {
+        toast.error(`"${f.name}" is ${formatBytes(f.size)}. Please trim videos to under ${formatBytes(MAX_VIDEO_BYTES)}.`);
+        continue;
+      }
+      accepted.push(f);
+    }
+
+    const total = selectedFiles.length + accepted.length;
     if (total > 10) {
       toast.error("Maximum 10 files allowed");
-      const allowed = files.slice(0, 10 - selectedFiles.length);
+      const allowed = accepted.slice(0, 10 - selectedFiles.length);
       setSelectedFiles(prev => [...prev, ...allowed]);
     } else {
-      setSelectedFiles(prev => [...prev, ...files]);
+      setSelectedFiles(prev => [...prev, ...accepted]);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadProgress(prev => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
   };
 
   // Mention helpers
@@ -718,15 +779,38 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       {/* Selected files preview */}
       {selectedFiles.length > 0 && (
         <div className="px-4 py-2 border-t flex flex-wrap gap-2">
-          {selectedFiles.map((file, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-              {getFileIcon(file.type)}
-              <span className="truncate max-w-[100px]">{file.name}</span>
-              <button onClick={() => removeFile(index)}>
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+          {selectedFiles.map((file, index) => {
+            const p = uploadProgress[index];
+            const statusLabel =
+              p?.status === "compressing" ? "compressing…" :
+              p?.status === "uploading" ? "uploading…" :
+              p?.status === "done" ? `done ${p.durationMs ? `${Math.round(p.durationMs / 100) / 10}s` : ""}` :
+              p?.status === "error" ? "failed" : null;
+            const sizeLabel = p?.outputSize
+              ? `${formatBytes(p.originalSize)} → ${formatBytes(p.outputSize)}`
+              : formatBytes(file.size);
+            return (
+              <Badge
+                key={index}
+                variant={p?.status === "error" ? "destructive" : "secondary"}
+                className="flex items-center gap-1.5"
+              >
+                {p?.status === "compressing" || p?.status === "uploading" ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  getFileIcon(file.type)
+                )}
+                <span className="truncate max-w-[140px]">{file.name}</span>
+                <span className="text-[10px] opacity-70">{sizeLabel}</span>
+                {statusLabel && <span className="text-[10px] opacity-70">· {statusLabel}</span>}
+                {!uploading && (
+                  <button onClick={() => removeFile(index)}>
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </Badge>
+            );
+          })}
         </div>
       )}
 
@@ -748,7 +832,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             ref={fileInputRef}
             onChange={handleFileSelect}
             multiple
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+            accept="image/*,.heic,.heif,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
             className="hidden"
           />
           <Button
