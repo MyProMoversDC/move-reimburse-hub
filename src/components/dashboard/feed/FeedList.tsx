@@ -96,12 +96,13 @@ const translations = {
   },
 };
 
-const FeedList = ({ userId, isAdmin, language }: FeedListProps) => {
+const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [attachmentsMap, setAttachmentsMap] = useState<Record<string, Attachment[]>>({});
   const [pollsMap, setPollsMap] = useState<Record<string, Poll>>({});
   const [authorsMap, setAuthorsMap] = useState<Record<string, AuthorProfile>>({});
   const [acknowledgedMap, setAcknowledgedMap] = useState<Record<string, boolean>>({});
+  const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editPost, setEditPost] = useState<Post | null>(null);
