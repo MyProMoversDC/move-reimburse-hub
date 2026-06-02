@@ -200,18 +200,19 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Manage Group: {conversationName || "Group Chat"}</DialogTitle>
+          <DialogTitle>{isGroup ? `Manage Group: ${conversationName || "Group Chat"}` : `Chat Media`}</DialogTitle>
         </DialogHeader>
 
         {loading ? (
           <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : (
-          <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
-              <TabsTrigger value="add">Add People</TabsTrigger>
+          <Tabs defaultValue={isGroup ? "members" : "media"} className="w-full">
+            <TabsList className={`grid w-full ${isGroup ? "grid-cols-3" : "grid-cols-1"}`}>
+              {isGroup && <TabsTrigger value="members">Members ({members.length})</TabsTrigger>}
+              {isGroup && <TabsTrigger value="add">Add People</TabsTrigger>}
               <TabsTrigger value="media">Media ({media.length})</TabsTrigger>
             </TabsList>
+
 
             <TabsContent value="members" className="space-y-2">
               <div className="relative">
