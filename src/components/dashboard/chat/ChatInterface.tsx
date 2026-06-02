@@ -11,21 +11,25 @@ import ManageGroupDialog from "./ManageGroupDialog";
 import { toast } from "sonner";
 import { format, isToday, isYesterday } from "date-fns";
 import { chatTranslations, ChatLanguage } from "@/lib/chatTranslations";
-import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { getSignedUrlsBatch } from "@/lib/storageUtils";
+import { compressImage, makeThumbnail } from "@/lib/imageCompression";
 import { playMessageNotification } from "@/lib/notificationSound";
 import MentionDropdown, { type MentionUser } from "./MentionDropdown";
+
+interface Attachment {
+  id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  thumb_url?: string;
+}
 
 interface Message {
   id: string;
   content: string | null;
   sender_id: string;
   created_at: string;
-  attachments?: {
-    id: string;
-    file_url: string;
-    file_name: string;
-    file_type: string;
-  }[];
+  attachments?: Attachment[];
 }
 
 interface Participant {
@@ -128,13 +132,31 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             .from('chat_message_attachments')
             .select('*')
             .eq('message_id', newMsg.id);
-          
-          setMessages(prev => [...prev, { ...newMsg, attachments: attachments || [] }]);
+
+          let signedAtts: Attachment[] = [];
+          if (attachments && attachments.length > 0) {
+            const paths: string[] = [];
+            for (const a of attachments) {
+              paths.push(a.file_url);
+              if (a.file_type?.startsWith('image/')) paths.push(`${a.file_url}.thumb.jpg`);
+            }
+            const signed = await getSignedUrlsBatch('chat-attachments', paths);
+            signedAtts = attachments.map((a: any) => ({
+              ...a,
+              file_url: signed.get(a.file_url) || a.file_url,
+              thumb_url: a.file_type?.startsWith('image/')
+                ? signed.get(`${a.file_url}.thumb.jpg`) || undefined
+                : undefined,
+            }));
+          }
+
+          setMessages(prev => [...prev, { ...newMsg, attachments: signedAtts }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
             playMessageNotification();
           }
         }
+
       )
       .subscribe();
 
@@ -151,6 +173,8 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const thumbPathFor = (filePath: string) => `${filePath}.thumb.jpg`;
+
   const fetchMessages = async () => {
     try {
       const { data: messagesData, error } = await supabase
@@ -161,30 +185,40 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
       if (error) throw error;
 
-      // Fetch attachments for all messages with signed URLs
-      const messagesWithAttachments = await Promise.all(
-        (messagesData || []).map(async (msg) => {
-          const { data: attachments } = await supabase
-            .from('chat_message_attachments')
-            .select('*')
-            .eq('message_id', msg.id);
-          
-          if (attachments && attachments.length > 0) {
-            const attachmentsWithSignedUrls = await getSignedUrlsForAttachments(
-              attachments,
-              "chat-attachments"
-            );
-            return { 
-              ...msg, 
-              attachments: attachmentsWithSignedUrls.map(a => ({
-                ...a,
-                file_url: a.signed_url
-              }))
-            };
+      const messageIds = (messagesData || []).map((m: any) => m.id);
+      let attachmentsByMsg: Map<string, any[]> = new Map();
+
+      if (messageIds.length > 0) {
+        const { data: allAttachments } = await supabase
+          .from('chat_message_attachments')
+          .select('*')
+          .in('message_id', messageIds);
+
+        // Batch-sign originals + thumbnails in a single request
+        const pathsToSign: string[] = [];
+        for (const a of allAttachments || []) {
+          pathsToSign.push(a.file_url);
+          if (a.file_type?.startsWith('image/')) {
+            pathsToSign.push(thumbPathFor(a.file_url));
           }
-          return { ...msg, attachments: [] };
-        })
-      );
+        }
+        const signedMap = await getSignedUrlsBatch('chat-attachments', pathsToSign);
+
+        for (const a of allAttachments || []) {
+          const signed = signedMap.get(a.file_url) || a.file_url;
+          const thumb = a.file_type?.startsWith('image/')
+            ? signedMap.get(thumbPathFor(a.file_url)) || undefined
+            : undefined;
+          const list = attachmentsByMsg.get(a.message_id) || [];
+          list.push({ ...a, file_url: signed, thumb_url: thumb || undefined });
+          attachmentsByMsg.set(a.message_id, list);
+        }
+      }
+
+      const messagesWithAttachments = (messagesData || []).map((msg: any) => ({
+        ...msg,
+        attachments: attachmentsByMsg.get(msg.id) || [],
+      }));
 
       setMessages(messagesWithAttachments);
     } catch (error) {
@@ -204,30 +238,53 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
   const uploadFiles = async (messageId: string) => {
     const uploadedFiles = [];
-    
-    for (const file of selectedFiles) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const filePath = `${userId}/${conversation.id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('chat-attachments')
-        .upload(filePath, file);
+    // Process files in parallel for faster uploads
+    const results = await Promise.all(
+      selectedFiles.map(async (rawFile) => {
+        // Compress large images before upload
+        const file = await compressImage(rawFile);
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        continue;
-      }
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${userId}/${conversation.id}/${fileName}`;
 
-      // Store the file path, not the public URL (bucket is private)
-      uploadedFiles.push({
-        message_id: messageId,
-        file_url: filePath,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-      });
-    }
+        // Generate thumbnail for images (in parallel with original upload below)
+        const thumbPromise = file.type.startsWith('image/')
+          ? makeThumbnail(file).then((thumbBlob) => {
+              if (!thumbBlob) return null;
+              return supabase.storage
+                .from('chat-attachments')
+                .upload(thumbPathFor(filePath), thumbBlob, {
+                  contentType: 'image/jpeg',
+                  upsert: true,
+                })
+                .then(() => null);
+            })
+          : Promise.resolve(null);
+
+        const { error: uploadError } = await supabase.storage
+          .from('chat-attachments')
+          .upload(filePath, file);
+
+        await thumbPromise;
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          return null;
+        }
+
+        return {
+          message_id: messageId,
+          file_url: filePath,
+          file_name: rawFile.name,
+          file_type: file.type,
+          file_size: file.size,
+        };
+      })
+    );
+
+    for (const r of results) if (r) uploadedFiles.push(r);
 
     if (uploadedFiles.length > 0) {
       await supabase.from('chat_message_attachments').insert(uploadedFiles);
@@ -235,6 +292,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     return uploadedFiles;
   };
+
 
   const handleSend = async () => {
     if (!newMessage.trim() && selectedFiles.length === 0) return;
@@ -458,27 +516,21 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     return <FileText className="h-4 w-4" />;
   };
 
-  const handleDownload = async (url: string, fileName: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(url, '_blank');
-    }
+  const triggerDownload = (url: string, fileName: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
-  const renderAttachment = (attachment: { file_url: string; file_name: string; file_type: string }) => {
+  const renderAttachment = (attachment: Attachment) => {
     const downloadBtn = (
       <button
-        onClick={(e) => { e.stopPropagation(); handleDownload(attachment.file_url, attachment.file_name); }}
+        onClick={(e) => { e.stopPropagation(); triggerDownload(attachment.file_url, attachment.file_name); }}
         className="flex items-center gap-1 text-xs mt-1 opacity-70 hover:opacity-100 transition-opacity"
         title="Download"
       >
@@ -488,12 +540,14 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     );
 
     if (attachment.file_type.startsWith('image/')) {
+      const previewSrc = attachment.thumb_url || attachment.file_url;
       return (
         <div>
           <a href={attachment.file_url} target="_blank" rel="noopener noreferrer">
-            <img 
-              src={attachment.file_url} 
+            <img
+              src={previewSrc}
               alt={attachment.file_name}
+              loading="lazy"
               className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
             />
           </a>
@@ -501,13 +555,14 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
         </div>
       );
     }
-    
+
     if (attachment.file_type.startsWith('video/')) {
       return (
         <div>
-          <video 
-            src={attachment.file_url} 
-            controls 
+          <video
+            src={attachment.file_url}
+            controls
+            preload="metadata"
             className="max-w-[300px] rounded-lg"
           />
           {downloadBtn}
@@ -518,7 +573,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
     if (attachment.file_type.startsWith('audio/')) {
       return (
         <div>
-          <audio src={attachment.file_url} controls className="max-w-[280px]" />
+          <audio src={attachment.file_url} controls preload="metadata" className="max-w-[280px]" />
           {downloadBtn}
         </div>
       );
@@ -526,7 +581,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
 
     return (
       <button
-        onClick={() => handleDownload(attachment.file_url, attachment.file_name)}
+        onClick={() => triggerDownload(attachment.file_url, attachment.file_name)}
         className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
       >
         {getFileIcon(attachment.file_type)}
@@ -535,6 +590,7 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       </button>
     );
   };
+
 
   const renderMessageContent = (content: string) => {
     // Highlight @mentions

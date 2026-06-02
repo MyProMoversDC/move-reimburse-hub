@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, UserMinus, UserPlus, Image as ImageIcon, FileText, Film, Music, Download } from "lucide-react";
 import { toast } from "sonner";
-import { getSignedUrlsForAttachments } from "@/lib/storageUtils";
+import { getSignedUrlsBatch } from "@/lib/storageUtils";
 
 interface User {
   id: string;
@@ -28,6 +28,7 @@ interface Attachment {
   file_size?: number;
   created_at: string;
   signed_url?: string;
+  thumb_url?: string;
 }
 
 interface Props {
@@ -107,8 +108,21 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
           .in("message_id", messageIds)
           .order("created_at", { ascending: false });
         if (atts && atts.length > 0) {
-          const signed = await getSignedUrlsForAttachments(atts as any, "chat-attachments");
-          setMedia(signed.map((a: any) => ({ ...a, file_url: a.signed_url })));
+          const paths: string[] = [];
+          for (const a of atts as any[]) {
+            paths.push(a.file_url);
+            if (a.file_type?.startsWith("image/")) paths.push(`${a.file_url}.thumb.jpg`);
+          }
+          const signed = await getSignedUrlsBatch("chat-attachments", paths);
+          setMedia(
+            (atts as any[]).map((a) => ({
+              ...a,
+              file_url: signed.get(a.file_url) || a.file_url,
+              thumb_url: a.file_type?.startsWith("image/")
+                ? signed.get(`${a.file_url}.thumb.jpg`) || undefined
+                : undefined,
+            }))
+          );
         } else {
           setMedia([]);
         }
@@ -263,10 +277,10 @@ const ManageGroupDialog = ({ open, onClose, conversationId, conversationName, cu
                       <div key={a.id} className="border rounded-md overflow-hidden">
                         {a.file_type.startsWith("image/") ? (
                           <a href={a.file_url} target="_blank" rel="noreferrer">
-                            <img src={a.file_url} alt={a.file_name} className="w-full h-24 object-cover" />
+                            <img src={a.thumb_url || a.file_url} alt={a.file_name} loading="lazy" className="w-full h-24 object-cover" />
                           </a>
                         ) : a.file_type.startsWith("video/") ? (
-                          <video src={a.file_url} controls className="w-full h-24 object-cover" />
+                          <video src={a.file_url} controls preload="metadata" className="w-full h-24 object-cover" />
                         ) : (
                           <div className="h-24 flex items-center justify-center bg-muted">
                             {fileIcon(a.file_type)}
