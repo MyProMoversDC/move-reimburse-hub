@@ -132,13 +132,31 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
             .from('chat_message_attachments')
             .select('*')
             .eq('message_id', newMsg.id);
-          
-          setMessages(prev => [...prev, { ...newMsg, attachments: attachments || [] }]);
+
+          let signedAtts: Attachment[] = [];
+          if (attachments && attachments.length > 0) {
+            const paths: string[] = [];
+            for (const a of attachments) {
+              paths.push(a.file_url);
+              if (a.file_type?.startsWith('image/')) paths.push(`${a.file_url}.thumb.jpg`);
+            }
+            const signed = await getSignedUrlsBatch('chat-attachments', paths);
+            signedAtts = attachments.map((a: any) => ({
+              ...a,
+              file_url: signed.get(a.file_url) || a.file_url,
+              thumb_url: a.file_type?.startsWith('image/')
+                ? signed.get(`${a.file_url}.thumb.jpg`) || undefined
+                : undefined,
+            }));
+          }
+
+          setMessages(prev => [...prev, { ...newMsg, attachments: signedAtts }]);
           if (newMsg.sender_id !== userId) {
             markAsRead();
             playMessageNotification();
           }
         }
+
       )
       .subscribe();
 
