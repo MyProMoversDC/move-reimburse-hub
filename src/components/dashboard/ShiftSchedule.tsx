@@ -360,6 +360,35 @@ const ShiftSchedule = ({ userId, language }: ShiftScheduleProps) => {
 
   useEffect(() => { calculateEarnings(); }, [calculateEarnings]);
 
+  const fetchPastShifts = useCallback(async () => {
+    if (!pastStartDate || !pastEndDate) {
+      setPastEntries([]);
+      setPastTotalHours(0);
+      return;
+    }
+    const { data: entries } = await supabase
+      .from("shift_clock_entries")
+      .select("*, shift_breaks(*)")
+      .eq("user_id", userId)
+      .not("clock_out", "is", null)
+      .gte("clock_in", startOfDay(pastStartDate).toISOString())
+      .lte("clock_in", endOfDay(pastEndDate).toISOString())
+      .order("clock_in", { ascending: false });
+
+    let totalMins = 0;
+    const withNet = (entries || []).map((entry: any) => {
+      const worked = differenceInMinutes(new Date(entry.clock_out), new Date(entry.clock_in));
+      const breakMins = (entry.shift_breaks || []).reduce((s: number, b: any) => s + (b.duration_minutes || 0), 0);
+      const netMins = Math.max(0, worked - breakMins);
+      totalMins += netMins;
+      return { ...entry, _netMins: netMins, _breakMins: breakMins };
+    });
+    setPastEntries(withNet);
+    setPastTotalHours(totalMins / 60);
+  }, [pastStartDate, pastEndDate, userId]);
+
+  useEffect(() => { fetchPastShifts(); }, [fetchPastShifts]);
+
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
       pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
