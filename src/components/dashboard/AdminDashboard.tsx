@@ -622,7 +622,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       <div className="flex min-h-screen w-full">
         <AdminSidebar 
           activeTab={activeTab} 
-          onTabChange={(tab) => { setActiveTab(tab); }}
+          onTabChange={(tab) => { setActiveTab(tab); setTimeout(() => setRefreshKey((k) => k + 1), 600); }}
           pendingCounts={pendingCounts}
           hasUnreadMessages={hasUnreadMessages}
         />
