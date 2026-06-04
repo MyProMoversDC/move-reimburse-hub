@@ -59,6 +59,14 @@ const ShiftSchedule = ({ userId, language }: ShiftScheduleProps) => {
   const [earningsStartOpen, setEarningsStartOpen] = useState(false);
   const [earningsEndOpen, setEarningsEndOpen] = useState(false);
 
+  // Past shifts state
+  const [pastStartDate, setPastStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [pastEndDate, setPastEndDate] = useState<Date | undefined>(new Date());
+  const [pastEntries, setPastEntries] = useState<any[]>([]);
+  const [pastTotalHours, setPastTotalHours] = useState(0);
+  const [pastStartOpen, setPastStartOpen] = useState(false);
+  const [pastEndOpen, setPastEndOpen] = useState(false);
+
   // Timer - freezes during breaks, resumes after
   useEffect(() => {
     if (!activeClockEntry) return;
