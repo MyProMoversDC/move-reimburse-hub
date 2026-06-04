@@ -152,10 +152,11 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true })
         .is("reviewed_at", null);
 
-      // Count new customer refunds (all, since no status field - use created_at within last 7 days as "new")
+      // Count pending customer refunds only
       const { count: customerRefundsCount } = await supabase
         .from("customer_refunds" as any)
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
 
       // Count open payment questions
       const { count: paymentQuestionsCount } = await supabase
