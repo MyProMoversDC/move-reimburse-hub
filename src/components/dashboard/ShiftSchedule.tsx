@@ -549,6 +549,82 @@ const ShiftSchedule = ({ userId, language }: ShiftScheduleProps) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Past Shifts */}
+          <Card>
+            <CardHeader><CardTitle>{t.pastShifts}</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                {t.pastShiftsDescription}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t.startDate}</Label>
+                  <Popover open={pastStartOpen} onOpenChange={setPastStartOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !pastStartDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {pastStartDate ? format(pastStartDate, "PPP") : t.selectDate}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={pastStartDate} onSelect={(d) => { setPastStartDate(d); setPastStartOpen(false); }} disabled={(d) => d > new Date()} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t.endDate}</Label>
+                  <Popover open={pastEndOpen} onOpenChange={setPastEndOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !pastEndDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {pastEndDate ? format(pastEndDate, "PPP") : t.selectDate}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={pastEndDate} onSelect={(d) => { setPastEndDate(d); setPastEndOpen(false); }} disabled={(d) => d > new Date() || (pastStartDate ? d < pastStartDate : false)} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="pt-4 text-center">
+                  <p className="text-sm text-muted-foreground">{t.totalHours}</p>
+                  <p className="text-2xl font-bold">{pastTotalHours.toFixed(2)}h</p>
+                </CardContent>
+              </Card>
+
+              {pastEntries.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">{t.noPastShifts}</p>
+              ) : (
+                <div className="space-y-2">
+                  {pastEntries.map((entry: any) => {
+                    const hrs = Math.floor(entry._netMins / 60);
+                    const mins = entry._netMins % 60;
+                    return (
+                      <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{formatDateEST(entry.clock_in)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatInEST(entry.clock_in, "h:mm a")} - {formatInEST(entry.clock_out, "h:mm a")} EST
+                          </p>
+                          {entry._breakMins > 0 && (
+                            <p className="text-xs text-muted-foreground">{t.breakLabel}: {entry._breakMins} {t.breakMinutes}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">{t.netHours}</p>
+                          <p className="font-bold font-mono">{hrs}h {mins}m</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Day Off Request Tab */}
