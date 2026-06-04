@@ -121,6 +121,11 @@ export const shiftTranslations = {
     status: "Estado",
     schedule: "Horario",
     declineReason: "Razón del Rechazo",
+    pastShifts: "Turnos Anteriores",
+    pastShiftsDescription: "Seleccione un rango de fechas para revisar meses anteriores. La lista muestra cada turno completado con las horas netas trabajadas (descansos restados) y el total del período.",
+    noPastShifts: "Sin turnos anteriores en este rango de fechas",
+    netHours: "Horas Netas",
+    breakLabel: "Descanso",
   },
   ru: {
     shiftSchedule: "Расписание Смен",
