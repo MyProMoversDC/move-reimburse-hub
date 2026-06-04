@@ -57,6 +57,11 @@ export const shiftTranslations = {
     status: "Status",
     schedule: "Schedule",
     declineReason: "Decline Reason",
+    pastShifts: "Past Shifts",
+    pastShiftsDescription: "Select a date range to review previous months. The list shows each completed shift with net hours worked (breaks subtracted) and the total for the period.",
+    noPastShifts: "No past shifts in this date range",
+    netHours: "Net Hours",
+    breakLabel: "Break",
   },
   es: {
     shiftSchedule: "Horario de Turnos",
