@@ -11,7 +11,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { format, differenceInMinutes, startOfDay, endOfDay, parseISO, addDays } from "date-fns";
+import { format, differenceInMinutes, startOfDay, endOfDay, parseISO, addDays, startOfMonth } from "date-fns";
+import { formatDateEST, formatInEST } from "@/lib/dateUtils";
 import { Clock, Play, Pause, Square, Calendar as CalendarIcon, DollarSign, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shiftTranslations } from "@/lib/shiftTranslations";
