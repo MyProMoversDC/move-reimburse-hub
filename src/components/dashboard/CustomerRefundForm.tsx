@@ -244,6 +244,31 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
           </div>
         )}
 
+        {paymentMethod === "check" && (
+          <div className="space-y-2">
+            <Label>{t.checkAddress} *</Label>
+            <AddressAutocomplete
+              value={checkAddress}
+              onChange={setCheckAddress}
+              placeholder={t.checkAddressPlaceholder}
+              accessToken={mapboxToken}
+            />
+          </div>
+        )}
+
+        {paymentMethod === "zelle" && (
+          <div className="space-y-2">
+            <Label>{t.zellePhone} *</Label>
+            <Input
+              type="tel"
+              inputMode="numeric"
+              value={zellePhone}
+              onChange={(e) => setZellePhone(e.target.value)}
+              placeholder={t.zellePhonePlaceholder}
+            />
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label>{t.comments}</Label>
           <Textarea value={comments} onChange={(e) => setComments(e.target.value)} />
