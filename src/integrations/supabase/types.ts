@@ -448,6 +448,7 @@ export type Database = {
       customer_refunds: {
         Row: {
           amount: number
+          check_address: string | null
           comments: string | null
           created_at: string
           customer_name: string
@@ -461,9 +462,11 @@ export type Database = {
           reviewed_by: string | null
           status: string
           submitted_by: string
+          zelle_phone: string | null
         }
         Insert: {
           amount: number
+          check_address?: string | null
           comments?: string | null
           created_at?: string
           customer_name: string
@@ -477,9 +480,11 @@ export type Database = {
           reviewed_by?: string | null
           status?: string
           submitted_by: string
+          zelle_phone?: string | null
         }
         Update: {
           amount?: number
+          check_address?: string | null
           comments?: string | null
           created_at?: string
           customer_name?: string
@@ -493,6 +498,7 @@ export type Database = {
           reviewed_by?: string | null
           status?: string
           submitted_by?: string
+          zelle_phone?: string | null
         }
         Relationships: []
       }
