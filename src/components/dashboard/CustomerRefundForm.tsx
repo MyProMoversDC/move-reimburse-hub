@@ -173,6 +173,8 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
       setAmount("");
       setPaymentMethod("");
       setPaymentMethodOther("");
+      setCheckAddress("");
+      setZellePhone("");
       setComments("");
       onSubmitted?.();
     } catch (error: any) {
