@@ -156,6 +156,8 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
             requestDate: format(requestDate, "MM/dd/yyyy"),
             amount: parseFloat(amount),
             paymentMethod: paymentMethod === "other" ? paymentMethodOther.trim() : paymentMethod,
+            checkAddress: paymentMethod === "check" ? checkAddress.trim() : null,
+            zellePhone: paymentMethod === "zelle" ? zellePhone.trim() : null,
             comments: comments.trim() || null,
             submitterName,
           },
