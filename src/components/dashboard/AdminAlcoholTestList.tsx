@@ -43,6 +43,7 @@ interface AlcoholTestReport {
 
 interface AdminAlcoholTestListProps {
   language?: "en" | "es" | "ru";
+  onRefresh?: () => void;
 }
 
 const translations = {
@@ -282,7 +283,7 @@ const translations = {
   }
 };
 
-const AdminAlcoholTestList = ({ language = "en" }: AdminAlcoholTestListProps) => {
+const AdminAlcoholTestList = ({ language = "en", onRefresh }: AdminAlcoholTestListProps) => {
   const t = translations[language];
   const [reports, setReports] = useState<AlcoholTestReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -346,10 +347,14 @@ const AdminAlcoholTestList = ({ language = "en" }: AdminAlcoholTestListProps) =>
     
     // Mark as reviewed if not already
     if (!report.reviewed_at) {
-      await supabase
+      const { error } = await supabase
         .from("alcohol_test_reports")
         .update({ reviewed_at: new Date().toISOString() })
         .eq("id", report.id);
+
+      if (!error) {
+        onRefresh?.();
+      }
     }
   };
 

@@ -500,7 +500,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
                 {runningAlcoholCheck ? "Checking..." : "Run Weekly Check"}
               </Button>
             </div>
-            <AdminAlcoholTestList language={language} />
+            <AdminAlcoholTestList language={language} onRefresh={() => setRefreshKey((prev) => prev + 1)} />
           </div>
         );
       case "payment-questions":
@@ -625,16 +625,23 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
           onTabChange={async (tab) => {
             setActiveTab(tab);
             try {
+              let didMarkReviewed = false;
               if (tab === "performance-reports") {
-                await supabase
+                const { error } = await supabase
                   .from("performance_reports")
                   .update({ reviewed_at: new Date().toISOString() })
                   .is("reviewed_at", null);
+                didMarkReviewed = !error;
               } else if (tab === "alcohol-tests") {
-                await supabase
+                const { error } = await supabase
                   .from("alcohol_test_reports")
                   .update({ reviewed_at: new Date().toISOString() })
                   .is("reviewed_at", null);
+                didMarkReviewed = !error;
+              }
+
+              if (didMarkReviewed) {
+                setRefreshKey((k) => k + 1);
               }
             } catch (e) {
               console.error("Failed to mark reports reviewed", e);
