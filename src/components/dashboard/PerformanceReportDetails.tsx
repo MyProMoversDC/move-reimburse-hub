@@ -22,6 +22,7 @@ interface PerformanceReport {
 interface PerformanceReportDetailsProps {
   report: PerformanceReport;
   onClose: () => void;
+  onReviewed?: () => void;
 }
 
 interface Attachment {
@@ -42,7 +43,7 @@ const isVideoFile = (fileName: string): boolean => {
   return videoExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
 };
 
-const PerformanceReportDetails = ({ report, onClose }: PerformanceReportDetailsProps) => {
+const PerformanceReportDetails = ({ report, onClose, onReviewed }: PerformanceReportDetailsProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [loadingAttachments, setLoadingAttachments] = useState(true);
@@ -80,10 +81,15 @@ const PerformanceReportDetails = ({ report, onClose }: PerformanceReportDetailsP
 
     const markAsReviewed = async () => {
       // Mark as reviewed when viewing
-      await supabase
+      const { error } = await supabase
         .from("performance_reports")
         .update({ reviewed_at: new Date().toISOString() })
-        .eq("id", report.id);
+        .eq("id", report.id)
+        .is("reviewed_at", null);
+
+      if (!error) {
+        onReviewed?.();
+      }
     };
 
     fetchAttachments();
