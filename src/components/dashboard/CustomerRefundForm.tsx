@@ -113,6 +113,14 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
       toast.error(t.required);
       return;
     }
+    if (paymentMethod === "check" && !checkAddress.trim()) {
+      toast.error(t.required);
+      return;
+    }
+    if (paymentMethod === "zelle" && !zellePhone.trim()) {
+      toast.error(t.required);
+      return;
+    }
 
     setSubmitting(true);
     try {
