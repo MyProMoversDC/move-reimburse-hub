@@ -132,6 +132,8 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
         amount: parseFloat(amount),
         payment_method: paymentMethod === "other" ? paymentMethodOther.trim() : paymentMethod,
         payment_method_other: paymentMethod === "other" ? paymentMethodOther.trim() : null,
+        check_address: paymentMethod === "check" ? checkAddress.trim() : null,
+        zelle_phone: paymentMethod === "zelle" ? zellePhone.trim() : null,
         comments: comments.trim() || null,
       } as any);
 
