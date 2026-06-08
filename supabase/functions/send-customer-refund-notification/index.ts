@@ -15,7 +15,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { customerName, reason, requestDate, amount, paymentMethod, comments, refundId, submitterName } = await req.json();
+    const { customerName, reason, requestDate, amount, paymentMethod, checkAddress, zellePhone, comments, refundId, submitterName } = await req.json();
 
     if (!customerName || !reason || !requestDate || !amount || !paymentMethod) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -43,6 +43,8 @@ const handler = async (req: Request): Promise<Response> => {
           <p style="margin: 5px 0;"><strong>Request Date:</strong> ${sanitize(requestDate)}</p>
           <p style="margin: 5px 0;"><strong>Amount:</strong> $${Number(amount).toFixed(2)}</p>
           <p style="margin: 5px 0;"><strong>Payment Method:</strong> ${sanitize(paymentMethod)}</p>
+          ${checkAddress ? `<p style="margin: 5px 0;"><strong>Check Mailing Address:</strong> ${sanitize(checkAddress)}</p>` : ''}
+          ${zellePhone ? `<p style="margin: 5px 0;"><strong>Zelle Phone / Digits:</strong> ${sanitize(zellePhone)}</p>` : ''}
         </div>
         
         <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">

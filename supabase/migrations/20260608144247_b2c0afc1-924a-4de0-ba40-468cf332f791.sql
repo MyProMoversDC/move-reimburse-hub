@@ -1,0 +1,1 @@
+ALTER TABLE public.customer_refunds ADD COLUMN IF NOT EXISTS check_address text, ADD COLUMN IF NOT EXISTS zelle_phone text;

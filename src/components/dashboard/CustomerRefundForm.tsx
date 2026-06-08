@@ -12,6 +12,8 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { useMapboxToken } from "@/hooks/useMapboxToken";
 
 interface CustomerRefundFormProps {
   userId: string;
@@ -37,6 +39,10 @@ const translations: Record<string, Record<string, string>> = {
     zelle: "Zelle",
     check: "Check",
     other: "Other",
+    checkAddress: "Mailing Address for Check",
+    checkAddressPlaceholder: "Enter mailing address",
+    zellePhone: "Zelle Phone Number / Digits",
+    zellePhonePlaceholder: "Enter Zelle phone number or digits",
   },
   ru: {
     title: "Форма возврата клиенту",
@@ -55,6 +61,10 @@ const translations: Record<string, Record<string, string>> = {
     zelle: "Zelle",
     check: "Чек",
     other: "Другое",
+    checkAddress: "Почтовый адрес для чека",
+    checkAddressPlaceholder: "Введите почтовый адрес",
+    zellePhone: "Номер телефона / цифры Zelle",
+    zellePhonePlaceholder: "Введите номер или цифры Zelle",
   },
   es: {
     title: "Formulario de Reembolso al Cliente",
@@ -73,6 +83,10 @@ const translations: Record<string, Record<string, string>> = {
     zelle: "Zelle",
     check: "Cheque",
     other: "Otro",
+    checkAddress: "Dirección postal para el cheque",
+    checkAddressPlaceholder: "Ingrese la dirección postal",
+    zellePhone: "Número de teléfono / dígitos de Zelle",
+    zellePhonePlaceholder: "Ingrese número o dígitos de Zelle",
   },
 };
 
@@ -84,8 +98,11 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentMethodOther, setPaymentMethodOther] = useState("");
+  const [checkAddress, setCheckAddress] = useState("");
+  const [zellePhone, setZellePhone] = useState("");
   const [comments, setComments] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const { token: mapboxToken } = useMapboxToken();
 
   const handleSubmit = async () => {
     if (!customerName.trim() || !reason.trim() || !requestDate || !amount || !paymentMethod) {
@@ -93,6 +110,14 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
       return;
     }
     if (paymentMethod === "other" && !paymentMethodOther.trim()) {
+      toast.error(t.required);
+      return;
+    }
+    if (paymentMethod === "check" && !checkAddress.trim()) {
+      toast.error(t.required);
+      return;
+    }
+    if (paymentMethod === "zelle" && !zellePhone.trim()) {
       toast.error(t.required);
       return;
     }
@@ -107,6 +132,8 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
         amount: parseFloat(amount),
         payment_method: paymentMethod === "other" ? paymentMethodOther.trim() : paymentMethod,
         payment_method_other: paymentMethod === "other" ? paymentMethodOther.trim() : null,
+        check_address: paymentMethod === "check" ? checkAddress.trim() : null,
+        zelle_phone: paymentMethod === "zelle" ? zellePhone.trim() : null,
         comments: comments.trim() || null,
       } as any);
 
@@ -129,6 +156,8 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
             requestDate: format(requestDate, "MM/dd/yyyy"),
             amount: parseFloat(amount),
             paymentMethod: paymentMethod === "other" ? paymentMethodOther.trim() : paymentMethod,
+            checkAddress: paymentMethod === "check" ? checkAddress.trim() : null,
+            zellePhone: paymentMethod === "zelle" ? zellePhone.trim() : null,
             comments: comments.trim() || null,
             submitterName,
           },
@@ -144,6 +173,8 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
       setAmount("");
       setPaymentMethod("");
       setPaymentMethodOther("");
+      setCheckAddress("");
+      setZellePhone("");
       setComments("");
       onSubmitted?.();
     } catch (error: any) {
@@ -210,6 +241,31 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
           <div className="space-y-2">
             <Label>{t.paymentMethodOther} *</Label>
             <Input value={paymentMethodOther} onChange={(e) => setPaymentMethodOther(e.target.value)} />
+          </div>
+        )}
+
+        {paymentMethod === "check" && (
+          <div className="space-y-2">
+            <Label>{t.checkAddress} *</Label>
+            <AddressAutocomplete
+              value={checkAddress}
+              onChange={setCheckAddress}
+              placeholder={t.checkAddressPlaceholder}
+              accessToken={mapboxToken}
+            />
+          </div>
+        )}
+
+        {paymentMethod === "zelle" && (
+          <div className="space-y-2">
+            <Label>{t.zellePhone} *</Label>
+            <Input
+              type="tel"
+              inputMode="numeric"
+              value={zellePhone}
+              onChange={(e) => setZellePhone(e.target.value)}
+              placeholder={t.zellePhonePlaceholder}
+            />
           </div>
         )}
 

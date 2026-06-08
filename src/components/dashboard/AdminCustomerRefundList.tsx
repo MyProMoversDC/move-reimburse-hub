@@ -22,6 +22,8 @@ interface Refund {
   amount: number;
   payment_method: string;
   payment_method_other: string | null;
+  check_address: string | null;
+  zelle_phone: string | null;
   comments: string | null;
   created_at: string;
   status: string;
@@ -386,6 +388,18 @@ const AdminCustomerRefundList = () => {
                     {detailsTarget.payment_method_other || detailsTarget.payment_method.charAt(0).toUpperCase() + detailsTarget.payment_method.slice(1)}
                   </p>
                 </div>
+                {detailsTarget.check_address && (
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Check Mailing Address</p>
+                    <p className="font-medium">{detailsTarget.check_address}</p>
+                  </div>
+                )}
+                {detailsTarget.zelle_phone && (
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Zelle Phone / Digits</p>
+                    <p className="font-medium">{detailsTarget.zelle_phone}</p>
+                  </div>
+                )}
                 <div className="col-span-2">
                   <p className="text-muted-foreground">Status</p>
                   <div className="mt-1">{statusBadge(detailsTarget.status || "pending")}</div>
