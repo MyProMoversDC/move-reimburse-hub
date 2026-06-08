@@ -1,9 +1,9 @@
-import { 
-  FileText, 
-  Star, 
-  FileBarChart, 
-  Users, 
-  UserCog, 
+import {
+  FileText,
+  Star,
+  FileBarChart,
+  Users,
+  UserCog,
   AlertTriangle,
   HelpCircle,
   LayoutDashboard,
@@ -19,7 +19,14 @@ import {
   UserPlus,
   Clock,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  ShieldAlert,
+  Wallet,
+  BarChart3,
+  Library,
+  Megaphone,
+  Briefcase,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,7 +47,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import logo from "@/assets/logo.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -63,233 +70,251 @@ interface AdminSidebarProps {
   hasUnreadMessages?: boolean;
 }
 
-const menuItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "signup-approvals", label: "SignUp Approvals", icon: UserCheck },
-  { id: "feed", label: "Feed Management", icon: Newspaper },
-  { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle },
-  { id: "violence-incidents", label: "Violence Incidents", icon: Shield },
-  { id: "alcohol-tests", label: "Alcohol Test Reports", icon: Shield },
-  { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare },
-  { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
-  { id: "handbook", label: "Handbook Management", icon: BookOpen },
-  { id: "consent-documents", label: "Consent Documents", icon: FileText },
-  { id: "customer-refunds", label: "Customer Refunds", icon: DollarSign },
-  { id: "referrals", label: "Referral Requests", icon: UserPlus },
-  { id: "email-logs", label: "Email Logs", icon: Mail },
-  { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
-  { id: "chat", label: "Chat", icon: MessageSquare },
-  { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
-  { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+type NavItem = {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badgeKey?: keyof AdminSidebarProps["pendingCounts"];
+  redDot?: boolean;
+};
+
+type NavGroup = {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: NavItem[];
+};
+
+const groups: NavGroup[] = [
+  {
+    id: "users",
+    label: "User Management",
+    icon: Users,
+    items: [
+      { id: "signup-approvals", label: "SignUp Approvals", icon: UserCheck, badgeKey: "signupApprovals", redDot: true },
+      { id: "roles", label: "User Management", icon: UserCog },
+      { id: "movers", label: "Movers Directory", icon: Users },
+      { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
+    ],
+  },
+  {
+    id: "operations",
+    label: "Operations",
+    icon: Briefcase,
+    items: [
+      { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
+      { id: "referrals", label: "Referral Requests", icon: UserPlus, badgeKey: "referrals" },
+    ],
+  },
+  {
+    id: "compliance",
+    label: "Compliance & Safety",
+    icon: ShieldAlert,
+    items: [
+      { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle, badgeKey: "performanceReports", redDot: true },
+      { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare, badgeKey: "misconductReplies" },
+      { id: "violence-incidents", label: "Violence Incidents", icon: Shield, badgeKey: "violenceIncidents", redDot: true },
+      { id: "alcohol-tests", label: "Alcohol Test Reports", icon: Shield, badgeKey: "alcoholTests", redDot: true },
+      { id: "consent-documents", label: "Consent Documents", icon: FileText },
+    ],
+  },
+  {
+    id: "finance",
+    label: "Financial Management",
+    icon: Wallet,
+    items: [
+      { id: "customer-refunds", label: "Customer Refunds", icon: DollarSign, badgeKey: "customerRefunds" },
+      { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
+      { id: "missing-payments", label: "Missing Payments", icon: DollarSign, badgeKey: "missingPayments" },
+      { id: "payment-questions", label: "Payment Questions", icon: HelpCircle, badgeKey: "paymentQuestions" },
+      { id: "requests", label: "Reimbursements", icon: FileText, badgeKey: "reimbursements" },
+    ],
+  },
+  {
+    id: "reports",
+    label: "Reports",
+    icon: BarChart3,
+    items: [
+      { id: "reimbursement-reports", label: "Reimbursement Reports", icon: FileBarChart },
+      { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
+      { id: "review-reports", label: "Customer Review Reports", icon: Star },
+      { id: "reviews", label: "Mover Form Reports", icon: ClipboardList, badgeKey: "reviews" },
+    ],
+  },
+  {
+    id: "content",
+    label: "Content & Knowledge",
+    icon: Library,
+    items: [
+      { id: "feed", label: "Feed Management", icon: Newspaper },
+      { id: "handbook", label: "Handbook Management", icon: BookOpen },
+      { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+      { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle, badgeKey: "moverFeedback", redDot: true },
+    ],
+  },
+  {
+    id: "comms",
+    label: "Communication & Logs",
+    icon: Megaphone,
+    items: [
+      { id: "email-logs", label: "Email Logs", icon: Mail },
+    ],
+  },
 ];
 
-const formItems = [
-  { id: "requests", label: "Reimbursements", icon: FileText },
-  { id: "reviews", label: "Review Bonuses", icon: Star },
-  { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
-  { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle },
-  { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
-];
-
-const reportingItems = [
-  { id: "reimbursement-reports", label: "Reimbursement Reports" },
-  { id: "review-reports", label: "Customer Review Reports" },
-  { id: "missing-payment-reports", label: "Missing Payment Reports" },
-];
-
-const bottomMenuItems = [
-  { id: "movers", label: "Movers Directory", icon: Users },
-  { id: "roles", label: "User Management", icon: UserCog },
-];
+const STORAGE_KEY = "adminSidebarOpenGroups";
 
 const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages = false }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const [reportsOpen, setReportsOpen] = useState(false);
-  const [formsOpen, setFormsOpen] = useState(false);
 
-  const getBadgeCount = (id: string) => {
-    if (id === "requests") return pendingCounts.reimbursements;
-    if (id === "reviews") return pendingCounts.reviews;
-    if (id === "missing-payments") return pendingCounts.missingPayments;
-    if (id === "misconduct-responses") return pendingCounts.misconductReplies;
-    if (id === "mover-feedback") return pendingCounts.moverFeedback;
-    if (id === "performance-reports") return pendingCounts.performanceReports;
-    if (id === "violence-incidents") return pendingCounts.violenceIncidents;
-    if (id === "alcohol-tests") return pendingCounts.alcoholTests;
-    if (id === "customer-refunds") return pendingCounts.customerRefunds;
-    if (id === "payment-questions") return pendingCounts.paymentQuestions;
-    if (id === "referrals") return pendingCounts.referrals;
-    if (id === "signup-approvals") return pendingCounts.signupApprovals;
-    if (id === "dashboard") return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.misconductReplies + pendingCounts.moverFeedback + pendingCounts.performanceReports + pendingCounts.violenceIncidents + pendingCounts.alcoholTests + pendingCounts.customerRefunds + pendingCounts.paymentQuestions + pendingCounts.referrals;
-    return 0;
-  };
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { users: true, operations: true, compliance: true, finance: true, reports: false, content: false, comms: false };
+  });
 
-  const isReportTab = reportingItems.some(item => item.id === activeTab);
-  const isFormTab = formItems.some(item => item.id === activeTab);
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(openGroups));
+    } catch {}
+  }, [openGroups]);
 
-  const getFormsBadgeCount = () => {
-    return pendingCounts.reimbursements + pendingCounts.reviews + pendingCounts.missingPayments + pendingCounts.moverFeedback + pendingCounts.paymentQuestions;
+  const setGroupOpen = (id: string, open: boolean) =>
+    setOpenGroups((prev) => ({ ...prev, [id]: open }));
+
+  const getItemBadge = (item: NavItem) =>
+    item.badgeKey ? pendingCounts[item.badgeKey] || 0 : 0;
+
+  const getGroupBadge = (group: NavGroup) =>
+    group.items.reduce((sum, i) => sum + getItemBadge(i), 0);
+
+  const isGroupActive = (group: NavGroup) =>
+    group.items.some((i) => i.id === activeTab);
+
+  const renderItemRow = (item: NavItem, indent = false) => {
+    const count = getItemBadge(item);
+    const showRedDot = item.redDot && count > 0;
+    return (
+      <SidebarMenuItem key={item.id}>
+        <SidebarMenuButton
+          isActive={activeTab === item.id}
+          onClick={() => onTabChange(item.id)}
+          tooltip={item.label}
+          className={indent && !isCollapsed ? "pl-8" : undefined}
+        >
+          <div className="relative">
+            <item.icon className="h-4 w-4" />
+            {isCollapsed && (showRedDot || count > 0) && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
+            )}
+          </div>
+          {!isCollapsed && <span className="flex-1 truncate">{item.label}</span>}
+          {!isCollapsed && count > 0 && (
+            showRedDot ? (
+              <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
+            ) : (
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-destructive-foreground text-xs font-medium">
+                {count}
+              </span>
+            )
+          )}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
   };
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center justify-between p-2">
-          {!isCollapsed && (
-            <img src={logo} alt="MyProMovers" className="h-8" />
-          )}
+          {!isCollapsed && <img src={logo} alt="MyProMovers" className="h-8" />}
           <SidebarTrigger className="ml-auto">
             <ChevronLeft className={`h-4 w-4 transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
           </SidebarTrigger>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="overflow-y-auto">
+        {/* Top-level standalone items */}
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => {
-                const count = getBadgeCount(item.id);
-                const showRedDot = count > 0 && ["mover-feedback", "performance-reports", "violence-incidents", "alcohol-tests", "signup-approvals"].includes(item.id);
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      isActive={activeTab === item.id}
-                      onClick={() => onTabChange(item.id)}
-                      tooltip={item.label}
-                    >
-                      <div className="relative">
-                        <item.icon className="h-4 w-4" />
-                        {item.id === "chat" && hasUnreadMessages && (
-                          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-                        )}
-                        {showRedDot && isCollapsed && (
-                          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-                        )}
-                      </div>
-                      {!isCollapsed && (
-                        <span className="flex-1">{item.label}</span>
-                      )}
-                      {!isCollapsed && count > 0 && !showRedDot && (
-                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
-                          {count}
-                        </span>
-                      )}
-                      {!isCollapsed && showRedDot && (
-                        <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
-                      )}
-                      {!isCollapsed && item.id === "chat" && hasUnreadMessages && count === 0 && (
-                        <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-
-              {/* Forms dropdown */}
-              {!isCollapsed && (
-                <Collapsible open={formsOpen || isFormTab} onOpenChange={setFormsOpen}>
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip="Forms">
-                        <FileText className="h-4 w-4" />
-                        <span className="flex-1">Forms</span>
-                        {getFormsBadgeCount() > 0 && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
-                            {getFormsBadgeCount()}
-                          </span>
-                        )}
-                        <ChevronDown className={`h-4 w-4 transition-transform ${formsOpen || isFormTab ? "rotate-180" : ""}`} />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                  </SidebarMenuItem>
-                  <CollapsibleContent>
-                    {formItems.map((formItem) => {
-                      const count = getBadgeCount(formItem.id);
-                      return (
-                        <SidebarMenuItem key={formItem.id} className="pl-6">
-                          <SidebarMenuButton
-                            isActive={activeTab === formItem.id}
-                            onClick={() => onTabChange(formItem.id)}
-                            tooltip={formItem.label}
-                          >
-                            <formItem.icon className="h-4 w-4" />
-                            <span className="flex-1 text-sm">{formItem.label}</span>
-                            {count > 0 && (
-                              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
-                                {count}
-                              </span>
-                            )}
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              {isCollapsed && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={isFormTab}
-                    onClick={() => onTabChange("requests")}
-                    tooltip="Forms"
-                  >
-                    <div className="relative">
-                      <FileText className="h-4 w-4" />
-                      {getFormsBadgeCount() > 0 && (
-                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-                      )}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-
-              {/* Mover Form Reports dropdown */}
-              {!isCollapsed && (
-                <Collapsible open={reportsOpen || isReportTab} onOpenChange={setReportsOpen}>
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip="Mover Form Reports">
-                        <FileBarChart className="h-4 w-4" />
-                        <span className="flex-1">Mover Form Reports</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${reportsOpen || isReportTab ? "rotate-180" : ""}`} />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                  </SidebarMenuItem>
-                  <CollapsibleContent>
-                    {reportingItems.map((item) => (
-                      <SidebarMenuItem key={item.id} className="pl-6">
-                        <SidebarMenuButton
-                          isActive={activeTab === item.id}
-                          onClick={() => onTabChange(item.id)}
-                          tooltip={item.label}
-                        >
-                          <span className="flex-1 text-sm">{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-
-              {bottomMenuItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    isActive={activeTab === item.id}
-                    onClick={() => onTabChange(item.id)}
-                    tooltip={item.label}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {!isCollapsed && (
-                      <span className="flex-1">{item.label}</span>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeTab === "dashboard"}
+                  onClick={() => onTabChange("dashboard")}
+                  tooltip="Dashboard"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  {!isCollapsed && <span className="flex-1">Dashboard</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={activeTab === "chat"}
+                  onClick={() => onTabChange("chat")}
+                  tooltip="Chat"
+                >
+                  <div className="relative">
+                    <MessageSquare className="h-4 w-4" />
+                    {isCollapsed && hasUnreadMessages && (
+                      <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
                     )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                  </div>
+                  {!isCollapsed && <span className="flex-1">Chat</span>}
+                  {!isCollapsed && hasUnreadMessages && (
+                    <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Grouped sections */}
+        {groups.map((group) => {
+          const groupBadge = getGroupBadge(group);
+          const active = isGroupActive(group);
+          const open = isCollapsed ? true : (openGroups[group.id] ?? false) || active;
+
+          if (isCollapsed) {
+            return (
+              <SidebarGroup key={group.id}>
+                <SidebarGroupContent>
+                  <SidebarMenu>{group.items.map((i) => renderItemRow(i))}</SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          }
+
+          return (
+            <SidebarGroup key={group.id}>
+              <Collapsible open={open} onOpenChange={(o) => setGroupOpen(group.id, o)}>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors">
+                    <group.icon className="h-3.5 w-3.5" />
+                    <span className="flex-1 text-left">{group.label}</span>
+                    {groupBadge > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-destructive-foreground text-[10px] font-medium">
+                        {groupBadge}
+                      </span>
+                    )}
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {group.items.map((item) => renderItemRow(item, true))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
     </Sidebar>
   );
