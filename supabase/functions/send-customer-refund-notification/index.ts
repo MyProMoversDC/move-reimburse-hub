@@ -15,7 +15,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { customerName, reason, requestDate, amount, paymentMethod, comments, refundId, submitterName } = await req.json();
+    const { customerName, reason, requestDate, amount, paymentMethod, checkAddress, zellePhone, comments, refundId, submitterName } = await req.json();
 
     if (!customerName || !reason || !requestDate || !amount || !paymentMethod) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
