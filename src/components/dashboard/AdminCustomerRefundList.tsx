@@ -22,6 +22,8 @@ interface Refund {
   amount: number;
   payment_method: string;
   payment_method_other: string | null;
+  check_address: string | null;
+  zelle_phone: string | null;
   comments: string | null;
   created_at: string;
   status: string;
