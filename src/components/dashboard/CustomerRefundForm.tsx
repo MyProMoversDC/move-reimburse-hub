@@ -98,8 +98,11 @@ const CustomerRefundForm = ({ userId, language, onSubmitted }: CustomerRefundFor
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentMethodOther, setPaymentMethodOther] = useState("");
+  const [checkAddress, setCheckAddress] = useState("");
+  const [zellePhone, setZellePhone] = useState("");
   const [comments, setComments] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const { token: mapboxToken } = useMapboxToken();
 
   const handleSubmit = async () => {
     if (!customerName.trim() || !reason.trim() || !requestDate || !amount || !paymentMethod) {
