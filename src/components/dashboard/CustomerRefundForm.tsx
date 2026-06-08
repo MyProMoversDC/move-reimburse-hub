@@ -39,6 +39,10 @@ const translations: Record<string, Record<string, string>> = {
     zelle: "Zelle",
     check: "Check",
     other: "Other",
+    checkAddress: "Mailing Address for Check",
+    checkAddressPlaceholder: "Enter mailing address",
+    zellePhone: "Zelle Phone Number / Digits",
+    zellePhonePlaceholder: "Enter Zelle phone number or digits",
   },
   ru: {
     title: "Форма возврата клиенту",
@@ -57,6 +61,10 @@ const translations: Record<string, Record<string, string>> = {
     zelle: "Zelle",
     check: "Чек",
     other: "Другое",
+    checkAddress: "Почтовый адрес для чека",
+    checkAddressPlaceholder: "Введите почтовый адрес",
+    zellePhone: "Номер телефона / цифры Zelle",
+    zellePhonePlaceholder: "Введите номер или цифры Zelle",
   },
   es: {
     title: "Formulario de Reembolso al Cliente",
@@ -75,6 +83,10 @@ const translations: Record<string, Record<string, string>> = {
     zelle: "Zelle",
     check: "Cheque",
     other: "Otro",
+    checkAddress: "Dirección postal para el cheque",
+    checkAddressPlaceholder: "Ingrese la dirección postal",
+    zellePhone: "Número de teléfono / dígitos de Zelle",
+    zellePhonePlaceholder: "Ingrese número o dígitos de Zelle",
   },
 };
 
