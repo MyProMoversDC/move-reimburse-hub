@@ -112,6 +112,7 @@ const PerformanceReportsList = ({ refreshKey, onRefresh, userRole = 'operations_
       <PerformanceReportDetails 
         report={selectedReport} 
         onClose={() => setSelectedReport(null)} 
+        onReviewed={onRefresh}
       />
     );
   }
