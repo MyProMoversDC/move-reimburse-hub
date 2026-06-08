@@ -622,7 +622,25 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       <div className="flex min-h-screen w-full">
         <AdminSidebar 
           activeTab={activeTab} 
-          onTabChange={(tab) => { setActiveTab(tab); setTimeout(() => setRefreshKey((k) => k + 1), 600); }}
+          onTabChange={async (tab) => {
+            setActiveTab(tab);
+            try {
+              if (tab === "performance-reports") {
+                await supabase
+                  .from("performance_reports")
+                  .update({ reviewed_at: new Date().toISOString() })
+                  .is("reviewed_at", null);
+              } else if (tab === "alcohol-tests") {
+                await supabase
+                  .from("alcohol_test_reports")
+                  .update({ reviewed_at: new Date().toISOString() })
+                  .is("reviewed_at", null);
+              }
+            } catch (e) {
+              console.error("Failed to mark reports reviewed", e);
+            }
+            setTimeout(() => setRefreshKey((k) => k + 1), 600);
+          }}
           pendingCounts={pendingCounts}
           hasUnreadMessages={hasUnreadMessages}
         />
