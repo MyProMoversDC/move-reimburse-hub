@@ -448,6 +448,7 @@ export type Database = {
       customer_refunds: {
         Row: {
           amount: number
+          at_fault_mover_id: string | null
           check_address: string | null
           comments: string | null
           created_at: string
@@ -466,6 +467,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          at_fault_mover_id?: string | null
           check_address?: string | null
           comments?: string | null
           created_at?: string
@@ -484,6 +486,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          at_fault_mover_id?: string | null
           check_address?: string | null
           comments?: string | null
           created_at?: string
@@ -500,7 +503,15 @@ export type Database = {
           submitted_by?: string
           zelle_phone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_refunds_at_fault_mover_id_fkey"
+            columns: ["at_fault_mover_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       day_off_requests: {
         Row: {
@@ -1657,6 +1668,89 @@ export type Database = {
         }
         Relationships: []
       }
+      mover_rating_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          delta: number
+          event_type: string
+          id: string
+          mover_id: string
+          reason: string | null
+          source_id: string | null
+          source_table: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          delta: number
+          event_type: string
+          id?: string
+          mover_id: string
+          reason?: string | null
+          source_id?: string | null
+          source_table?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          delta?: number
+          event_type?: string
+          id?: string
+          mover_id?: string
+          reason?: string | null
+          source_id?: string | null
+          source_table?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mover_rating_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mover_rating_events_mover_id_fkey"
+            columns: ["mover_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mover_ratings: {
+        Row: {
+          id: string
+          mover_id: string
+          score: number
+          stars: number | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          mover_id: string
+          score?: number
+          stars?: number | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          mover_id?: string
+          score?: number
+          stars?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mover_ratings_mover_id_fkey"
+            columns: ["mover_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_question_attachments: {
         Row: {
           created_at: string
@@ -2731,6 +2825,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_rating_event: {
+        Args: {
+          _created_by: string
+          _delta: number
+          _event_type: string
+          _mover_id: string
+          _reason: string
+          _source_id: string
+          _source_table: string
+        }
+        Returns: {
+          event_id: string
+          new_score: number
+          new_stars: number
+        }[]
+      }
       check_duplicate_invoice_number: {
         Args: { p_invoice_number: string }
         Returns: boolean
@@ -2743,6 +2853,7 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: undefined
       }
+      find_mover_id_by_name: { Args: { _worker_name: string }; Returns: string }
       get_email_by_username: {
         Args: { input_username: string }
         Returns: string
@@ -2761,6 +2872,10 @@ export type Database = {
       is_conversation_participant: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
+      }
+      last_positive_manual_adjustment: {
+        Args: { _mover_id: string }
+        Returns: string
       }
       list_chat_users_for_picker: {
         Args: { exclude_user_id?: string }

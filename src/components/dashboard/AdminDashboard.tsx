@@ -31,6 +31,7 @@ import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
 import AdminSignupApprovals from "./AdminSignupApprovals";
+import MoverRatingsPage from "@/components/ratings/MoverRatingsPage";
 import { Button } from "@/components/ui/button";
 import { Download, PlayCircle, Search, Plus, X } from "lucide-react";
 import { exportToExcel, exportReviewBonusesToExcel, exportMissingPaymentsToExcel } from "@/lib/exportToExcel";
@@ -605,6 +606,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         );
       case "movers":
         return <MoversList language={language} />;
+      case "mover-ratings":
+        return <MoverRatingsPage />;
       case "roles":
         return (
           <div className="space-y-6">

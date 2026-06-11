@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
+import MoverPerformanceCard from "@/components/ratings/MoverPerformanceCard";
 
 interface UserSettingsProps {
   userId: string;
@@ -714,6 +715,9 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                 </Button>
               </div>
             </div>
+
+            {/* Performance Score Card - movers only */}
+            {showBalance && <MoverPerformanceCard moverId={userId} />}
 
             {/* Balance Display - Only for movers */}
             {showBalance && (
