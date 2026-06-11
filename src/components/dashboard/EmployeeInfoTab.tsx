@@ -115,11 +115,12 @@ const translations = {
     otherMounting: "Other Mounting",
     specialProject: "Special Project",
     unsavedChanges: "You have unsaved changes. Are you sure you want to leave?",
-    crewForeman: "Crew Foreman",
-    driver: "Driver",
-    mover: "Mover",
-    manager: "Manager",
+    helperK: "Helper (K)",
     helper: "Helper",
+    foreman: "Foreman",
+    driver: "Driver",
+    foremanDriver: "Foreman & Driver",
+    officeUser: "Office User",
     mainOffice: "Main Office",
     branchA: "Branch A",
     branchB: "Branch B",
@@ -184,11 +185,12 @@ const translations = {
     otherMounting: "Otro Montaje",
     specialProject: "Proyecto Especial",
     unsavedChanges: "Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?",
-    crewForeman: "Capataz de Equipo",
-    driver: "Conductor",
-    mover: "Mudador",
-    manager: "Gerente",
+    helperK: "Ayudante (K)",
     helper: "Ayudante",
+    foreman: "Capataz",
+    driver: "Conductor",
+    foremanDriver: "Capataz y Conductor",
+    officeUser: "Usuario de Oficina",
     mainOffice: "Oficina Principal",
     branchA: "Sucursal A",
     branchB: "Sucursal B",
@@ -253,11 +255,12 @@ const translations = {
     otherMounting: "Другой Монтаж",
     specialProject: "Специальный Проект",
     unsavedChanges: "У вас есть несохраненные изменения. Вы уверены, что хотите уйти?",
-    crewForeman: "Бригадир",
-    driver: "Водитель",
-    mover: "Грузчик",
-    manager: "Менеджер",
+    helperK: "Помощник (K)",
     helper: "Помощник",
+    foreman: "Бригадир",
+    driver: "Водитель",
+    foremanDriver: "Бригадир и Водитель",
+    officeUser: "Офисный Сотрудник",
     mainOffice: "Главный Офис",
     branchA: "Филиал A",
     branchB: "Филиал B",
@@ -771,11 +774,12 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
                   <SelectValue placeholder={t.selectRole} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="crew_foreman">{t.crewForeman}</SelectItem>
-                  <SelectItem value="driver">{t.driver}</SelectItem>
-                  <SelectItem value="mover">{t.mover}</SelectItem>
-                  <SelectItem value="manager">{t.manager}</SelectItem>
+                  <SelectItem value="helper_k">{t.helperK}</SelectItem>
                   <SelectItem value="helper">{t.helper}</SelectItem>
+                  <SelectItem value="foreman">{t.foreman}</SelectItem>
+                  <SelectItem value="driver">{t.driver}</SelectItem>
+                  <SelectItem value="foreman_driver">{t.foremanDriver}</SelectItem>
+                  <SelectItem value="office_user">{t.officeUser}</SelectItem>
                 </SelectContent>
               </Select>
               {errors.role && (
