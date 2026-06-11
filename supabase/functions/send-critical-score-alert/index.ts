@@ -53,7 +53,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "MyProMovers <alerts@mypromoversreimbursements.com>",
+        from: FROM_EMAIL,
         to: toEmails,
         subject: `Critical Performance Score: ${fullName}`,
         html,
@@ -62,22 +62,27 @@ serve(async (req) => {
     const result = await res.json();
 
     try {
-      await logEmail(supabase, {
-        recipients: toEmails,
+      await logEmail({
+        from_email: FROM_EMAIL,
+        to_emails: toEmails,
         subject: `Critical Performance Score: ${fullName}`,
-        type: "critical_score_alert",
+        body_html: html,
+        email_type: "critical_score_alert",
+        reference_id: mover_id,
+        reference_type: "mover_rating",
         status: res.ok ? "sent" : "failed",
         resend_id: result?.id,
-        error_message: res.ok ? null : JSON.stringify(result),
+        error_message: res.ok ? undefined : JSON.stringify(result),
       });
     } catch (e) { console.error("logEmail failed", e); }
 
     // In-app mover notification
     await supabase.from("mover_notifications").insert({
-      mover_id,
+      user_id: mover_id,
       title: "Performance score critical",
       message: "Your performance score has reached the minimum threshold. HR will contact you.",
-      type: "critical_score",
+      notification_type: "critical_score",
+      reference_type: "mover_rating",
     });
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
