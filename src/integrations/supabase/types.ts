@@ -1751,6 +1751,275 @@ export type Database = {
           },
         ]
       }
+      office_ai_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: string
+          embedding: string
+          id: string
+          page_number: number | null
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          document_id: string
+          embedding: string
+          id?: string
+          page_number?: number | null
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: string
+          embedding?: string
+          id?: string
+          page_number?: number | null
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_ai_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "office_ai_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          language: string | null
+          last_message_at: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          last_message_at?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          last_message_at?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      office_ai_documents: {
+        Row: {
+          ai_enabled: boolean
+          chunk_count: number
+          created_at: string
+          description: string | null
+          file_size_bytes: number | null
+          id: string
+          ingest_error: string | null
+          ingest_status: string
+          kb_folder_id: string | null
+          language: string | null
+          mime_type: string | null
+          source_bucket: string
+          source_path: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          ai_enabled?: boolean
+          chunk_count?: number
+          created_at?: string
+          description?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          ingest_error?: string | null
+          ingest_status?: string
+          kb_folder_id?: string | null
+          language?: string | null
+          mime_type?: string | null
+          source_bucket?: string
+          source_path: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          ai_enabled?: boolean
+          chunk_count?: number
+          created_at?: string
+          description?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          ingest_error?: string | null
+          ingest_status?: string
+          kb_folder_id?: string | null
+          language?: string | null
+          mime_type?: string | null
+          source_bucket?: string
+          source_path?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_ai_documents_kb_folder_id_fkey"
+            columns: ["kb_folder_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_ai_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          message_id: string | null
+          query_id: string | null
+          rating: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          query_id?: string | null
+          rating: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          query_id?: string | null
+          rating?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_ai_feedback_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "office_ai_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "office_ai_feedback_query_id_fkey"
+            columns: ["query_id"]
+            isOneToOne: false
+            referencedRelation: "office_ai_queries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_ai_messages: {
+        Row: {
+          ai_message_id: string | null
+          citations: Json | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          ai_message_id?: string | null
+          citations?: Json | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          ai_message_id?: string | null
+          citations?: Json | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "office_ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_ai_queries: {
+        Row: {
+          answer_preview: string | null
+          chunk_ids_used: string[] | null
+          conversation_id: string | null
+          created_at: string
+          document_ids_used: string[] | null
+          had_results: boolean
+          id: string
+          language: string | null
+          question: string
+          response_ms: number | null
+          user_id: string | null
+        }
+        Insert: {
+          answer_preview?: string | null
+          chunk_ids_used?: string[] | null
+          conversation_id?: string | null
+          created_at?: string
+          document_ids_used?: string[] | null
+          had_results?: boolean
+          id?: string
+          language?: string | null
+          question: string
+          response_ms?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          answer_preview?: string | null
+          chunk_ids_used?: string[] | null
+          conversation_id?: string | null
+          created_at?: string
+          document_ids_used?: string[] | null
+          had_results?: boolean
+          id?: string
+          language?: string | null
+          question?: string
+          response_ms?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_ai_queries_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "office_ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_question_attachments: {
         Row: {
           created_at: string
@@ -2849,6 +3118,7 @@ export type Database = {
         Args: { p_review_url: string }
         Returns: boolean
       }
+      cleanup_office_ai_old_conversations: { Args: never; Returns: number }
       delete_user_account: {
         Args: { user_id_to_delete: string }
         Returns: undefined
@@ -2884,6 +3154,17 @@ export type Database = {
           id: string
           last_name: string
           roles: string[]
+        }[]
+      }
+      match_office_ai_chunks: {
+        Args: { match_count?: number; query_embedding: string }
+        Returns: {
+          content: string
+          document_id: string
+          document_title: string
+          id: string
+          page_number: number
+          similarity: number
         }[]
       }
     }
