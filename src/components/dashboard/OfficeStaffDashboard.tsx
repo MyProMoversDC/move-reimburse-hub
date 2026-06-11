@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap, Bookmark } from "lucide-react";
+import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap, Bookmark, Sparkles } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import CustomerRefundForm from "./CustomerRefundForm";
@@ -10,6 +10,7 @@ import FeedList from "./feed/FeedList";
 import SavedFeedPosts from "./feed/SavedFeedPosts";
 import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
+import OfficeAIAssistant from "./OfficeAIAssistant";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ const navItems = [
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
   { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+  { id: "ai-assistant", label: "AI Assistant", icon: Sparkles },
 ] as const;
 
 const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
@@ -114,6 +116,9 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           {activeTab === "knowledge-base" && (
             <KnowledgeBaseViewer userId={userId} />
           )}
+          {activeTab === "ai-assistant" && (
+            <OfficeAIAssistant userId={userId} language={language} />
+          )}
         </div>
       </div>
 
@@ -153,6 +158,11 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
         {activeTab === "knowledge-base" && (
           <div className="space-y-6">
             <KnowledgeBaseViewer userId={userId} />
+          </div>
+        )}
+        {activeTab === "ai-assistant" && (
+          <div className="space-y-6">
+            <OfficeAIAssistant userId={userId} language={language} />
           </div>
         )}
       </div>
