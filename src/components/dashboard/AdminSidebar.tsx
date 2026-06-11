@@ -94,6 +94,7 @@ const groups: NavGroup[] = [
       { id: "signup-approvals", label: "SignUp Approvals", icon: UserCheck, badgeKey: "signupApprovals", redDot: true },
       { id: "roles", label: "User Management", icon: UserCog },
       { id: "movers", label: "Movers Directory", icon: Users },
+      { id: "mover-ratings", label: "Mover Ratings", icon: Star },
       { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
     ],
   },
