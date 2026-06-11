@@ -116,6 +116,9 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           {activeTab === "knowledge-base" && (
             <KnowledgeBaseViewer userId={userId} />
           )}
+          {activeTab === "ai-assistant" && (
+            <OfficeAIAssistant userId={userId} language={language} />
+          )}
         </div>
       </div>
 
