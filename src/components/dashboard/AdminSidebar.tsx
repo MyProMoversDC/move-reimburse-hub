@@ -27,6 +27,7 @@ import {
   Megaphone,
   Briefcase,
   ClipboardList,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
