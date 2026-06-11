@@ -30,6 +30,7 @@ import CustomerRefundForm from "./CustomerRefundForm";
 import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
+import AdminOfficeAIKnowledge from "./AdminOfficeAIKnowledge";
 import AdminSignupApprovals from "./AdminSignupApprovals";
 import MoverRatingsPage from "@/components/ratings/MoverRatingsPage";
 import { Button } from "@/components/ui/button";
@@ -595,6 +596,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return (
           <div className="space-y-6">
             <AdminKnowledgeBase userId={userId} />
+          </div>
+        );
+      case "office-ai-knowledge":
+        return (
+          <div className="space-y-6">
+            <AdminOfficeAIKnowledge userId={userId} />
           </div>
         );
       case "chat":
