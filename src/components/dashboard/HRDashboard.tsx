@@ -43,6 +43,7 @@ import { useLanguage as useLang } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { getSignedUrl } from "@/lib/storageUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import MoverRatingsPage from "@/components/ratings/MoverRatingsPage";
 
 interface Profile {
   id: string;
