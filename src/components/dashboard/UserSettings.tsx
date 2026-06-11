@@ -715,6 +715,9 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
               </div>
             </div>
 
+            {/* Performance Score Card - movers only */}
+            {showBalance && <MoverPerformanceCard moverId={userId} />}
+
             {/* Balance Display - Only for movers */}
             {showBalance && (
               <Card className="bg-primary/5 border-primary/20">
