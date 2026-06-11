@@ -448,6 +448,7 @@ export type Database = {
       customer_refunds: {
         Row: {
           amount: number
+          at_fault_mover_id: string | null
           check_address: string | null
           comments: string | null
           created_at: string
@@ -466,6 +467,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          at_fault_mover_id?: string | null
           check_address?: string | null
           comments?: string | null
           created_at?: string
@@ -484,6 +486,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          at_fault_mover_id?: string | null
           check_address?: string | null
           comments?: string | null
           created_at?: string
@@ -500,7 +503,15 @@ export type Database = {
           submitted_by?: string
           zelle_phone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_refunds_at_fault_mover_id_fkey"
+            columns: ["at_fault_mover_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       day_off_requests: {
         Row: {
@@ -2842,6 +2853,7 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: undefined
       }
+      find_mover_id_by_name: { Args: { _worker_name: string }; Returns: string }
       get_email_by_username: {
         Args: { input_username: string }
         Returns: string
