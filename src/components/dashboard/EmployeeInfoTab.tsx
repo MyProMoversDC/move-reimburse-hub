@@ -774,11 +774,12 @@ const EmployeeInfoTab = ({ userId, employeeId, employeeName }: EmployeeInfoTabPr
                   <SelectValue placeholder={t.selectRole} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="crew_foreman">{t.crewForeman}</SelectItem>
-                  <SelectItem value="driver">{t.driver}</SelectItem>
-                  <SelectItem value="mover">{t.mover}</SelectItem>
-                  <SelectItem value="manager">{t.manager}</SelectItem>
+                  <SelectItem value="helper_k">{t.helperK}</SelectItem>
                   <SelectItem value="helper">{t.helper}</SelectItem>
+                  <SelectItem value="foreman">{t.foreman}</SelectItem>
+                  <SelectItem value="driver">{t.driver}</SelectItem>
+                  <SelectItem value="foreman_driver">{t.foremanDriver}</SelectItem>
+                  <SelectItem value="office_user">{t.officeUser}</SelectItem>
                 </SelectContent>
               </Select>
               {errors.role && (
