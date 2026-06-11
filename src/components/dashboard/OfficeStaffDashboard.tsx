@@ -10,6 +10,7 @@ import FeedList from "./feed/FeedList";
 import SavedFeedPosts from "./feed/SavedFeedPosts";
 import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
+import OfficeAIAssistant from "./OfficeAIAssistant";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 
