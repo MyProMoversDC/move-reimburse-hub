@@ -25,6 +25,7 @@ const navItems = [
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
   { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+  { id: "ai-assistant", label: "AI Assistant", icon: Sparkles },
 ] as const;
 
 const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
