@@ -160,6 +160,11 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
             <KnowledgeBaseViewer userId={userId} />
           </div>
         )}
+        {activeTab === "ai-assistant" && (
+          <div className="space-y-6">
+            <OfficeAIAssistant userId={userId} language={language} />
+          </div>
+        )}
       </div>
     </div>
   );
