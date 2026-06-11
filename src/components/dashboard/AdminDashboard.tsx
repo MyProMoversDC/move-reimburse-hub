@@ -598,6 +598,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminKnowledgeBase userId={userId} />
           </div>
         );
+      case "office-ai-knowledge":
+        return (
+          <div className="space-y-6">
+            <AdminOfficeAIKnowledge userId={userId} />
+          </div>
+        );
       case "chat":
         return (
           <div className="space-y-6">
