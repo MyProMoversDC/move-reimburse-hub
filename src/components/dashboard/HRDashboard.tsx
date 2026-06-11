@@ -489,10 +489,16 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
         <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
           <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
             <TabsTrigger value="hr-cabinet" className="text-xs md:text-sm px-2 md:px-3 py-1.5">HR Cabinet</TabsTrigger>
+            <TabsTrigger value="mover-ratings" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Mover Ratings</TabsTrigger>
             <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
             <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Knowledge Base</TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="mover-ratings">
+          <MoverRatingsPage readOnly />
+        </TabsContent>
+
 
         <TabsContent value="hr-cabinet">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
