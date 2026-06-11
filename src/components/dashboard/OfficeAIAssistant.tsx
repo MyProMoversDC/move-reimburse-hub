@@ -112,7 +112,7 @@ const OfficeAIAssistant = ({ userId, language }: { userId: string; language: Lan
     const { data } = await supabase
       .from("office_ai_messages").select("*").eq("conversation_id", id)
       .order("created_at", { ascending: true });
-    setMessages((data ?? []) as Msg[]);
+    setMessages((data ?? []) as unknown as Msg[]);
   };
 
   const createConv = async (firstQuestion?: string) => {
@@ -151,7 +151,7 @@ const OfficeAIAssistant = ({ userId, language }: { userId: string; language: Lan
       const { data: userMsg } = await supabase.from("office_ai_messages")
         .insert({ conversation_id: convId, role: "user", content: q })
         .select().single();
-      if (userMsg) setMessages((m) => [...m, userMsg as Msg]);
+      if (userMsg) setMessages((m) => [...m, userMsg as unknown as Msg]);
       setInput("");
 
       const { data: { session } } = await supabase.auth.getSession();
