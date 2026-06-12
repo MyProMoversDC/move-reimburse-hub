@@ -189,7 +189,6 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
 
         <Card className="p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input placeholder="Title (e.g. Refund Policy 2026)" value={title} onChange={(e) => setTitle(e.target.value)} />
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -200,29 +199,53 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
               <option value="ru">Russian</option>
             </select>
           </div>
-          <Textarea placeholder="Short description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          <Textarea placeholder="Short description applied to all uploads (optional)" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
 
           <div className="relative">
             <Button variant="outline" className="w-full justify-start pointer-events-none">
               <Upload className="h-4 w-4 mr-2" />
-              {file ? `${file.name} (${Math.round(file.size / 1024)} KB)` : "Choose file (PDF, DOCX, TXT, MD)"}
+              {files.length > 0
+                ? `${files.length} file${files.length > 1 ? "s" : ""} selected`
+                : "Choose files (PDF, DOCX, TXT, MD) — multiple allowed"}
             </Button>
             <input
               type="file"
+              multiple
               accept={ACCEPTED}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
           </div>
-          {file && (
-            <Button variant="ghost" size="sm" onClick={() => setFile(null)}>Remove file</Button>
+          {files.length > 0 && (
+            <div className="space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-0.5 max-h-32 overflow-y-auto">
+                {files.map((f, i) => (
+                  <li key={i} className="flex items-center justify-between gap-2">
+                    <span className="truncate">{f.name} ({Math.round(f.size / 1024)} KB)</span>
+                    <button
+                      type="button"
+                      onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                      className="text-destructive hover:underline shrink-0"
+                    >Remove</button>
+                  </li>
+                ))}
+              </ul>
+              <Button variant="ghost" size="sm" onClick={() => setFiles([])}>Clear all</Button>
+            </div>
           )}
 
-          <Button onClick={onUpload} disabled={uploading || !file || !title.trim()}>
+          {progress && (
+            <p className="text-xs text-muted-foreground">
+              Uploading {progress.done + 1} of {progress.total}: {progress.current}
+            </p>
+          )}
+
+          <Button onClick={onUpload} disabled={uploading || files.length === 0}>
             {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-            Upload & Ingest
+            Upload & Ingest {files.length > 0 ? `(${files.length})` : ""}
           </Button>
         </Card>
+
 
         {loading ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>
