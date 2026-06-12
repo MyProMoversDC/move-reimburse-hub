@@ -19,7 +19,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("signup") === "1";
+    }
+    return false;
+  });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { language, setLanguage } = useLanguage();
   const isSigningUpRef = useRef(false);
