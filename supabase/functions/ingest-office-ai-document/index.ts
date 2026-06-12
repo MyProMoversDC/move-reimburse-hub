@@ -69,7 +69,7 @@ async function extractFromBuffer(buf: ArrayBuffer, mime: string): Promise<{ text
     return { text: combined, pages: pageBreaks };
   }
   if (mime.includes("word") || mime.includes("officedocument") || mime.endsWith("docx")) {
-    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    const result = await mammoth.extractRawText({ buffer: Buffer.from(new Uint8Array(buf)) });
     return { text: result.value, pages: [] };
   }
   // plain text / markdown / html stripped
