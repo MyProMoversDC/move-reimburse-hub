@@ -38,11 +38,11 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("en");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [progress, setProgress] = useState<{ done: number; total: number; current: string } | null>(null);
 
   useEffect(() => {
     void fetchDocs();
