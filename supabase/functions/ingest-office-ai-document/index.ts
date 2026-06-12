@@ -16,6 +16,14 @@ const EMBED_DIMS = 1536;
 const CHUNK_SIZE = 1200;   // ~chars
 const CHUNK_OVERLAP = 200;
 
+function sanitize(s: string): string {
+  return s
+    .replace(/\u0000/g, "")
+    .replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
+    .replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "$1");
+}
+
 function chunkText(text: string): string[] {
   const clean = text.replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
   const chunks: string[] = [];
