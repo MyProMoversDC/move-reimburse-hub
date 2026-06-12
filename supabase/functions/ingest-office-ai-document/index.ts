@@ -127,14 +127,15 @@ Deno.serve(async (req) => {
     if (dlErr || !file) throw new Error(`Download failed: ${dlErr?.message}`);
 
     const buf = await file.arrayBuffer();
-    const { text, pages } = await extractFromBuffer(buf, doc.mime_type ?? "");
+    const { text: rawText, pages } = await extractFromBuffer(buf, doc.mime_type ?? "");
+    const text = sanitize(rawText);
 
     if (!text.trim()) throw new Error("No text extracted from document");
 
     // Purge existing chunks (reindex case)
     await supabase.from("office_ai_chunks").delete().eq("document_id", documentId);
 
-    const chunks = chunkText(text);
+    const chunks = chunkText(text).map(sanitize).filter((c) => c.trim().length > 0);
     let inserted = 0;
     const BATCH = 50;
     let runningOffset = 0;
