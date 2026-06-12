@@ -26,7 +26,7 @@ const Index = () => {
           Submit and track your long-distance move reimbursements
         </p>
         <div className="flex gap-4 justify-center">
-          <Button size="lg" onClick={() => navigate("/auth")}>
+          <Button size="lg" onClick={() => navigate("/auth?signup=1")}>
             Sign Up
           </Button>
           <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>
