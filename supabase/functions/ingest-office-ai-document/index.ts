@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { extractText, getDocumentProxy } from "npm:unpdf@0.12.1";
 import mammoth from "npm:mammoth@1.8.0";
+import { Buffer } from "node:buffer";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -68,7 +69,7 @@ async function extractFromBuffer(buf: ArrayBuffer, mime: string): Promise<{ text
     return { text: combined, pages: pageBreaks };
   }
   if (mime.includes("word") || mime.includes("officedocument") || mime.endsWith("docx")) {
-    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    const result = await mammoth.extractRawText({ buffer: Buffer.from(new Uint8Array(buf)) });
     return { text: result.value, pages: [] };
   }
   // plain text / markdown / html stripped

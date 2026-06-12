@@ -38,11 +38,11 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("en");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [progress, setProgress] = useState<{ done: number; total: number; current: string } | null>(null);
 
   useEffect(() => {
     void fetchDocs();
@@ -66,51 +66,64 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
     setLoading(false);
   };
 
+  const stripExt = (n: string) => n.replace(/\.[^/.]+$/, "");
+
   const onUpload = async () => {
-    if (!file) return toast.error("Please select a file");
-    if (!title.trim()) return toast.error("Please enter a title");
+    if (files.length === 0) return toast.error("Please select at least one file");
     setUploading(true);
+    setProgress({ done: 0, total: files.length, current: "" });
+    let okCount = 0;
+    let failCount = 0;
     try {
-      const path = `${userId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-      const { error: upErr } = await supabase.storage
-        .from("office-ai-kb")
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (upErr) throw upErr;
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        setProgress({ done: i, total: files.length, current: f.name });
+        try {
+          const path = `${userId}/${Date.now()}-${i}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+          const { error: upErr } = await supabase.storage
+            .from("office-ai-kb")
+            .upload(path, f, { contentType: f.type, upsert: false });
+          if (upErr) throw upErr;
 
-      const { data: doc, error: insErr } = await supabase
-        .from("office_ai_documents")
-        .insert({
-          title: title.trim(),
-          description: description.trim() || null,
-          source_bucket: "office-ai-kb",
-          source_path: path,
-          mime_type: file.type || "application/octet-stream",
-          file_size_bytes: file.size,
-          language,
-          uploaded_by: userId,
-        })
-        .select()
-        .single();
-      if (insErr) throw insErr;
+          const { data: doc, error: insErr } = await supabase
+            .from("office_ai_documents")
+            .insert({
+              title: stripExt(f.name),
+              description: description.trim() || null,
+              source_bucket: "office-ai-kb",
+              source_path: path,
+              mime_type: f.type || "application/octet-stream",
+              file_size_bytes: f.size,
+              language,
+              uploaded_by: userId,
+            })
+            .select()
+            .single();
+          if (insErr) throw insErr;
 
-      // Trigger ingestion
-      const { error: fnErr } = await supabase.functions.invoke(
-        "ingest-office-ai-document",
-        { body: { document_id: doc!.id } }
-      );
-      if (fnErr) throw fnErr;
-
-      toast.success("Uploaded — ingestion started");
-      setFile(null);
-      setTitle("");
-      setDescription("");
+          const { error: fnErr } = await supabase.functions.invoke(
+            "ingest-office-ai-document",
+            { body: { document_id: doc!.id } }
+          );
+          if (fnErr) throw fnErr;
+          okCount++;
+        } catch (e) {
+          failCount++;
+          toast.error(`${f.name}: ${e instanceof Error ? e.message : "failed"}`);
+        }
+      }
+      if (okCount) toast.success(`Uploaded ${okCount} file${okCount > 1 ? "s" : ""} — ingestion started`);
+      if (failCount === 0) {
+        setFiles([]);
+        setDescription("");
+      }
       setRefreshKey((k) => k + 1);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
+      setProgress(null);
     }
   };
+
 
   const reindex = async (doc: Doc) => {
     const { error } = await supabase.functions.invoke("ingest-office-ai-document", {
@@ -176,7 +189,6 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
 
         <Card className="p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input placeholder="Title (e.g. Refund Policy 2026)" value={title} onChange={(e) => setTitle(e.target.value)} />
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -187,29 +199,53 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
               <option value="ru">Russian</option>
             </select>
           </div>
-          <Textarea placeholder="Short description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          <Textarea placeholder="Short description applied to all uploads (optional)" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
 
           <div className="relative">
             <Button variant="outline" className="w-full justify-start pointer-events-none">
               <Upload className="h-4 w-4 mr-2" />
-              {file ? `${file.name} (${Math.round(file.size / 1024)} KB)` : "Choose file (PDF, DOCX, TXT, MD)"}
+              {files.length > 0
+                ? `${files.length} file${files.length > 1 ? "s" : ""} selected`
+                : "Choose files (PDF, DOCX, TXT, MD) — multiple allowed"}
             </Button>
             <input
               type="file"
+              multiple
               accept={ACCEPTED}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
           </div>
-          {file && (
-            <Button variant="ghost" size="sm" onClick={() => setFile(null)}>Remove file</Button>
+          {files.length > 0 && (
+            <div className="space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-0.5 max-h-32 overflow-y-auto">
+                {files.map((f, i) => (
+                  <li key={i} className="flex items-center justify-between gap-2">
+                    <span className="truncate">{f.name} ({Math.round(f.size / 1024)} KB)</span>
+                    <button
+                      type="button"
+                      onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                      className="text-destructive hover:underline shrink-0"
+                    >Remove</button>
+                  </li>
+                ))}
+              </ul>
+              <Button variant="ghost" size="sm" onClick={() => setFiles([])}>Clear all</Button>
+            </div>
           )}
 
-          <Button onClick={onUpload} disabled={uploading || !file || !title.trim()}>
+          {progress && (
+            <p className="text-xs text-muted-foreground">
+              Uploading {progress.done + 1} of {progress.total}: {progress.current}
+            </p>
+          )}
+
+          <Button onClick={onUpload} disabled={uploading || files.length === 0}>
             {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-            Upload & Ingest
+            Upload & Ingest {files.length > 0 ? `(${files.length})` : ""}
           </Button>
         </Card>
+
 
         {loading ? (
           <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>
