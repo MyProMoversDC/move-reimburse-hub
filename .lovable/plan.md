@@ -1,45 +1,34 @@
-# Past Shifts Tracker in "My Schedule"
+## Problem
 
-Add a new **Past Shifts** section inside the existing "My Schedule" tab of `ShiftSchedule.tsx` (used by the Office Staff cabinet and other roles). Users will pick a date range with the existing calendar UI and see every shift they actually worked in that period, plus a total hours summary.
+The 3 failed documents all error with:
+`Chunk insert failed: invalid input syntax for type json`
 
-## What the user will see
+All three are PDFs. The PDF text extractor (`unpdf`) returns strings that contain NUL bytes (`\u0000`) and other control characters from the PDF stream. Postgres' `jsonb`/`text` columns reject `\u0000`, so the insert of `content` + `embedding` (stored as `JSON.stringify(...)`) blows up.
 
-Inside the My Schedule tab, below the existing "Upcoming Shifts" list, a new card titled **Past Shifts**:
+This is why the refresh button doesn't help — re-running ingestion hits the same sanitization gap every time.
 
-- Two date pickers: **Start Date** and **End Date** (popovers with auto-close on select, matching the pattern already used in the Earnings tab).
-- A summary row: **Total Hours Worked: X.XX h** for the selected range.
-- A list of past shifts grouped by day, each row showing:
-  - Date (formatted in EST via `formatDateEST`)
-  - Clock-in time → Clock-out time
-  - Break minutes (if any)
-  - Net hours worked for that entry
-- Empty state when no entries fall in the range.
-- Defaults: Start = first day of current month, End = today, so the user sees something immediately.
+## Fix
 
-## Data source
+Edit `supabase/functions/ingest-office-ai-document/index.ts`:
 
-Reuse the existing `shift_clock_entries` table (already queried by the Earnings tab in the same component) joined with `shift_breaks`. Only include entries where `clock_out is not null` and `clock_in` falls inside the selected range. No new tables, no migration, no RLS changes.
+1. After extracting text from a PDF/DOCX/TXT, **sanitize**:
+   - Strip `\u0000`
+   - Strip other C0 control chars except `\n`, `\r`, `\t`
+   - Collapse lone surrogate halves that break JSON encoding
+2. Apply the same sanitizer to each chunk before insert (defense in depth).
+3. Re-deploy the function.
 
-Per-entry net minutes = `differenceInMinutes(clock_out, clock_in) - sum(shift_breaks.duration_minutes)` — identical formula to `calculateEarnings`.
+After deploy, the admin can hit the per-row refresh button on the 3 failed docs and they'll re-ingest cleanly. No DB migration needed.
 
-## Files modified
+## Technical detail
 
-1. `src/components/dashboard/ShiftSchedule.tsx`
-   - Add state: `pastStartDate`, `pastEndDate`, `pastEntries`, `pastTotalHours`, popover open flags.
-   - Add `fetchPastShifts` callback + `useEffect` that runs when the range changes.
-   - Render the new **Past Shifts** card inside `<TabsContent value="schedule">`, after the existing Upcoming Shifts block.
-   - All times formatted in EST per project standard.
+```ts
+const sanitize = (s: string) =>
+  s
+    .replace(/\u0000/g, "")
+    .replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
+    .replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "$1");
+```
 
-2. `src/lib/shiftTranslations.ts`
-   - Add keys for EN / ES / RU: `pastShifts`, `noPastShifts`, `netHours`, `breakLabel` (reuse `totalHours`, `startDate`, `endDate`, `selectDateRange` which already exist).
-
-## Out of scope
-
-- No new admin view (admins already see all shift data via `AdminShiftManagement`).
-- No CSV export — can be added later if requested.
-- No changes to clock-in/out, day-off, or earnings flows.
-- No backend/database/RLS changes.
-
-## Estimated size
-
-~80–110 lines added in `ShiftSchedule.tsx`, ~12 lines added across the 3 language blocks in `shiftTranslations.ts`. Two files total.
+Applied to `text` returned from `extractFromBuffer` and to each `content` value before building the insert row.

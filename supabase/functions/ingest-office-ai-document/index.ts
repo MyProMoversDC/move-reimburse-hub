@@ -16,6 +16,14 @@ const EMBED_DIMS = 1536;
 const CHUNK_SIZE = 1200;   // ~chars
 const CHUNK_OVERLAP = 200;
 
+function sanitize(s: string): string {
+  return s
+    .replace(/\u0000/g, "")
+    .replace(/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, "")
+    .replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "$1");
+}
+
 function chunkText(text: string): string[] {
   const clean = text.replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim();
   const chunks: string[] = [];
@@ -119,14 +127,15 @@ Deno.serve(async (req) => {
     if (dlErr || !file) throw new Error(`Download failed: ${dlErr?.message}`);
 
     const buf = await file.arrayBuffer();
-    const { text, pages } = await extractFromBuffer(buf, doc.mime_type ?? "");
+    const { text: rawText, pages } = await extractFromBuffer(buf, doc.mime_type ?? "");
+    const text = sanitize(rawText);
 
     if (!text.trim()) throw new Error("No text extracted from document");
 
     // Purge existing chunks (reindex case)
     await supabase.from("office_ai_chunks").delete().eq("document_id", documentId);
 
-    const chunks = chunkText(text);
+    const chunks = chunkText(text).map(sanitize).filter((c) => c.trim().length > 0);
     let inserted = 0;
     const BATCH = 50;
     let runningOffset = 0;
