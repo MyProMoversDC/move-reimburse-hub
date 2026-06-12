@@ -66,51 +66,64 @@ const AdminOfficeAIKnowledge = ({ userId }: { userId: string }) => {
     setLoading(false);
   };
 
+  const stripExt = (n: string) => n.replace(/\.[^/.]+$/, "");
+
   const onUpload = async () => {
-    if (!file) return toast.error("Please select a file");
-    if (!title.trim()) return toast.error("Please enter a title");
+    if (files.length === 0) return toast.error("Please select at least one file");
     setUploading(true);
+    setProgress({ done: 0, total: files.length, current: "" });
+    let okCount = 0;
+    let failCount = 0;
     try {
-      const path = `${userId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-      const { error: upErr } = await supabase.storage
-        .from("office-ai-kb")
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (upErr) throw upErr;
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        setProgress({ done: i, total: files.length, current: f.name });
+        try {
+          const path = `${userId}/${Date.now()}-${i}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+          const { error: upErr } = await supabase.storage
+            .from("office-ai-kb")
+            .upload(path, f, { contentType: f.type, upsert: false });
+          if (upErr) throw upErr;
 
-      const { data: doc, error: insErr } = await supabase
-        .from("office_ai_documents")
-        .insert({
-          title: title.trim(),
-          description: description.trim() || null,
-          source_bucket: "office-ai-kb",
-          source_path: path,
-          mime_type: file.type || "application/octet-stream",
-          file_size_bytes: file.size,
-          language,
-          uploaded_by: userId,
-        })
-        .select()
-        .single();
-      if (insErr) throw insErr;
+          const { data: doc, error: insErr } = await supabase
+            .from("office_ai_documents")
+            .insert({
+              title: stripExt(f.name),
+              description: description.trim() || null,
+              source_bucket: "office-ai-kb",
+              source_path: path,
+              mime_type: f.type || "application/octet-stream",
+              file_size_bytes: f.size,
+              language,
+              uploaded_by: userId,
+            })
+            .select()
+            .single();
+          if (insErr) throw insErr;
 
-      // Trigger ingestion
-      const { error: fnErr } = await supabase.functions.invoke(
-        "ingest-office-ai-document",
-        { body: { document_id: doc!.id } }
-      );
-      if (fnErr) throw fnErr;
-
-      toast.success("Uploaded — ingestion started");
-      setFile(null);
-      setTitle("");
-      setDescription("");
+          const { error: fnErr } = await supabase.functions.invoke(
+            "ingest-office-ai-document",
+            { body: { document_id: doc!.id } }
+          );
+          if (fnErr) throw fnErr;
+          okCount++;
+        } catch (e) {
+          failCount++;
+          toast.error(`${f.name}: ${e instanceof Error ? e.message : "failed"}`);
+        }
+      }
+      if (okCount) toast.success(`Uploaded ${okCount} file${okCount > 1 ? "s" : ""} — ingestion started`);
+      if (failCount === 0) {
+        setFiles([]);
+        setDescription("");
+      }
       setRefreshKey((k) => k + 1);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
+      setProgress(null);
     }
   };
+
 
   const reindex = async (doc: Doc) => {
     const { error } = await supabase.functions.invoke("ingest-office-ai-document", {
