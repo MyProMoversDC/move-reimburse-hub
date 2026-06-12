@@ -11,7 +11,7 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const EMBED_MODEL = "google/gemini-embedding-001";
 const EMBED_DIMS = 1536;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
-const TOP_K = 8;
+const TOP_K = 16;
 
 const corsHeaders = {
   ...baseCors,
