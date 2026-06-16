@@ -44,16 +44,12 @@ export function MoverFeedbackHistory({ userId, language, refreshKey, anonymousOn
     const fetchFeedback = async () => {
       setIsLoading(true);
       try {
-        let query = supabase
+        const { data: feedbacks, error: feedbackError } = await supabase
           .from('mover_feedback')
           .select('*')
           .eq('mover_id', userId)
+          .eq('is_anonymous', anonymousOnly)
           .order('created_at', { ascending: false });
-
-        // Filter by anonymous flag
-        query = query.eq('is_anonymous' as any, anonymousOnly);
-
-        const { data: feedbacks, error: feedbackError } = await query;
 
         if (feedbackError) throw feedbackError;
 
