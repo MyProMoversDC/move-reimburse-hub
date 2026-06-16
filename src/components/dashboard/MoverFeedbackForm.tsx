@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { t } from '@/lib/feedbackTranslations';
 import { Language } from '@/lib/translations';
-import { AlertTriangle, Lightbulb, Send } from 'lucide-react';
+import { AlertTriangle, Lightbulb, Send, EyeOff } from 'lucide-react';
 
 const feedbackAreas = [
   'operations',
