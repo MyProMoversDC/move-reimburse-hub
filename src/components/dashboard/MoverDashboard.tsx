@@ -215,6 +215,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setFeedbackRefreshKey((prev) => prev + 1);
   };
 
+  const handleAnonymousFeedbackSuccess = () => {
+    setShowAnonymousFeedbackForm(false);
+    setAnonymousFeedbackRefreshKey((prev) => prev + 1);
+  };
+
   const handlePaymentQuestionSuccess = () => {
     setShowPaymentQuestionForm(false);
     setPaymentQuestionRefreshKey((prev) => prev + 1);
