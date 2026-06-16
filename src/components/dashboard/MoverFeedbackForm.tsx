@@ -44,9 +44,10 @@ interface MoverFeedbackFormProps {
   language: Language;
   onSuccess?: () => void;
   onCancel?: () => void;
+  isAnonymous?: boolean;
 }
 
-export function MoverFeedbackForm({ userId, language, onSuccess, onCancel }: MoverFeedbackFormProps) {
+export function MoverFeedbackForm({ userId, language, onSuccess, onCancel, isAnonymous = false }: MoverFeedbackFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [moverName, setMoverName] = useState('');
   const { toast } = useToast();
