@@ -60,6 +60,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
   const [showViolenceForm, setShowViolenceForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showAnonymousFeedbackForm, setShowAnonymousFeedbackForm] = useState(false);
   const [showPaymentQuestionForm, setShowPaymentQuestionForm] = useState(false);
   const [showReferFriendForm, setShowReferFriendForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
