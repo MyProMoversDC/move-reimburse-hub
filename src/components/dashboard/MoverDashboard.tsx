@@ -477,8 +477,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const MobileLayout = () => {
     const showFormContent = activeTab !== "feed" && (
       showReimbursementForm || showReviewForm || showMissingPaymentForm || 
-      showViolenceForm || showFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
-      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "refer-friend" || activeTab === "my-jobs"
+      showViolenceForm || showFeedbackForm || showAnonymousFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
+      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "anonymous-feedback" || activeTab === "refer-friend" || activeTab === "my-jobs"
     );
 
     const handleBackToFeed = () => {
