@@ -150,6 +150,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     { id: "violence", label: t.incidents, icon: Shield },
     { id: "misconduct", label: t.cases, icon: AlertTriangle },
     { id: "feedback", label: t.feedback, icon: Lightbulb },
+    { id: "anonymous-feedback", label: t.anonymousFeedback, icon: EyeOff },
     { id: "payment-questions", label: t.paymentQuestions, icon: HelpCircle },
     { id: "chat", label: t.chat, icon: MessageSquare },
   ];
