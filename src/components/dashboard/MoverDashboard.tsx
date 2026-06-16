@@ -101,6 +101,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setShowMissingPaymentForm(false);
     setShowViolenceForm(false);
     setShowFeedbackForm(false);
+    setShowAnonymousFeedbackForm(false);
     setShowPaymentQuestionForm(false);
 
     switch (formType) {
