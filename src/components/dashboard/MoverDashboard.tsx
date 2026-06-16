@@ -55,7 +55,20 @@ interface MoverDashboardProps {
 }
 
 const MoverDashboard = ({ userId }: MoverDashboardProps) => {
-  const [activeTab, setActiveTab] = useState("feed");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "feed");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+      // Clear the query param so navigating tabs doesn't leave it stale
+      const next = new URLSearchParams(searchParams);
+      next.delete("tab");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
