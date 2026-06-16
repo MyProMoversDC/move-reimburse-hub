@@ -68,6 +68,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
+  const [anonymousFeedbackRefreshKey, setAnonymousFeedbackRefreshKey] = useState(0);
   const [paymentQuestionRefreshKey, setPaymentQuestionRefreshKey] = useState(0);
   const [referralRefreshKey, setReferralRefreshKey] = useState(0);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
