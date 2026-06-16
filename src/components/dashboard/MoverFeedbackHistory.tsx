@@ -33,9 +33,10 @@ interface MoverFeedbackHistoryProps {
   userId: string;
   language: Language;
   refreshKey?: number;
+  anonymousOnly?: boolean;
 }
 
-export function MoverFeedbackHistory({ userId, language, refreshKey }: MoverFeedbackHistoryProps) {
+export function MoverFeedbackHistory({ userId, language, refreshKey, anonymousOnly = false }: MoverFeedbackHistoryProps) {
   const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,11 +44,16 @@ export function MoverFeedbackHistory({ userId, language, refreshKey }: MoverFeed
     const fetchFeedback = async () => {
       setIsLoading(true);
       try {
-        const { data: feedbacks, error: feedbackError } = await supabase
+        let query = supabase
           .from('mover_feedback')
           .select('*')
           .eq('mover_id', userId)
           .order('created_at', { ascending: false });
+
+        // Filter by anonymous flag
+        query = query.eq('is_anonymous' as any, anonymousOnly);
+
+        const { data: feedbacks, error: feedbackError } = await query;
 
         if (feedbackError) throw feedbackError;
 
@@ -76,7 +82,7 @@ export function MoverFeedbackHistory({ userId, language, refreshKey }: MoverFeed
     };
 
     fetchFeedback();
-  }, [userId, refreshKey]);
+  }, [userId, refreshKey, anonymousOnly]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
