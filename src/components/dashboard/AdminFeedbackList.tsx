@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { Clock, CheckCircle, MessageCircle, AlertCircle, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TranslateButton } from './TranslateButton';
+import AnonymousFeedbackQRCode from './AnonymousFeedbackQRCode';
 
 interface FeedbackResponse {
   id: string;
