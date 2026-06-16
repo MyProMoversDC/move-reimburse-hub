@@ -99,13 +99,16 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
 
       // Fetch mover emails and responses for each feedback
       const feedbacksWithDetails = await Promise.all(
-        (feedbacks || []).map(async (feedback) => {
+        (feedbacks || []).map(async (feedback: any) => {
+          const isAnon = !!feedback.is_anonymous;
           const [profileResult, responsesResult] = await Promise.all([
-            supabase
-              .from('profiles')
-              .select('email')
-              .eq('id', feedback.mover_id)
-              .single(),
+            isAnon
+              ? Promise.resolve({ data: null })
+              : supabase
+                  .from('profiles')
+                  .select('email')
+                  .eq('id', feedback.mover_id)
+                  .single(),
             supabase
               .from('mover_feedback_responses')
               .select('*')
@@ -115,7 +118,8 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
 
           return {
             ...feedback,
-            mover_email: profileResult.data?.email,
+            mover_name: isAnon ? 'Anonymous' : feedback.mover_name,
+            mover_email: isAnon ? undefined : (profileResult as any).data?.email,
             responses: responsesResult.data || []
           };
         })
