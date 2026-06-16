@@ -60,6 +60,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [showMissingPaymentForm, setShowMissingPaymentForm] = useState(false);
   const [showViolenceForm, setShowViolenceForm] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showAnonymousFeedbackForm, setShowAnonymousFeedbackForm] = useState(false);
   const [showPaymentQuestionForm, setShowPaymentQuestionForm] = useState(false);
   const [showReferFriendForm, setShowReferFriendForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -67,6 +68,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [missingPaymentRefreshKey, setMissingPaymentRefreshKey] = useState(0);
   const [violenceRefreshKey, setViolenceRefreshKey] = useState(0);
   const [feedbackRefreshKey, setFeedbackRefreshKey] = useState(0);
+  const [anonymousFeedbackRefreshKey, setAnonymousFeedbackRefreshKey] = useState(0);
   const [paymentQuestionRefreshKey, setPaymentQuestionRefreshKey] = useState(0);
   const [referralRefreshKey, setReferralRefreshKey] = useState(0);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
@@ -99,6 +101,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     setShowMissingPaymentForm(false);
     setShowViolenceForm(false);
     setShowFeedbackForm(false);
+    setShowAnonymousFeedbackForm(false);
     setShowPaymentQuestionForm(false);
 
     switch (formType) {
@@ -121,6 +124,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       case 'feedback':
         setActiveTab('feedback');
         setTimeout(() => setShowFeedbackForm(true), 100);
+        break;
+      case 'anonymous-feedback':
+        setActiveTab('anonymous-feedback');
+        setTimeout(() => setShowAnonymousFeedbackForm(true), 100);
         break;
       case 'payment-question':
         setActiveTab('payment-questions');
@@ -206,6 +213,11 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const handleFeedbackSuccess = () => {
     setShowFeedbackForm(false);
     setFeedbackRefreshKey((prev) => prev + 1);
+  };
+
+  const handleAnonymousFeedbackSuccess = () => {
+    setShowAnonymousFeedbackForm(false);
+    setAnonymousFeedbackRefreshKey((prev) => prev + 1);
   };
 
   const handlePaymentQuestionSuccess = () => {
@@ -378,6 +390,32 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <MoverFeedbackHistory userId={userId} language={language} refreshKey={feedbackRefreshKey} />
           </div>
         );
+
+      case "anonymous-feedback":
+        return (
+          <div className="space-y-6">
+            {!showAnonymousFeedbackForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowAnonymousFeedbackForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {language === 'ru' ? 'Отправить анонимный отзыв' : language === 'es' ? 'Enviar comentario anónimo' : 'Submit Anonymous Feedback'}
+                </Button>
+              </Card>
+            )}
+            {showAnonymousFeedbackForm && (
+              <div>
+                <div className="flex justify-end mb-4">
+                  <Button variant="outline" size="sm" onClick={() => setShowAnonymousFeedbackForm(false)}>
+                    {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
+                  </Button>
+                </div>
+                <MoverFeedbackForm userId={userId} language={language} isAnonymous onSuccess={handleAnonymousFeedbackSuccess} onCancel={() => setShowAnonymousFeedbackForm(false)} />
+              </div>
+            )}
+            <MoverFeedbackHistory userId={userId} language={language} refreshKey={anonymousFeedbackRefreshKey} anonymousOnly />
+          </div>
+        );
+      
       
       case "payment-questions":
         return (
@@ -439,8 +477,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const MobileLayout = () => {
     const showFormContent = activeTab !== "feed" && (
       showReimbursementForm || showReviewForm || showMissingPaymentForm || 
-      showViolenceForm || showFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
-      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "refer-friend" || activeTab === "my-jobs"
+      showViolenceForm || showFeedbackForm || showAnonymousFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
+      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "anonymous-feedback" || activeTab === "refer-friend" || activeTab === "my-jobs"
     );
 
     const handleBackToFeed = () => {
@@ -450,6 +488,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       setShowMissingPaymentForm(false);
       setShowViolenceForm(false);
       setShowFeedbackForm(false);
+      setShowAnonymousFeedbackForm(false);
     };
 
     return (
@@ -614,6 +653,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                   <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('feedback'); }} className="py-3">
                     <Lightbulb className="h-4 w-4 mr-2" />
                     {language === 'ru' ? 'Отправить отзыв' : language === 'es' ? 'Enviar comentarios' : 'Submit Feedback'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('anonymous-feedback'); }} className="py-3">
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    {language === 'ru' ? 'Анонимный отзыв' : language === 'es' ? 'Comentario anónimo' : 'Anonymous Feedback'}
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleFormSelect('payment-question'); }} className="py-3">
                     <HelpCircle className="h-4 w-4 mr-2" />

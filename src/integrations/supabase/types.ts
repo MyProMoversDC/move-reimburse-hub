@@ -1504,6 +1504,7 @@ export type Database = {
           feedback_type: string
           id: string
           improvement_suggestion: string | null
+          is_anonymous: boolean
           is_recurring: string
           mover_id: string
           mover_name: string
@@ -1520,6 +1521,7 @@ export type Database = {
           feedback_type: string
           id?: string
           improvement_suggestion?: string | null
+          is_anonymous?: boolean
           is_recurring?: string
           mover_id: string
           mover_name: string
@@ -1536,6 +1538,7 @@ export type Database = {
           feedback_type?: string
           id?: string
           improvement_suggestion?: string | null
+          is_anonymous?: boolean
           is_recurring?: string
           mover_id?: string
           mover_name?: string

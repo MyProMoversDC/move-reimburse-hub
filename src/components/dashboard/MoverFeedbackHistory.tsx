@@ -33,9 +33,10 @@ interface MoverFeedbackHistoryProps {
   userId: string;
   language: Language;
   refreshKey?: number;
+  anonymousOnly?: boolean;
 }
 
-export function MoverFeedbackHistory({ userId, language, refreshKey }: MoverFeedbackHistoryProps) {
+export function MoverFeedbackHistory({ userId, language, refreshKey, anonymousOnly = false }: MoverFeedbackHistoryProps) {
   const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,6 +48,7 @@ export function MoverFeedbackHistory({ userId, language, refreshKey }: MoverFeed
           .from('mover_feedback')
           .select('*')
           .eq('mover_id', userId)
+          .eq('is_anonymous', anonymousOnly)
           .order('created_at', { ascending: false });
 
         if (feedbackError) throw feedbackError;
@@ -76,7 +78,7 @@ export function MoverFeedbackHistory({ userId, language, refreshKey }: MoverFeed
     };
 
     fetchFeedback();
-  }, [userId, refreshKey]);
+  }, [userId, refreshKey, anonymousOnly]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

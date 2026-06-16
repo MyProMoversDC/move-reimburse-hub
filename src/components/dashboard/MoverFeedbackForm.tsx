@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { t } from '@/lib/feedbackTranslations';
 import { Language } from '@/lib/translations';
-import { AlertTriangle, Lightbulb, Send } from 'lucide-react';
+import { AlertTriangle, Lightbulb, Send, EyeOff } from 'lucide-react';
 
 const feedbackAreas = [
   'operations',
@@ -44,9 +44,10 @@ interface MoverFeedbackFormProps {
   language: Language;
   onSuccess?: () => void;
   onCancel?: () => void;
+  isAnonymous?: boolean;
 }
 
-export function MoverFeedbackForm({ userId, language, onSuccess, onCancel }: MoverFeedbackFormProps) {
+export function MoverFeedbackForm({ userId, language, onSuccess, onCancel, isAnonymous = false }: MoverFeedbackFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [moverName, setMoverName] = useState('');
   const { toast } = useToast();
@@ -90,7 +91,8 @@ export function MoverFeedbackForm({ userId, language, onSuccess, onCancel }: Mov
         .from('mover_feedback')
         .insert({
           mover_id: userId,
-          mover_name: moverName,
+          mover_name: isAnonymous ? 'Anonymous' : moverName,
+          is_anonymous: isAnonymous,
           feedback_type: values.feedbackType,
           feedback_areas: values.feedbackAreas,
           other_area_explanation: values.otherExplanation || null,
@@ -99,7 +101,7 @@ export function MoverFeedbackForm({ userId, language, onSuccess, onCancel }: Mov
           is_recurring: values.isRecurring,
           priority: values.priority,
           additional_notes: values.additionalNotes || null
-        });
+        } as any);
 
       if (error) throw error;
 
@@ -126,17 +128,35 @@ export function MoverFeedbackForm({ userId, language, onSuccess, onCancel }: Mov
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-primary" />
-          {t('formTitle', language)}
+          {isAnonymous ? <EyeOff className="h-5 w-5 text-primary" /> : <Lightbulb className="h-5 w-5 text-primary" />}
+          {isAnonymous
+            ? (language === 'ru' ? 'Анонимный отзыв' : language === 'es' ? 'Comentarios Anónimos' : 'Anonymous Feedback')
+            : t('formTitle', language)}
         </CardTitle>
         <CardDescription className="text-sm">
-          {t('formDescription', language)}
+          {isAnonymous
+            ? (language === 'ru'
+                ? 'Поделитесь любыми идеями, предложениями или опасениями с руководством. То же, что и обычная форма отзыва, но без раскрытия вашей личности.'
+                : language === 'es'
+                  ? 'Comparte cualquier idea, sugerencia o preocupación con la gerencia. Igual que el formulario de comentarios habitual, pero sin revelar tu identidad.'
+                  : 'Share any ideas, suggestions or concerns with management. Same as the regular Feedback form, but without revealing your identity.')
+            : t('formDescription', language)}
         </CardDescription>
         <div className="mt-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 p-4 rounded-lg border-2 border-amber-400 dark:border-amber-500 shadow-md">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            {isAnonymous ? (
+              <EyeOff className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            )}
             <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-              {t('importantNotice', language)}
+              {isAnonymous
+                ? (language === 'ru'
+                    ? 'Этот отзыв полностью анонимен. Ваше имя, email и личность НЕ будут переданы руководству. Администраторы увидят только содержание отзыва. Ответ администратора (если будет) появится в вашей истории анонимных отзывов.'
+                    : language === 'es'
+                      ? 'Este comentario es completamente anónimo. Tu nombre, correo e identidad NO se compartirán con la gerencia. Los administradores solo verán el contenido del comentario. La respuesta del administrador (si hay) aparecerá en tu historial de comentarios anónimos.'
+                      : 'This feedback is fully anonymous. Your name, email and identity will NOT be shared with management. Admins will only see the content of the feedback. Any admin response will appear in your Anonymous Feedback history.')
+                : t('importantNotice', language)}
             </p>
           </div>
         </div>
