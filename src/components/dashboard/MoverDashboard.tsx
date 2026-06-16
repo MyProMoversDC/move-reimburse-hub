@@ -125,6 +125,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
         setActiveTab('feedback');
         setTimeout(() => setShowFeedbackForm(true), 100);
         break;
+      case 'anonymous-feedback':
+        setActiveTab('anonymous-feedback');
+        setTimeout(() => setShowAnonymousFeedbackForm(true), 100);
+        break;
       case 'payment-question':
         setActiveTab('payment-questions');
         setTimeout(() => setShowPaymentQuestionForm(true), 100);
