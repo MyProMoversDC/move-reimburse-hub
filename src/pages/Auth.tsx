@@ -51,16 +51,24 @@ const Auth = () => {
   // Forgot password form
   const [resetEmail, setResetEmail] = useState("");
 
+  const getRedirectTarget = () => {
+    if (typeof window === "undefined") return "/dashboard";
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    if (redirect && redirect.startsWith("/")) return redirect;
+    return "/dashboard";
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && !isSigningUpRef.current) {
-        navigate("/dashboard");
+        navigate(getRedirectTarget());
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && !isSigningUpRef.current) {
-        navigate("/dashboard");
+        navigate(getRedirectTarget());
       }
     });
 

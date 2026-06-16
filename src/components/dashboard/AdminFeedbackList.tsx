@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { Clock, CheckCircle, MessageCircle, AlertCircle, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TranslateButton } from './TranslateButton';
+import AnonymousFeedbackQRCode from './AnonymousFeedbackQRCode';
 
 interface FeedbackResponse {
   id: string;
@@ -266,6 +267,7 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
 
   return (
     <div className="space-y-4">
+      <AnonymousFeedbackQRCode />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-xl font-semibold">Mover Feedback Review</h2>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
