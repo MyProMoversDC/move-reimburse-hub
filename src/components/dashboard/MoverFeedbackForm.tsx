@@ -91,7 +91,8 @@ export function MoverFeedbackForm({ userId, language, onSuccess, onCancel, isAno
         .from('mover_feedback')
         .insert({
           mover_id: userId,
-          mover_name: moverName,
+          mover_name: isAnonymous ? 'Anonymous' : moverName,
+          is_anonymous: isAnonymous,
           feedback_type: values.feedbackType,
           feedback_areas: values.feedbackAreas,
           other_area_explanation: values.otherExplanation || null,
@@ -100,7 +101,7 @@ export function MoverFeedbackForm({ userId, language, onSuccess, onCancel, isAno
           is_recurring: values.isRecurring,
           priority: values.priority,
           additional_notes: values.additionalNotes || null
-        });
+        } as any);
 
       if (error) throw error;
 
