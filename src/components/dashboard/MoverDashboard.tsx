@@ -390,6 +390,32 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             <MoverFeedbackHistory userId={userId} language={language} refreshKey={feedbackRefreshKey} />
           </div>
         );
+
+      case "anonymous-feedback":
+        return (
+          <div className="space-y-6">
+            {!showAnonymousFeedbackForm && (
+              <Card className="p-6">
+                <Button onClick={() => setShowAnonymousFeedbackForm(true)} className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {language === 'ru' ? 'Отправить анонимный отзыв' : language === 'es' ? 'Enviar comentario anónimo' : 'Submit Anonymous Feedback'}
+                </Button>
+              </Card>
+            )}
+            {showAnonymousFeedbackForm && (
+              <div>
+                <div className="flex justify-end mb-4">
+                  <Button variant="outline" size="sm" onClick={() => setShowAnonymousFeedbackForm(false)}>
+                    {language === 'ru' ? 'Закрыть' : language === 'es' ? 'Cerrar' : 'Close'}
+                  </Button>
+                </div>
+                <MoverFeedbackForm userId={userId} language={language} isAnonymous onSuccess={handleAnonymousFeedbackSuccess} onCancel={() => setShowAnonymousFeedbackForm(false)} />
+              </div>
+            )}
+            <MoverFeedbackHistory userId={userId} language={language} refreshKey={anonymousFeedbackRefreshKey} anonymousOnly />
+          </div>
+        );
+      
       
       case "payment-questions":
         return (
