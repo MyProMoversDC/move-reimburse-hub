@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import AnonymousFeedbackEntry from "./pages/AnonymousFeedbackEntry";
 
 const queryClient = new QueryClient();
 
