@@ -6,6 +6,7 @@ import {
   Shield,
   MessageSquare,
   Lightbulb,
+  EyeOff,
   ChevronLeft,
   Newspaper,
   ClipboardList,
