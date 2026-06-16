@@ -22,6 +22,7 @@ interface Feedback {
   id: string;
   mover_id: string;
   mover_name: string;
+  is_anonymous?: boolean;
   feedback_type: string;
   feedback_areas: string[];
   other_area_explanation: string | null;
