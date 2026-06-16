@@ -291,7 +291,14 @@ export function AdminFeedbackList({ refreshKey }: AdminFeedbackListProps) {
               <CardHeader className="pb-2">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                   <div className="flex-1">
-                    <CardTitle className="text-base font-medium">{feedback.mover_name}</CardTitle>
+                    <CardTitle className="text-base font-medium flex items-center gap-2">
+                      {feedback.mover_name}
+                      {feedback.is_anonymous && (
+                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-300">
+                          Anonymous
+                        </Badge>
+                      )}
+                    </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(feedback.created_at), 'MMM d, yyyy h:mm a')}
                     </p>
