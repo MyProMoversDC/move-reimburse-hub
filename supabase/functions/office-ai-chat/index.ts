@@ -12,6 +12,41 @@ const EMBED_MODEL = "google/gemini-embedding-001";
 const EMBED_DIMS = 1536;
 const CHAT_MODEL = "google/gemini-3-flash-preview";
 const TOP_K = 16;
+const KEYWORD_TOP_K = 16;
+const FINAL_TOP_K = 24;
+
+const STOP_WORDS = new Set([
+  "a", "an", "and", "are", "as", "at", "based", "be", "by", "can", "do", "does", "for", "from", "how", "i", "in", "is", "it", "make", "of", "on", "or", "please", "should", "the", "to", "what", "when", "where", "who", "with", "you",
+]);
+
+function extractKeywordTerms(question: string): string[] {
+  const normalized = question
+    .toLowerCase()
+    .replace(/\b1st\b/g, "first")
+    .replace(/\b2nd\b/g, "second")
+    .replace(/\b3rd\b/g, "third")
+    .replace(/\b(\d+)th\b/g, "$1");
+
+  const terms = normalized.match(/[a-z0-9][a-z0-9'-]{1,}/g) ?? [];
+  return Array.from(new Set(terms.filter((term) => term.length >= 3 && !STOP_WORDS.has(term)))).slice(0, 8);
+}
+
+function escapeLike(term: string): string {
+  return term.replace(/[\\%_]/g, (m) => `\\${m}`).replace(/,/g, "");
+}
+
+function scoreKeywordChunk(content: string, title: string, terms: string[], question: string): number {
+  const haystack = `${title}\n${content}`.toLowerCase();
+  let score = 0;
+  for (const term of terms) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const matches = haystack.match(new RegExp(`\\b${escaped}\\b`, "g"));
+    if (matches?.length) score += Math.min(matches.length, 6) * (title.toLowerCase().includes(term) ? 3 : 1);
+  }
+  const meaningfulPhrase = question.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  if (meaningfulPhrase.length >= 12 && haystack.includes(meaningfulPhrase)) score += 10;
+  return score;
+}
 
 const corsHeaders = {
   ...baseCors,
@@ -95,10 +130,62 @@ Deno.serve(async (req) => {
       });
     }
 
-    const chunks = (matches ?? []) as Array<{
+    const vectorChunks = (matches ?? []) as Array<{
       id: string; document_id: string; document_title: string;
       page_number: number | null; content: string; similarity: number;
     }>;
+
+    // 2b. Keyword fallback/boost for short, specific questions where vector search can miss
+    // recently uploaded training docs (example: "1st Yelp response" should find Yelp response chunks).
+    const keywordTerms = extractKeywordTerms(question);
+    let keywordChunks: Array<{
+      id: string; document_id: string; document_title: string;
+      page_number: number | null; content: string; similarity: number;
+    }> = [];
+
+    if (keywordTerms.length) {
+      const keywordFilter = keywordTerms.map((term) => `content.ilike.%${escapeLike(term)}%`).join(",");
+      const { data: lexicalRows } = await supabase
+        .from("office_ai_chunks")
+        .select("id,document_id,page_number,content,office_ai_documents!inner(title,ingest_status,ai_enabled)")
+        .eq("office_ai_documents.ingest_status", "ready")
+        .eq("office_ai_documents.ai_enabled", true)
+        .or(keywordFilter)
+        .limit(80);
+
+      keywordChunks = ((lexicalRows ?? []) as Array<{
+        id: string;
+        document_id: string;
+        page_number: number | null;
+        content: string;
+        office_ai_documents?: { title?: string } | { title?: string }[];
+      }>)
+        .map((row) => {
+          const doc = Array.isArray(row.office_ai_documents) ? row.office_ai_documents[0] : row.office_ai_documents;
+          const title = doc?.title ?? "Knowledge document";
+          return {
+            id: row.id,
+            document_id: row.document_id,
+            document_title: title,
+            page_number: row.page_number,
+            content: row.content,
+            similarity: scoreKeywordChunk(row.content, title, keywordTerms, question) / 100,
+          };
+        })
+        .filter((row) => row.similarity > 0)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, KEYWORD_TOP_K);
+    }
+
+    const merged = new Map<string, typeof vectorChunks[number]>();
+    for (const chunk of keywordChunks) merged.set(chunk.id, chunk);
+    for (const chunk of vectorChunks) {
+      const existing = merged.get(chunk.id);
+      merged.set(chunk.id, existing ? { ...chunk, similarity: Math.max(chunk.similarity, existing.similarity) } : chunk);
+    }
+    const chunks = Array.from(merged.values())
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, FINAL_TOP_K);
 
     // 3. Build context
     const contextBlocks = chunks.map((c, i) =>
