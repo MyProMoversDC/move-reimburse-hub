@@ -1,0 +1,67 @@
+# Codemagic alternative pipeline.
+# GitHub Actions (.github/workflows/ios-build.yml) is the PRIMARY pipeline.
+# Use this only if you prefer Codemagic (500 free macOS build minutes/month, easier code-signing).
+#
+# Setup:
+# 1. https://codemagic.io -> connect this GitHub repo.
+# 2. Teams -> Integrations -> App Store Connect: create API key, upload .p8 + Issuer ID + Key ID.
+# 3. Trigger "ios-release" workflow. Codemagic fetches signing assets automatically.
+
+workflows:
+  ios-release:
+    name: iOS Release (App Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.mypromovers.app
+      vars:
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.mypromovers.app"
+        APP_STORE_APP_ID: 0000000000   # replace with the numeric App Store Connect app id
+      node: 20
+      xcode: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Install npm deps
+        script: npm ci
+      - name: Build web
+        script: npm run build
+      - name: Strip dev server.url
+        script: |
+          node -e "
+            const fs=require('fs');
+            let s=fs.readFileSync('capacitor.config.ts','utf8');
+            s=s.replace(/server:\s*{[^}]*},?\s*/s,'');
+            fs.writeFileSync('capacitor.config.ts',s);
+          "
+      - name: Cap sync iOS
+        script: |
+          if [ ! -d "ios" ]; then npx cap add ios; fi
+          npx cap sync ios
+      - name: Install GoogleService-Info.plist
+        script: |
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build .ipa
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
