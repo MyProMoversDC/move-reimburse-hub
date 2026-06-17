@@ -31,6 +31,7 @@ import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
 import AdminOfficeAIKnowledge from "./AdminOfficeAIKnowledge";
+import AdminTestPushButton from "./AdminTestPushButton";
 import AdminSignupApprovals from "./AdminSignupApprovals";
 import MoverRatingsPage from "@/components/ratings/MoverRatingsPage";
 import { Button } from "@/components/ui/button";
@@ -319,7 +320,10 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "dashboard":
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+              <AdminTestPushButton />
+            </div>
             <AdminTodoList onNavigate={(tab) => { setActiveTab(tab); }} />
           </div>
         );
