@@ -20,6 +20,7 @@ const STOP_WORDS = new Set([
 ]);
 
 function extractKeywordTerms(question: string): string[] {
+  const originalTerms = question.toLowerCase().match(/[a-z0-9][a-z0-9'-]{1,}/g) ?? [];
   const normalized = question
     .toLowerCase()
     .replace(/\b1st\b/g, "first")
@@ -27,7 +28,7 @@ function extractKeywordTerms(question: string): string[] {
     .replace(/\b3rd\b/g, "third")
     .replace(/\b(\d+)th\b/g, "$1");
 
-  const terms = normalized.match(/[a-z0-9][a-z0-9'-]{1,}/g) ?? [];
+  const terms = [...originalTerms, ...(normalized.match(/[a-z0-9][a-z0-9'-]{1,}/g) ?? [])];
   return Array.from(new Set(terms.filter((term) => term.length >= 3 && !STOP_WORDS.has(term)))).slice(0, 8);
 }
 
@@ -169,7 +170,7 @@ Deno.serve(async (req) => {
             document_title: title,
             page_number: row.page_number,
             content: row.content,
-            similarity: scoreKeywordChunk(row.content, title, keywordTerms, question) / 100,
+            similarity: 1 + scoreKeywordChunk(row.content, title, keywordTerms, question) / 100,
           };
         })
         .filter((row) => row.similarity > 0)
