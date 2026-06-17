@@ -17,6 +17,12 @@ const config: CapacitorConfig = {
       releaseType: 'AAB'
     }
   },
+  ios: {
+    contentInset: 'always',
+    scheme: 'My Pro Movers',
+    limitsNavigationsToAppBoundDomains: false,
+    backgroundColor: '#ffffff'
+  },
   plugins: {
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
