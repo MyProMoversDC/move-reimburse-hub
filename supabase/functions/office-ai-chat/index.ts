@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
             similarity: 1 + scoreKeywordChunk(row.content, title, keywordTerms, question) / 100,
           };
         })
-        .filter((row) => row.similarity > 0)
+        .filter((row) => row.similarity >= 1.02)
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, KEYWORD_TOP_K);
     }
