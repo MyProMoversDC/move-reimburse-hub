@@ -71,6 +71,17 @@ async function sendFcm(projectId: string, accessToken: string, token: string, ti
         notification: { title, body },
         data,
         android: { priority: "HIGH", notification: { sound: "default" } },
+        apns: {
+          headers: { "apns-priority": "10" },
+          payload: {
+            aps: {
+              alert: { title, body },
+              sound: "default",
+              "mutable-content": 1,
+              "content-available": 1,
+            },
+          },
+        },
       },
     }),
   });
