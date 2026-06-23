@@ -105,6 +105,7 @@ const groups: NavGroup[] = [
     icon: Briefcase,
     items: [
       { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
+      { id: "mover-shifts", label: "Mover Shifts (QR)", icon: Clock },
       { id: "referrals", label: "Referral Requests", icon: UserPlus, badgeKey: "referrals" },
     ],
   },

@@ -33,6 +33,7 @@ import ReferFriendHistory from "./ReferFriendHistory";
 import MoverSettings from "./MoverSettings";
 import MoverTodoList from "./MoverTodoList";
 import MoverJobAssignments from "./MoverJobAssignments";
+import MoverShiftClock from "./MoverShiftClock";
 import { MoverNotificationBell } from "./MoverNotificationBell";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -254,6 +255,10 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
       case "my-jobs":
         return <MoverJobAssignments userId={userId} />;
+
+      case "shift-clock":
+        return <MoverShiftClock userId={userId} />;
+
       
       case "reimbursements":
         return (
