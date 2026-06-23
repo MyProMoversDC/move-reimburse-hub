@@ -1781,6 +1781,33 @@ export type Database = {
           },
         ]
       }
+      mover_shift_qr_tokens: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          token: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Relationships: []
+      }
       office_ai_chunks: {
         Row: {
           chunk_index: number
@@ -3124,6 +3151,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_active_mover_shifts: {
+        Args: never
+        Returns: {
+          clock_in: string
+          entry_id: string
+          first_name: string
+          last_name: string
+          user_id: string
+        }[]
+      }
+      admin_list_mover_shift_entries: {
+        Args: { _end: string; _mover_id?: string; _start: string }
+        Returns: {
+          clock_in: string
+          clock_out: string
+          entry_id: string
+          first_name: string
+          last_name: string
+          net_minutes: number
+          user_id: string
+        }[]
+      }
       apply_rating_event: {
         Args: {
           _created_by: string
@@ -3197,6 +3246,11 @@ export type Database = {
           similarity: number
         }[]
       }
+      redeem_mover_shift_qr: {
+        Args: { _action: string; _token: string }
+        Returns: Json
+      }
+      rotate_mover_shift_qr: { Args: { _action: string }; Returns: string }
     }
     Enums: {
       app_role:
