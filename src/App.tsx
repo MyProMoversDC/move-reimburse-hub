@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import AnonymousFeedbackEntry from "./pages/AnonymousFeedbackEntry";
+import MoverClockRedeem from "./pages/MoverClockRedeem";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/anonymous-feedback" element={<AnonymousFeedbackEntry />} />
+            <Route path="/mover/clock" element={<MoverClockRedeem />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -12,7 +12,8 @@ import {
   ClipboardList,
   HelpCircle,
   UserPlus,
-  Truck
+  Truck,
+  Clock
 } from "lucide-react";
 import {
   Sidebar,
@@ -56,6 +57,7 @@ const translations = {
     chat: "Chat",
     paymentQuestions: "Payment Questions",
     referFriend: "Refer a Friend",
+    shiftClock: "Shift Clock",
   },
   es: {
     navigation: "Navegación",
@@ -72,6 +74,7 @@ const translations = {
     chat: "Chat",
     paymentQuestions: "Preguntas de Pago",
     referFriend: "Referir un Amigo",
+    shiftClock: "Registro de Turno",
   },
   ru: {
     navigation: "Навигация",
@@ -88,6 +91,7 @@ const translations = {
     chat: "Чат",
     paymentQuestions: "Вопросы по Оплате",
     referFriend: "Порекомендовать Друга",
+    shiftClock: "Учёт смены",
   },
 };
 
@@ -144,6 +148,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     { id: "refer-friend", label: t.referFriend, icon: UserPlus },
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "my-jobs", label: t.myJobs, icon: Truck },
+    { id: "shift-clock", label: t.shiftClock, icon: Clock },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },
     { id: "missing-payments", label: t.missingPayments, icon: AlertTriangle },
