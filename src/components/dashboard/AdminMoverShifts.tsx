@@ -279,7 +279,7 @@ const AdminMoverShifts = () => {
                     emptyMessage="No movers"
                   />
                 </div>
-                <Button size="sm" onClick={exportXls} disabled={entries.length === 0} className="ml-auto">
+                <Button size="sm" onClick={exportCsv} disabled={entries.length === 0} className="ml-auto">
                   <FileSpreadsheet className="h-4 w-4 mr-1" /> Export
                 </Button>
               </div>
@@ -317,7 +317,7 @@ const AdminMoverShifts = () => {
                 <div className="border-t pt-3">
                   <p className="text-xs uppercase text-muted-foreground mb-2">Totals per mover</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {Object.values(totalsByMover).map((t) => (
+                    {totalsList.map((t) => (
                       <div key={t.name} className="flex justify-between text-sm border rounded-md px-3 py-1.5">
                         <span>{t.name}</span>
                         <span className="font-medium">{(t.minutes / 60).toFixed(2)}h</span>
