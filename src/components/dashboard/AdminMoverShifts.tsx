@@ -14,7 +14,7 @@ import { format, differenceInMinutes, startOfMonth } from "date-fns";
 import { formatDateTimeEST } from "@/lib/dateUtils";
 import { Download, Printer, RefreshCw, Calendar as CalendarIcon, QrCode, Users, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { exportToExcel } from "@/lib/exportToExcel";
+
 
 const buildUrl = (action: "in" | "out", token: string) =>
   `${window.location.origin}/mover/clock?action=${action}&token=${token}`;
@@ -155,23 +155,31 @@ const AdminMoverShifts = () => {
   }, []);
 
   // Aggregate totals per mover
-  const totalsByMover = entries.reduce((acc: Record<string, { name: string; minutes: number }>, e: any) => {
+  type Totals = Record<string, { name: string; minutes: number }>;
+  const totalsByMover: Totals = entries.reduce((acc: Totals, e: any) => {
     if (!e.net_minutes) return acc;
     const key = e.user_id;
     if (!acc[key]) acc[key] = { name: `${e.first_name} ${e.last_name}`, minutes: 0 };
     acc[key].minutes += e.net_minutes;
     return acc;
-  }, {});
-  const grandTotalMins = Object.values(totalsByMover).reduce((s, m) => s + m.minutes, 0);
+  }, {} as Totals);
+  const totalsList = Object.values(totalsByMover);
+  const grandTotalMins = totalsList.reduce((s, m) => s + m.minutes, 0);
 
-  const exportXls = () => {
-    const rows = entries.map((e: any) => ({
-      Mover: `${e.first_name} ${e.last_name}`,
-      "Clock In (EST)": formatDateTimeEST(e.clock_in),
-      "Clock Out (EST)": e.clock_out ? formatDateTimeEST(e.clock_out) : "—",
-      "Net Hours": e.net_minutes ? (e.net_minutes / 60).toFixed(2) : "—",
-    }));
-    exportToExcel(rows, "mover-shifts");
+  const exportCsv = () => {
+    const header = ["Mover", "Clock In (EST)", "Clock Out (EST)", "Net Hours"];
+    const rows = entries.map((e: any) => [
+      `${e.first_name} ${e.last_name}`,
+      formatDateTimeEST(e.clock_in),
+      e.clock_out ? formatDateTimeEST(e.clock_out) : "",
+      e.net_minutes ? (e.net_minutes / 60).toFixed(2) : "",
+    ]);
+    const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `mover-shifts-${format(startDate || new Date(), "yyyyMMdd")}-${format(endDate || new Date(), "yyyyMMdd")}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
 
   const moverOptions = movers.map((m) => ({ value: m.id, label: `${m.first_name} ${m.last_name}` }));
