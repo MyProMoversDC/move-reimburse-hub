@@ -17,6 +17,7 @@ interface Mover {
 }
 
 interface ExistingAssignment {
+  assignment_id: string;
   mover_id: string;
   first_name: string | null;
   last_name: string | null;
@@ -26,7 +27,9 @@ interface ExistingAssignment {
   started_at: string | null;
   ended_at: string | null;
   arrived_parking_at: string | null;
+  moving_to_site_at: string | null;
   arrived_site_at: string | null;
+  created_at: string | null;
 }
 
 interface Props {
