@@ -23,6 +23,7 @@ const CrewsManager = ({ userId }: Props) => {
   const [members, setMembers] = useState<Record<string, { id: string; user_id: string; name: string }[]>>({});
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", crew_date: new Date().toISOString().slice(0,10), lead_user_id: "", truck_id: "" });
+  const [extraMembers, setExtraMembers] = useState<string[]>([""]);
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const [memberPick, setMemberPick] = useState("");
 
