@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Loader2 } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
+import MoverAutocomplete from "./MoverAutocomplete";
 
 interface PlanningJob {
   id: string;
@@ -263,36 +264,30 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
 
             <div>
               <Label>Movers ({selectedMoverIds.length} selected, minimum 2)</Label>
-              <Input
-                placeholder="Search movers..."
-                value={moverSearch}
-                onChange={e => setMoverSearch(e.target.value)}
-                className="mb-2"
+              <MoverAutocomplete
+                movers={movers}
+                selectedIds={selectedMoverIds}
+                onChange={setSelectedMoverIds}
+                placeholder="Type a mover's name…"
               />
-              <div className="max-h-60 overflow-auto border rounded-md p-2 space-y-1">
-                {filteredMovers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground p-2">No movers found</p>
-                ) : filteredMovers.map(m => {
-                  const st = moverStatus(m.id);
-                  return (
-                    <label key={m.id} className="flex items-center justify-between gap-2 p-2 rounded hover:bg-muted cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <Checkbox checked={selectedMoverIds.includes(m.id)} onCheckedChange={() => toggleMover(m.id)} />
-                        <span className="text-sm">{m.first_name} {m.last_name}</span>
-                      </div>
-                      {st && (
-                        <Badge variant={
-                          st.status === "accepted" ? "default" :
-                          st.status === "declined" ? "destructive" : "secondary"
-                        }>
-                          {st.status}{st.status === "declined" && st.decline_reason ? `: ${st.decline_reason}` : ""}
-                        </Badge>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
+              {existingAssignments.length > 0 && (
+                <div className="mt-3 space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Current responses</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {existingAssignments.map(a => (
+                      <Badge key={a.mover_id} variant={
+                        a.status === "confirmed" || a.status === "accepted" ? "default" :
+                        a.status === "declined" ? "destructive" : "secondary"
+                      }>
+                        {a.first_name} {a.last_name}: {a.status}
+                        {a.status === "declined" && a.decline_reason ? ` (${a.decline_reason})` : ""}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
           </div>
         )}
 

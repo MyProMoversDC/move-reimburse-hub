@@ -3,13 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, UserCheck } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
+import MoverAutocomplete from "./MoverAutocomplete";
 
 interface Mover {
   id: string;
@@ -64,7 +63,6 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   const [movers, setMovers] = useState<Mover[]>([]);
   const [existing, setExisting] = useState<ExistingAssignment[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -102,14 +100,6 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
 
   const alreadyAssigned = new Set(existing.map((e) => e.mover_id));
 
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
   const submit = async () => {
     if (selected.size === 0) return toast.error("Select at least one mover");
     setSubmitting(true);
@@ -130,10 +120,6 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
     }
   };
 
-  const filtered = movers.filter((m) => {
-    const name = `${m.first_name ?? ""} ${m.last_name ?? ""}`.toLowerCase();
-    return name.includes(search.toLowerCase());
-  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -179,28 +165,15 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Add movers</Label>
-              <Input placeholder="Search movers…" value={search} onChange={(e) => setSearch(e.target.value)} />
-              <ScrollArea className="h-56 border rounded-lg">
-                <div className="divide-y">
-                  {filtered.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">No movers found</div>
-                  ) : filtered.map((m) => {
-                    const taken = alreadyAssigned.has(m.id);
-                    return (
-                      <label key={m.id} className={`flex items-center gap-3 p-2 ${taken ? "opacity-50" : "cursor-pointer hover:bg-muted/50"}`}>
-                        <Checkbox
-                          checked={selected.has(m.id)}
-                          disabled={taken}
-                          onCheckedChange={() => !taken && toggle(m.id)}
-                        />
-                        <span className="text-sm">{m.first_name ?? ""} {m.last_name ?? ""}</span>
-                        {taken && <span className="ml-auto text-xs text-muted-foreground">already assigned</span>}
-                      </label>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
+              <MoverAutocomplete
+                movers={movers}
+                selectedIds={Array.from(selected)}
+                onChange={(ids) => setSelected(new Set(ids))}
+                disabledIds={Array.from(alreadyAssigned)}
+                placeholder="Type a mover's name…"
+              />
             </div>
+
           </>
         )}
 
