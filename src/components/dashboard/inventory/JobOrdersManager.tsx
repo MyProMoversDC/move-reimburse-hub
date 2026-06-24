@@ -37,6 +37,8 @@ const JobOrdersManager = ({ userId }: Props) => {
   const [assignedCounts, setAssignedCounts] = useState<Record<string, { total: number; pending: number; confirmed: number; declined: number }>>({});
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const [form, setForm] = useState({
     job_number: "", client_name: "", job_date: new Date().toISOString().slice(0,10),
     job_type_id: "", truck_id: "", pickup_address: "", dropoff_address: "", notes: "", status: "pending"
