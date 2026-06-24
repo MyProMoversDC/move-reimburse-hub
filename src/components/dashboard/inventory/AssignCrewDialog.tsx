@@ -74,7 +74,7 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
             .select("id, first_name, last_name, user_roles!inner(role)")
             .eq("user_roles.role", "mover")
             .order("first_name"),
-          supabase.from("crews").select("id, name").order("crew_date", { ascending: false }).limit(100),
+          supabase.from("crews").select("id, name, crew_date").order("crew_date", { ascending: false }).limit(200),
           supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
           supabase
             .from("inv_job_orders")
