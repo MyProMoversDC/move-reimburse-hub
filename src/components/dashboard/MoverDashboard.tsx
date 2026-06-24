@@ -620,6 +620,16 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
           {language === 'ru' ? 'Мои Заказы' : language === 'es' ? 'Mis Trabajos' : 'My Jobs'}
         </Button>
 
+        {/* Shift Clock Button for Mobile */}
+        <Button
+          variant={activeTab === "shift-clock" ? "default" : "outline"}
+          className="w-full justify-start"
+          onClick={() => setActiveTab("shift-clock")}
+        >
+          <Clock className="h-4 w-4 mr-2" />
+          {language === 'ru' ? 'Учёт смены' : language === 'es' ? 'Registro de Turno' : 'Shift Clock'}
+        </Button>
+
         {/* Refer a Friend Button for Mobile */}
         <Button 
           variant={activeTab === "refer-friend" ? "default" : "outline"}
