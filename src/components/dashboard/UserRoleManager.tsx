@@ -101,7 +101,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
   };
 
   const handleAddRole = async (userId: string) => {
-    const role = selectedRole[userId] as "mover" | "admin" | "accountant" | "operations_manager";
+    const role = selectedRole[userId] as "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff" | "warehouse_keeper";
     if (!role) {
       toast.error("Please select a role to add");
       return;
@@ -141,7 +141,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
         .from("user_roles")
         .delete()
         .eq("user_id", userId)
-        .eq("role", role as "mover" | "admin" | "accountant" | "operations_manager");
+        .eq("role", role as "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff" | "warehouse_keeper");
 
       if (error) throw error;
 
