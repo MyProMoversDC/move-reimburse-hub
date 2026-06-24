@@ -33,6 +33,8 @@ const JobOrdersManager = ({ userId }: Props) => {
   const [jobTypes, setJobTypes] = useState<{ id: string; name: string }[]>([]);
   const [trucks, setTrucks] = useState<{ id: string; truck_number: string }[]>([]);
   const [open, setOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<Row | null>(null);
+  const [assignedCounts, setAssignedCounts] = useState<Record<string, { total: number; pending: number; confirmed: number; declined: number }>>({});
   const [form, setForm] = useState({
     job_number: "", client_name: "", job_date: new Date().toISOString().slice(0,10),
     job_type_id: "", truck_id: "", pickup_address: "", dropoff_address: "", notes: "", status: "pending"
