@@ -149,6 +149,20 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
       ].filter(Boolean).join("\n");
 
       let invJobId = existingJobOrderId;
+
+      // Defensive: an inv_job_order with this job_number (or smartmoving_id)
+      // may already exist from a previous run / manual entry. Reuse it
+      // instead of hitting the UNIQUE(job_number) constraint, which would
+      // throw an error and block the mover notification from being sent.
+      if (!invJobId) {
+        const { data: byNumber } = await supabase
+          .from("inv_job_orders")
+          .select("id")
+          .or(`job_number.eq.${jobNumber},smartmoving_id.eq.${job.smartmoving_id}`)
+          .maybeSingle();
+        if (byNumber?.id) invJobId = byNumber.id;
+      }
+
       if (invJobId) {
         const { error } = await supabase
           .from("inv_job_orders")
@@ -156,6 +170,7 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
             truck_id: form.truck_id,
             notes: composedNotes || null,
             pickup_address: job.address ?? null,
+            planned_from_smartmoving_id: job.smartmoving_id,
           })
           .eq("id", invJobId);
         if (error) throw error;
