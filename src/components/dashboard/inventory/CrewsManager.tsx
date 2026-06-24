@@ -133,12 +133,45 @@ const CrewsManager = ({ userId }: Props) => {
                   options={movers.map(m => ({ value: m.id, label: `${m.first_name} ${m.last_name}` }))}
                   placeholder="Select lead" searchPlaceholder="Search movers..." emptyMessage="No movers" />
               </div>
+
+              {form.lead_user_id && (
+                <div className="space-y-2">
+                  <Label>Additional crew members</Label>
+                  <p className="text-xs text-muted-foreground">A new slot is added automatically once the previous one is filled.</p>
+                  {extraMembers.map((val, i) => {
+                    const taken = new Set([form.lead_user_id, ...extraMembers.filter((_, j) => j !== i)]);
+                    const opts = movers
+                      .filter(m => !taken.has(m.id))
+                      .map(m => ({ value: m.id, label: `${m.first_name} ${m.last_name}` }));
+                    return (
+                      <div key={i} className="flex gap-2">
+                        <SearchableSelect
+                          value={val}
+                          onValueChange={(v) => updateExtraMember(i, v)}
+                          options={opts}
+                          placeholder={`Member ${i + 1}`}
+                          searchPlaceholder="Search movers..."
+                          emptyMessage="No movers"
+                          triggerClassName="flex-1"
+                        />
+                        {(val || extraMembers.length > 1) && (
+                          <Button type="button" size="sm" variant="ghost" onClick={() => removeExtraMember(i)}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <div><Label>Truck</Label>
                 <SearchableSelect value={form.truck_id} onValueChange={v => setForm({ ...form, truck_id: v })}
                   options={trucks.map(t => ({ value: t.id, label: t.truck_number }))}
                   placeholder="Select truck" searchPlaceholder="Search..." emptyMessage="None" />
               </div>
             </div>
+
             <DialogFooter><Button onClick={createCrew}>Create</Button></DialogFooter>
           </DialogContent>
         </Dialog>
