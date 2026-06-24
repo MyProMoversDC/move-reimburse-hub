@@ -9,10 +9,10 @@ const corsHeaders = {
 
 interface Body {
   assignment_id: string;
-  status: "confirmed" | "declined" | "arrived_parking" | "arrived_site";
+  status: "confirmed" | "declined" | "arrived_parking" | "moving_to_site" | "arrived_site" | "completed";
   decline_reason?: string;
 }
-const ALLOWED = ["confirmed", "declined", "arrived_parking", "arrived_site"];
+const ALLOWED = ["confirmed", "declined", "arrived_parking", "moving_to_site", "arrived_site", "completed"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -52,8 +52,15 @@ Deno.serve(async (req) => {
       updatePayload.decline_reason = body.status === "declined" ? declineReason : null;
     } else if (body.status === "arrived_parking") {
       updatePayload.arrived_parking_at = responded_at;
+    } else if (body.status === "moving_to_site") {
+      updatePayload.moving_to_site_at = responded_at;
+      updatePayload.status = "in_progress";
+      updatePayload.started_at = responded_at;
     } else if (body.status === "arrived_site") {
       updatePayload.arrived_site_at = responded_at;
+    } else if (body.status === "completed") {
+      updatePayload.status = "completed";
+      updatePayload.ended_at = responded_at;
     }
 
     const { data: updated, error: upErr } = await admin

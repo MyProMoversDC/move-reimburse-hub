@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ import {
   Clock,
   Truck,
   Calendar,
-  Play,
   Square,
   MapPin,
+  Navigation,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateEST } from "@/lib/dateUtils";
@@ -47,6 +47,7 @@ interface JobRow {
   ended_at: string | null;
   decline_reason: string | null;
   arrived_parking_at: string | null;
+  moving_to_site_at: string | null;
   arrived_site_at: string | null;
   assignment: JobAssignment;
 }
@@ -56,7 +57,7 @@ interface Props { userId: string; }
 const PING_INTERVAL_MS = 60_000;
 
 function StatusBadge({ status }: { status: JobStatus }) {
-  if (status === "confirmed") return <Badge className="bg-green-600"><CheckCircle2 className="h-3 w-3 mr-1" />Confirmed</Badge>;
+  if (status === "confirmed") return <Badge className="bg-green-600"><CheckCircle2 className="h-3 w-3 mr-1" />Accepted</Badge>;
   if (status === "in_progress") return <Badge className="bg-blue-600"><MapPin className="h-3 w-3 mr-1" />In Progress</Badge>;
   if (status === "completed") return <Badge className="bg-slate-600"><CheckCircle2 className="h-3 w-3 mr-1" />Completed</Badge>;
   if (status === "declined") return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Declined</Badge>;
@@ -79,7 +80,7 @@ export default function MoverJobAssignments({ userId }: Props) {
     const { data, error } = await supabase
       .from("mover_job_assignments")
       .select(
-        "id, status, responded_at, started_at, ended_at, decline_reason, arrived_parking_at, arrived_site_at, assignment:job_assignments(id, job_number, client_name, service_date, move_size, scope_of_work, truck_number)"
+        "id, status, responded_at, started_at, ended_at, decline_reason, arrived_parking_at, moving_to_site_at, arrived_site_at, assignment:job_assignments(id, job_number, client_name, service_date, move_size, scope_of_work, truck_number)"
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -113,12 +114,20 @@ export default function MoverJobAssignments({ userId }: Props) {
     if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        // Per-assignment job log
         await supabase.from("job_location_pings").insert({
           mover_assignment_id: rowId,
           user_id: userId,
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
+        });
+        // Crew tracking map feed
+        await supabase.from("mover_location_pings").insert({
+          user_id: userId,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy_m: pos.coords.accuracy,
         });
       },
       (err) => console.warn("geo error", err),
@@ -139,7 +148,7 @@ export default function MoverJobAssignments({ userId }: Props) {
     }
   }
 
-  // Resume tracking on load if any job is in_progress
+  // Auto start/stop tracking based on in_progress rows
   useEffect(() => {
     const live = rows.find((r) => r.status === "in_progress");
     if (live && trackingRef.current?.rowId !== live.id) startTracking(live.id);
@@ -150,6 +159,19 @@ export default function MoverJobAssignments({ userId }: Props) {
 
   useEffect(() => () => stopTracking(), []);
 
+  // Determine whether this is the mover's first job of the day (parking required)
+  const firstJobIdOfDay = useMemo(() => {
+    const map: Record<string, string> = {};
+    [...rows]
+      .filter((r) => r.assignment.service_date && (r.status === "confirmed" || r.status === "in_progress" || r.status === "completed"))
+      .sort((a, b) => (a.responded_at ?? "").localeCompare(b.responded_at ?? ""))
+      .forEach((r) => {
+        const d = r.assignment.service_date as string;
+        if (!map[d]) map[d] = r.id;
+      });
+    return map;
+  }, [rows]);
+
   // ---------- actions ----------
   async function respond(rowId: string, assignmentId: string, status: "confirmed" | "declined", reason?: string) {
     setBusyId(rowId);
@@ -158,7 +180,7 @@ export default function MoverJobAssignments({ userId }: Props) {
     });
     setBusyId(null);
     if (error) toast({ title: "Could not submit", description: error.message, variant: "destructive" });
-    else { toast({ title: status === "confirmed" ? "Job confirmed" : "Job declined" }); load(); }
+    else { toast({ title: status === "confirmed" ? "Job accepted" : "Job declined" }); load(); }
   }
 
   function openDecline() {
@@ -175,16 +197,6 @@ export default function MoverJobAssignments({ userId }: Props) {
     setDeclineOpen(false);
   }
 
-  async function reportArrival(row: JobRow, kind: "arrived_parking" | "arrived_site") {
-    setBusyId(row.id);
-    const { error } = await supabase.functions.invoke("confirm-job", {
-      body: { assignment_id: row.assignment.id, status: kind },
-    });
-    setBusyId(null);
-    if (error) toast({ title: "Could not submit", description: error.message, variant: "destructive" });
-    else { toast({ title: kind === "arrived_parking" ? "Parking lot arrival sent" : "Job site arrival sent" }); load(); }
-  }
-
   function requestGeoPermission(): Promise<boolean> {
     return new Promise((resolve) => {
       if (!("geolocation" in navigator)) return resolve(false);
@@ -192,37 +204,35 @@ export default function MoverJobAssignments({ userId }: Props) {
     });
   }
 
-  async function startJob(row: JobRow) {
+  async function invokeStatus(row: JobRow, status: "arrived_parking" | "moving_to_site" | "arrived_site" | "completed", successMsg: string) {
     setBusyId(row.id);
+    const { error } = await supabase.functions.invoke("confirm-job", {
+      body: { assignment_id: row.assignment.id, status },
+    });
+    setBusyId(null);
+    if (error) { toast({ title: "Could not submit", description: error.message, variant: "destructive" }); return false; }
+    toast({ title: successMsg });
+    load();
+    return true;
+  }
+
+  async function startMovingToSite(row: JobRow) {
     const ok = await requestGeoPermission();
     if (!ok) {
-      setBusyId(null);
       toast({
         title: "Location required",
-        description: "Please allow location access to start the job.",
+        description: "Please allow location access — tracking starts when you head to the customer.",
         variant: "destructive",
       });
       return;
     }
-    const { error } = await supabase
-      .from("mover_job_assignments")
-      .update({ status: "in_progress", started_at: new Date().toISOString() })
-      .eq("id", row.id);
-    setBusyId(null);
-    if (error) toast({ title: "Could not start", description: error.message, variant: "destructive" });
-    else { toast({ title: "Job started", description: "Location tracking active." }); startTracking(row.id); load(); }
+    const success = await invokeStatus(row, "moving_to_site", "Heading to customer — tracking active");
+    if (success) startTracking(row.id);
   }
 
   async function endJob(row: JobRow) {
-    setBusyId(row.id);
-    const { error } = await supabase
-      .from("mover_job_assignments")
-      .update({ status: "completed", ended_at: new Date().toISOString() })
-      .eq("id", row.id);
-    setBusyId(null);
-    stopTracking();
-    if (error) toast({ title: "Could not end", description: error.message, variant: "destructive" });
-    else { toast({ title: "Job completed" }); load(); }
+    const success = await invokeStatus(row, "completed", "Job completed");
+    if (success) stopTracking();
   }
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -260,100 +270,111 @@ export default function MoverJobAssignments({ userId }: Props) {
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">
-          {selected && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="break-words">Job #{selected.assignment.job_number}</DialogTitle>
-                <DialogDescription className="break-words">{selected.assignment.client_name}</DialogDescription>
-              </DialogHeader>
+          {selected && (() => {
+            const isFirstOfDay = selected.assignment.service_date
+              ? firstJobIdOfDay[selected.assignment.service_date] === selected.id
+              : true;
+            const canShowParking = isFirstOfDay && !selected.moving_to_site_at;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="break-words">Job #{selected.assignment.job_number}</DialogTitle>
+                  <DialogDescription className="break-words">{selected.assignment.client_name}</DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Status</Label>
-                  <StatusBadge status={selected.status} />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Status</Label>
+                    <StatusBadge status={selected.status} />
+                  </div>
+
+                  {selected.assignment.service_date && (
+                    <div><Label>Service Date</Label><p className="text-sm mt-1">{formatDateEST(selected.assignment.service_date)}</p></div>
+                  )}
+                  {selected.assignment.move_size && (
+                    <div><Label>Move Size</Label><p className="text-sm mt-1">{selected.assignment.move_size}</p></div>
+                  )}
+                  {selected.assignment.truck_number && (
+                    <div><Label>Truck</Label><p className="text-sm mt-1">Truck {selected.assignment.truck_number}</p></div>
+                  )}
+                  {selected.assignment.scope_of_work && (
+                    <div><Label>Scope of Work</Label><p className="text-sm mt-1 whitespace-pre-wrap break-words">{selected.assignment.scope_of_work}</p></div>
+                  )}
+
+                  {selected.status === "in_progress" && !selected.ended_at && (
+                    <div className="rounded-md border border-blue-500/40 bg-blue-500/10 p-3 text-sm flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-0.5 text-blue-600 shrink-0" />
+                      <span>Location tracking is active. Keep the app open until you complete the job.</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    {selected.responded_at && <p>Responded {new Date(selected.responded_at).toLocaleString()}</p>}
+                    {selected.arrived_parking_at && <p>Arrived at parking {new Date(selected.arrived_parking_at).toLocaleString()}</p>}
+                    {selected.moving_to_site_at && <p>Moving to customer {new Date(selected.moving_to_site_at).toLocaleString()}</p>}
+                    {selected.arrived_site_at && <p>Arrived at customer site {new Date(selected.arrived_site_at).toLocaleString()}</p>}
+                    {selected.started_at && <p>Started {new Date(selected.started_at).toLocaleString()}</p>}
+                    {selected.ended_at && <p>Completed {new Date(selected.ended_at).toLocaleString()}</p>}
+                  </div>
+
+                  {selected.status === "declined" && selected.decline_reason && (
+                    <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+                      <Label className="text-destructive">Decline Reason</Label>
+                      <p className="text-sm mt-1 whitespace-pre-wrap break-words">{selected.decline_reason}</p>
+                    </div>
+                  )}
                 </div>
 
-                {selected.assignment.service_date && (
-                  <div><Label>Service Date</Label><p className="text-sm mt-1">{formatDateEST(selected.assignment.service_date)}</p></div>
-                )}
-                {selected.assignment.move_size && (
-                  <div><Label>Move Size</Label><p className="text-sm mt-1">{selected.assignment.move_size}</p></div>
-                )}
-                {selected.assignment.truck_number && (
-                  <div><Label>Truck</Label><p className="text-sm mt-1">Truck {selected.assignment.truck_number}</p></div>
-                )}
-                {selected.assignment.scope_of_work && (
-                  <div><Label>Scope of Work</Label><p className="text-sm mt-1 whitespace-pre-wrap break-words">{selected.assignment.scope_of_work}</p></div>
-                )}
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  {selected.status === "pending" && (
+                    <>
+                      <Button variant="outline" className="w-full sm:w-auto" onClick={openDecline} disabled={busyId === selected.id}>
+                        {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}Decline
+                      </Button>
+                      <Button className="w-full sm:w-auto" onClick={() => respond(selected.id, selected.assignment.id, "confirmed")} disabled={busyId === selected.id}>
+                        {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}Accept Job
+                      </Button>
+                    </>
+                  )}
 
-                {selected.status === "in_progress" && (
-                  <div className="rounded-md border border-blue-500/40 bg-blue-500/10 p-3 text-sm flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-blue-600 shrink-0" />
-                    <span>Location tracking is active. Keep this tab open until you end the job.</span>
-                  </div>
-                )}
-
-                {selected.started_at && (
-                  <p className="text-xs text-muted-foreground">Started {new Date(selected.started_at).toLocaleString()}</p>
-                )}
-                {selected.ended_at && (
-                  <p className="text-xs text-muted-foreground">Ended {new Date(selected.ended_at).toLocaleString()}</p>
-                )}
-                {selected.arrived_parking_at && (
-                  <p className="text-xs text-muted-foreground">Arrived at parking {new Date(selected.arrived_parking_at).toLocaleString()}</p>
-                )}
-                {selected.arrived_site_at && (
-                  <p className="text-xs text-muted-foreground">Arrived at job site {new Date(selected.arrived_site_at).toLocaleString()}</p>
-                )}
-                {selected.responded_at && selected.status === "declined" && (
-                  <p className="text-xs text-muted-foreground">Responded {new Date(selected.responded_at).toLocaleString()}</p>
-                )}
-                {selected.status === "declined" && selected.decline_reason && (
-                  <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
-                    <Label className="text-destructive">Decline Reason</Label>
-                    <p className="text-sm mt-1 whitespace-pre-wrap break-words">{selected.decline_reason}</p>
-                  </div>
-                )}
-              </div>
-
-              <DialogFooter className="flex-col sm:flex-row gap-2">
-                {selected.status === "pending" && (
-                  <>
-                    <Button variant="outline" className="w-full sm:w-auto" onClick={openDecline} disabled={busyId === selected.id}>
-                      {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}Decline
-                    </Button>
-                    <Button className="w-full sm:w-auto" onClick={() => respond(selected.id, selected.assignment.id, "confirmed")} disabled={busyId === selected.id}>
-                      {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}Confirm Job
-                    </Button>
-                  </>
-                )}
-                {selected.status === "confirmed" && (
-                  <Button className="w-full sm:w-auto bg-green-600 hover:bg-green-700" onClick={() => startJob(selected)} disabled={busyId === selected.id}>
-                    {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}Start Job
-                  </Button>
-                )}
-                {(selected.status === "confirmed" || selected.status === "in_progress") && (
-                  <>
-                    <Button variant="outline" className="w-full sm:w-auto"
-                      onClick={() => reportArrival(selected, "arrived_parking")}
-                      disabled={busyId === selected.id || !!selected.arrived_parking_at}>
-                      🅿️ {selected.arrived_parking_at ? "Parking confirmed" : "I'm at parking lot"}
-                    </Button>
-                    <Button variant="outline" className="w-full sm:w-auto"
-                      onClick={() => reportArrival(selected, "arrived_site")}
-                      disabled={busyId === selected.id || !!selected.arrived_site_at}>
-                      📍 {selected.arrived_site_at ? "Site confirmed" : "I'm at job site"}
-                    </Button>
-                  </>
-                )}
-                {selected.status === "in_progress" && (
-                  <Button variant="destructive" className="w-full sm:w-auto" onClick={() => endJob(selected)} disabled={busyId === selected.id}>
-                    {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Square className="h-4 w-4 mr-2" />}End Job
-                  </Button>
-                )}
-              </DialogFooter>
-            </>
-          )}
+                  {(selected.status === "confirmed" || selected.status === "in_progress") && !selected.ended_at && (
+                    <>
+                      {canShowParking && (
+                        <Button variant="outline" className="w-full sm:w-auto"
+                          onClick={() => invokeStatus(selected, "arrived_parking", "Parking lot arrival sent")}
+                          disabled={busyId === selected.id || !!selected.arrived_parking_at}>
+                          🅿️ {selected.arrived_parking_at ? "Parking confirmed" : "I'm at parking lot"}
+                        </Button>
+                      )}
+                      {!selected.moving_to_site_at && (
+                        <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                          onClick={() => startMovingToSite(selected)}
+                          disabled={busyId === selected.id}>
+                          {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Navigation className="h-4 w-4 mr-2" />}
+                          Moving to customer site
+                        </Button>
+                      )}
+                      {selected.moving_to_site_at && !selected.arrived_site_at && (
+                        <Button variant="outline" className="w-full sm:w-auto"
+                          onClick={() => invokeStatus(selected, "arrived_site", "Customer site arrival sent")}
+                          disabled={busyId === selected.id}>
+                          📍 Arrived at customer site
+                        </Button>
+                      )}
+                      {selected.arrived_site_at && (
+                        <Button variant="destructive" className="w-full sm:w-auto"
+                          onClick={() => endJob(selected)}
+                          disabled={busyId === selected.id}>
+                          {busyId === selected.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Square className="h-4 w-4 mr-2" />}
+                          Completed
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
