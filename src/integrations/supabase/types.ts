@@ -445,6 +445,135 @@ export type Database = {
         }
         Relationships: []
       }
+      crew_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          crew_id: string
+          id: string
+          inv_job_order_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          crew_id: string
+          id?: string
+          inv_job_order_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          crew_id?: string
+          id?: string
+          inv_job_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_assignments_crew_id_fkey"
+            columns: ["crew_id"]
+            isOneToOne: false
+            referencedRelation: "crews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_inv_job_order_id_fkey"
+            columns: ["inv_job_order_id"]
+            isOneToOne: false
+            referencedRelation: "inv_job_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crew_members: {
+        Row: {
+          created_at: string
+          crew_id: string
+          id: string
+          role_label: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          crew_id: string
+          id?: string
+          role_label?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          crew_id?: string
+          id?: string
+          role_label?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_members_crew_id_fkey"
+            columns: ["crew_id"]
+            isOneToOne: false
+            referencedRelation: "crews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crews: {
+        Row: {
+          created_at: string
+          created_by: string
+          crew_date: string
+          id: string
+          lead_user_id: string | null
+          name: string
+          notes: string | null
+          truck_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          crew_date: string
+          id?: string
+          lead_user_id?: string | null
+          name: string
+          notes?: string | null
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          crew_date?: string
+          id?: string
+          lead_user_id?: string | null
+          name?: string
+          notes?: string | null
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crews_lead_user_id_fkey"
+            columns: ["lead_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crews_truck_id_fkey"
+            columns: ["truck_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_refunds: {
         Row: {
           amount: number
@@ -512,6 +641,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_locks: {
+        Row: {
+          id: string
+          is_locked: boolean
+          lock_date: string
+          locked_at: string
+          locked_by: string
+          unlock_reason: string | null
+          unlocked_at: string | null
+          unlocked_by: string | null
+        }
+        Insert: {
+          id?: string
+          is_locked?: boolean
+          lock_date: string
+          locked_at?: string
+          locked_by: string
+          unlock_reason?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+        }
+        Update: {
+          id?: string
+          is_locked?: boolean
+          lock_date?: string
+          locked_at?: string
+          locked_by?: string
+          unlock_reason?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+        }
+        Relationships: []
       }
       day_off_requests: {
         Row: {
@@ -1226,6 +1388,176 @@ export type Database = {
         }
         Relationships: []
       }
+      inv_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          quantity_after: number | null
+          quantity_before: number | null
+          record_id: string | null
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          quantity_after?: number | null
+          quantity_before?: number | null
+          record_id?: string | null
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          quantity_after?: number | null
+          quantity_before?: number | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      inv_job_orders: {
+        Row: {
+          client_name: string
+          created_at: string
+          created_by: string
+          dropoff_address: string | null
+          id: string
+          job_date: string
+          job_number: string
+          job_type_id: string | null
+          notes: string | null
+          pickup_address: string | null
+          smartmoving_id: string | null
+          status: string
+          truck_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          created_by: string
+          dropoff_address?: string | null
+          id?: string
+          job_date: string
+          job_number: string
+          job_type_id?: string | null
+          notes?: string | null
+          pickup_address?: string | null
+          smartmoving_id?: string | null
+          status?: string
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          dropoff_address?: string | null
+          id?: string
+          job_date?: string
+          job_number?: string
+          job_type_id?: string | null
+          notes?: string | null
+          pickup_address?: string | null
+          smartmoving_id?: string | null
+          status?: string
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_job_orders_job_type_id_fkey"
+            columns: ["job_type_id"]
+            isOneToOne: false
+            referencedRelation: "job_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inv_job_orders_truck_id_fkey"
+            columns: ["truck_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          min_stock_level: number
+          name: string
+          quantity: number
+          uom: Database["public"]["Enums"]["unit_of_measure"]
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_stock_level?: number
+          name: string
+          quantity?: number
+          uom?: Database["public"]["Enums"]["unit_of_measure"]
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_stock_level?: number
+          name?: string
+          quantity?: number
+          uom?: Database["public"]["Enums"]["unit_of_measure"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_assignments: {
         Row: {
           callback_url: string
@@ -1308,6 +1640,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_type_requirements: {
+        Row: {
+          id: string
+          item_id: string
+          job_type_id: string
+          quantity: number
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          job_type_id: string
+          quantity?: number
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          job_type_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_type_requirements_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_type_requirements_job_type_id_fkey"
+            columns: ["job_type_id"]
+            isOneToOne: false
+            referencedRelation: "job_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       knowledge_base_folder_shares: {
         Row: {
@@ -1658,6 +2047,61 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "job_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mover_location_pings: {
+        Row: {
+          accuracy_m: number | null
+          crew_id: string | null
+          id: string
+          inv_job_order_id: string | null
+          lat: number
+          lng: number
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          crew_id?: string | null
+          id?: string
+          inv_job_order_id?: string | null
+          lat: number
+          lng: number
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          crew_id?: string | null
+          id?: string
+          inv_job_order_id?: string | null
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mover_location_pings_crew_id_fkey"
+            columns: ["crew_id"]
+            isOneToOne: false
+            referencedRelation: "crews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mover_location_pings_inv_job_order_id_fkey"
+            columns: ["inv_job_order_id"]
+            isOneToOne: false
+            referencedRelation: "inv_job_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mover_location_pings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2304,6 +2748,114 @@ export type Database = {
         }
         Relationships: []
       }
+      planning_routes: {
+        Row: {
+          created_at: string
+          created_by: string
+          crew_id: string | null
+          id: string
+          name: string | null
+          optimized_payload: Json | null
+          route_date: string
+          status: string
+          truck_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          crew_id?: string | null
+          id?: string
+          name?: string | null
+          optimized_payload?: Json | null
+          route_date: string
+          status?: string
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          crew_id?: string | null
+          id?: string
+          name?: string | null
+          optimized_payload?: Json | null
+          route_date?: string
+          status?: string
+          truck_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_routes_crew_id_fkey"
+            columns: ["crew_id"]
+            isOneToOne: false
+            referencedRelation: "crews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planning_routes_truck_id_fkey"
+            columns: ["truck_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planning_stops: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          inv_job_order_id: string | null
+          lat: number | null
+          lng: number | null
+          notes: string | null
+          route_id: string
+          scheduled_at: string | null
+          stop_order: number
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          inv_job_order_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          route_id: string
+          scheduled_at?: string | null
+          stop_order?: number
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          inv_job_order_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          route_id?: string
+          scheduled_at?: string | null
+          stop_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_stops_inv_job_order_id_fkey"
+            columns: ["inv_job_order_id"]
+            isOneToOne: false
+            referencedRelation: "inv_job_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planning_stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "planning_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -2393,6 +2945,47 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      purchases: {
+        Row: {
+          id: string
+          item_id: string
+          notes: string | null
+          purchased_at: string
+          purchased_by: string
+          quantity: number
+          unit_cost: number | null
+          vendor: string | null
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          notes?: string | null
+          purchased_at?: string
+          purchased_by: string
+          quantity: number
+          unit_cost?: number | null
+          vendor?: string | null
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          notes?: string | null
+          purchased_at?: string
+          purchased_by?: string
+          quantity?: number
+          unit_cost?: number | null
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_requests: {
         Row: {
@@ -2949,6 +3542,75 @@ export type Database = {
           },
         ]
       }
+      truck_inventory: {
+        Row: {
+          id: string
+          item_id: string
+          last_updated: string
+          quantity: number
+          truck_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          last_updated?: string
+          quantity?: number
+          truck_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          last_updated?: string
+          quantity?: number
+          truck_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "truck_inventory_truck_id_fkey"
+            columns: ["truck_id"]
+            isOneToOne: false
+            referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trucks: {
+        Row: {
+          capacity_notes: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          license_plate: string | null
+          truck_number: string
+          updated_at: string
+        }
+        Insert: {
+          capacity_notes?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          license_plate?: string | null
+          truck_number: string
+          updated_at?: string
+        }
+        Update: {
+          capacity_notes?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          license_plate?: string | null
+          truck_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_activity_logs: {
         Row: {
           activity_description: string
@@ -3146,6 +3808,99 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouse_zone_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          label: string | null
+          notes: string | null
+          quantity: number
+          zone_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          label?: string | null
+          notes?: string | null
+          quantity?: number
+          zone_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          label?: string | null
+          notes?: string | null
+          quantity?: number
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_zone_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_zone_items_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouse_zones: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          height_pct: number
+          id: string
+          name: string
+          notes: string | null
+          status: string
+          updated_at: string
+          width_pct: number
+          x_pct: number
+          y_pct: number
+          zone_type: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          height_pct?: number
+          id?: string
+          name: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          width_pct?: number
+          x_pct?: number
+          y_pct?: number
+          zone_type?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          height_pct?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          width_pct?: number
+          x_pct?: number
+          y_pct?: number
+          zone_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3261,6 +4016,7 @@ export type Database = {
         | "reviews_admin"
         | "hr_manager"
         | "office_staff"
+        | "warehouse_keeper"
       chat_topic_type:
         | "general"
         | "reimbursement"
@@ -3304,6 +4060,7 @@ export type Database = {
         | "appeal"
       review_bonus_status: "pending" | "confirmed" | "declined" | "appeal"
       shift_status: "pending" | "confirmed" | "cancelled"
+      unit_of_measure: "piece" | "roll" | "box" | "pack" | "set" | "ft" | "lb"
       violence_incident_type:
         | "verbal_threat"
         | "physical_contact"
@@ -3447,6 +4204,7 @@ export const Constants = {
         "reviews_admin",
         "hr_manager",
         "office_staff",
+        "warehouse_keeper",
       ],
       chat_topic_type: [
         "general",
@@ -3496,6 +4254,7 @@ export const Constants = {
       ],
       review_bonus_status: ["pending", "confirmed", "declined", "appeal"],
       shift_status: ["pending", "confirmed", "cancelled"],
+      unit_of_measure: ["piece", "roll", "box", "pack", "set", "ft", "lb"],
       violence_incident_type: [
         "verbal_threat",
         "physical_contact",

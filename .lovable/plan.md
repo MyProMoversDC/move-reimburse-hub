@@ -1,84 +1,116 @@
 
-## Goal
+# Plan: Port MovePro Inventory Hub features + add Warehouse Keeper role
 
-Add a QR-code-based shift system to the **Mover cabinet** so movers clock in by scanning a Clock-In QR and clock out by scanning a Clock-Out QR. Admins can view, print, and download both QR codes and track all mover shift activity (active now, historical, hours by date range).
+## Scope
 
-## How it works
+- **Operations Manager** gains: Fleet, Job Orders, Planning, Crew Tracking, Crews.
+- **New role `warehouse_keeper`** gains: Warehouse, Warehouse Live Map, Purchases, Reports, Fleet.
+- **Fleet** is shared (full CRUD for both roles).
+- Existing Android, push notifications, movers cabinet, and current schema are untouched. All inventory tables are **net-new additions** — nothing in the current schema is altered.
 
-```text
-[Admin prints 2 QRs] ──► posted at the office
-       │
-       ▼
-Clock-In QR  ─ scan ─► mover phone opens /mover/clock?action=in  ─► creates shift_clock_entries row
-Clock-Out QR ─ scan ─► mover phone opens /mover/clock?action=out ─► sets clock_out on open entry
-       │
-       ▼
-[Admin Mover Shifts tab]  ► Active now • Calendar filter • Total hours per mover • CSV export
-```
+## Architecture decisions (from your answers)
 
-QR codes encode signed URLs containing the action and a rotating short token (stored as a secret/admin config). On scan: if the user is logged in as a mover, the action runs immediately; otherwise they land on the login page and the action runs after sign-in.
+1. Schema is ported into THIS project's Supabase (no cross-project API).
+2. Crews link to existing `profiles` (real movers), not standalone people.
+3. Both roles get full CRUD on Fleet.
+4. SmartMoving + Mapbox + location-ingest edge functions are ported.
 
-## Database (migration)
+## Step 1 — Database migration (one migration, additive only)
 
-Reuse existing `shift_clock_entries` and `shift_breaks` tables (already in schema). Add:
+New `app_role` enum value: `warehouse_keeper`.
 
-- New table `mover_shift_qr_tokens` — stores the two active tokens (`action`: `'in' | 'out'`, `token`, `created_by`, `created_at`, `is_active`). RLS: admins manage; authenticated movers can call a SECURITY DEFINER function `redeem_mover_shift_qr(token, action)` that validates the token and inserts/updates `shift_clock_entries` for `auth.uid()`.
-- RLS update on `shift_clock_entries`: allow movers to view their own rows; allow admins to view all (already partially present — verify and extend if missing).
-- SECURITY DEFINER helper `admin_list_mover_shifts(start_date, end_date, mover_id?)` returning aggregated rows for the admin dashboard.
+New tables (all under `public`, all with `GRANT … TO authenticated` + `service_role`, RLS enabled, policies use existing `has_role()`):
 
-## Mover cabinet changes
+| Table | Purpose | Write access |
+|---|---|---|
+| `inventory_categories` | warehouse item categories | warehouse_keeper, admin |
+| `inventory_items` | stock catalog (name, uom, qty, min_stock) | warehouse_keeper, admin |
+| `trucks` | fleet vehicles | warehouse_keeper, operations_manager, admin |
+| `truck_inventory` | per-truck stock | warehouse_keeper, operations_manager, admin |
+| `job_types` + `job_type_requirements` | templates | operations_manager, admin |
+| `inv_job_orders` | job orders (renamed to avoid collision with existing `job_assignments`) | operations_manager, admin |
+| `purchases` | restock log | warehouse_keeper, admin |
+| `daily_locks` | end-of-day inventory lock | warehouse_keeper, admin |
+| `inv_audit_logs` | inventory audit trail | system insert; admin read |
+| `warehouse_zones` | warehouse-map zones | warehouse_keeper, admin |
+| `warehouse_zone_items` | items per zone | warehouse_keeper, admin |
+| `crews` | named crew (date, lead) | operations_manager, admin |
+| `crew_members` (`user_id → profiles.id`) | crew↔mover link | operations_manager, admin |
+| `crew_assignments` (`crew_id`, `inv_job_order_id`) | crew↔job link | operations_manager, admin |
+| `planning_routes` + `planning_stops` | optimized routes | operations_manager, admin |
+| `mover_location_pings` | live GPS for crew tracking | mover insert self; ops_manager/warehouse_keeper/admin read |
 
-New page/component `MoverShiftClock.tsx` added to `MoverDashboard` sidebar as **"Shift Clock"**:
-- Big "Scan Clock-In QR" / "Scan Clock-Out QR" buttons using `@capacitor-community/barcode-scanner` on native and `html5-qrcode` web fallback.
-- Shows current status (Clocked In since HH:mm / Not on shift), today's worked time, last 30 days history.
+Read access: `operations_manager` and `warehouse_keeper` can read all of the above (so Fleet works on both sides; Ops can see warehouse stock when building job orders).
 
-New public route `/mover/clock` that:
-- Reads `?action=in|out&token=…` from URL.
-- If not logged in → redirects to `/auth` then back.
-- Calls `redeem_mover_shift_qr` RPC and shows success/failure toast.
+Reuse existing `has_role()` (already present, no need to recreate).
 
-## Admin cabinet changes
+> Note: this is purely **additive**. No existing column or policy is modified, so the current Mover / Admin / HR / Accountant / etc. cabinets are unaffected.
 
-New tab inside `AdminShiftManagement.tsx` (or new component `AdminMoverShifts.tsx` mounted in admin sidebar) called **"Mover Shifts (QR)"**:
+## Step 2 — Edge functions (port from source project)
 
-1. **QR Codes panel**
-   - Renders both QR codes (Clock-In green, Clock-Out red) using existing `qrcode` package (already used in `AnonymousFeedbackQRCode.tsx`).
-   - Buttons: Download PNG (each), Print (window.print with print stylesheet), Regenerate token (invalidates old QR — confirmation dialog).
+Copy and adapt to this project's auth + secrets:
 
-2. **Active Now**
-   - Live list of movers currently clocked in (entries with `clock_out IS NULL`), elapsed time, last scan time.
+- `sync-smartmoving-jobs`, `sync-workers`, `fetch-smartmoving-crew-notes`
+- `optimize-routes`
+- `receive-mover-location`, `report-job-confirmation`, `notify-job-assignment`
+- Reuse existing `get-mapbox-token` (already deployed here).
 
-3. **History / Reporting**
-   - Calendar date-range filter, optional mover filter (SearchableSelect, movers only).
-   - Table: Mover • Date • Clock In • Clock Out • Net hours.
-   - Footer totals: total hours per mover, grand total.
-   - Export to Excel (reuse `src/lib/exportToExcel.ts`).
+Required secrets to add (via `add_secret` when ready): `SMARTMOVING_API_KEY`, `SMARTMOVING_API_URL`, plus any SmartMoving webhook secret.
 
-## Technical details
+## Step 3 — Role & permission wiring
 
-- Packages to add: `html5-qrcode` (web QR scanner). Capacitor barcode plugin is optional and only used when `Capacitor.isNativePlatform()` — graceful fallback to camera-based web scan.
-- QR payload format: `${window.location.origin}/mover/clock?action=in&token=<uuid>`.
-- Tokens are rotated only on admin demand; printed QRs remain valid until regenerated.
-- All clock times stored UTC, displayed via existing `formatInEST` (EST rule from project memory).
-- Mover role check: gated by `has_role(auth.uid(), 'mover')` in the RPC; admins blocked from clocking via QR.
-- No changes to existing office-staff shift flow (`AdminShiftManagement` keeps its current scope).
-- Add red-dot indicator in admin sidebar when ≥1 mover is currently clocked in (optional, per memory pattern).
+- Add `warehouse_keeper` to `availableRoles` and `roleDisplayNames` in `src/components/dashboard/UserRoleManager.tsx`.
+- Add `warehouse_keeper` to the priority ladder in `src/pages/Dashboard.tsx` and render a new `WarehouseKeeperDashboard`.
+- Add `warehouse_keeper` to the `UserRole` union type.
 
-## Files
+## Step 4 — New cabinet: Warehouse Keeper
 
-**New**
-- `supabase/migrations/<ts>_mover_shift_qr.sql`
-- `src/components/dashboard/MoverShiftClock.tsx`
-- `src/components/dashboard/AdminMoverShifts.tsx`
-- `src/pages/MoverClockRedeem.tsx` (route `/mover/clock`)
-- `src/lib/qrScanner.ts` (thin wrapper around html5-qrcode + Capacitor)
+New file `src/components/dashboard/WarehouseKeeperDashboard.tsx` following the existing sidebar+content pattern (mirrors `OperationsManagerDashboard.tsx` structure for visual consistency, logo always present, EN/ES/RU support, EST timestamps).
 
-**Edited**
-- `src/App.tsx` — add `/mover/clock` route
-- `src/components/dashboard/MoverSidebar.tsx` + `MoverDashboard.tsx` — add Shift Clock entry
-- `src/components/dashboard/AdminSidebar.tsx` + `AdminDashboard.tsx` — add Mover Shifts entry
-- `package.json` — add `html5-qrcode`
+Tabs: **Warehouse**, **Live Map**, **Fleet**, **Purchases**, **Reports**, **Chat**, **Settings**.
 
-## Open question
+## Step 5 — Operations Manager cabinet additions
 
-Do you want a **single QR per action that all movers share** (simpler — print once, post at office), or **per-mover QR codes** (more secure, individual accountability, admin prints a sheet)? Plan above assumes the **shared two-QR** model — confirm or I'll switch to per-mover.
+Edit `src/components/dashboard/OperationsManagerDashboard.tsx` to add tabs: **Fleet**, **Job Orders**, **Planning**, **Crew Tracking**, **Crews** — appended after existing tabs so current behavior is preserved.
+
+## Step 6 — Feature components (ported from source, adapted to shadcn/Tailwind tokens already used here)
+
+New folder `src/components/dashboard/inventory/`:
+
+- `FleetManager.tsx` (shared by both cabinets)
+- `JobOrdersManager.tsx`
+- `PlanningBoard.tsx` + `RouteSuggestionDialog.tsx`
+- `CrewTrackingMap.tsx` (uses `useMapboxToken` + `mover_location_pings`)
+- `CrewsManager.tsx` + `AssignCrewDialog.tsx` (uses `SearchableSelect` filtered to movers — per existing project rule)
+- `WarehouseManager.tsx` (items, categories, daily-lock)
+- `WarehouseLiveMap.tsx` + `WarehouseCanvas.tsx` + `ZoneEditorDialog.tsx` + `ZoneDetailsDrawer.tsx` + `ZoneItemsList.tsx` + `AnalyticsWidgets.tsx`
+- `PurchasesManager.tsx`
+- `ReportsDashboard.tsx`
+
+All UI follows project standards already in memory: SearchableSelect for user pickers (admins/accountants filtered out for mover lists), transparent file-input overlay for uploads, calendars auto-close, "Approved" terminology, removable file uploads, EST timestamps, multilingual EN/ES/RU.
+
+## Step 7 — Mobile parity
+
+Add the new tabs to the mobile horizontal nav in both dashboards (same pattern used for "Shift Clock" addition).
+
+## Step 8 — Verification
+
+- Build passes.
+- Existing Mover / Admin / Accountant / HR / Reviews / Office cabinets render unchanged.
+- New roles' RLS policies tested via SQL: an `operations_manager` user cannot write to `purchases`; a `warehouse_keeper` cannot write to `inv_job_orders`; both can read/write `trucks` and `truck_inventory`.
+- Live map shows pings only to allowed roles.
+
+## Open items handled at build time (will request from you in build mode)
+
+- SmartMoving API credentials (added via `add_secret` only when you confirm you want to enable sync).
+- Optional: copy any seed data (job types, categories) from source project via CSV.
+
+## Out of scope (explicit)
+
+- No changes to: Android, push notification architecture, existing tables, existing edge functions, mover compliance flows, Checkr, handbook, consent, chat, feed, shift clock.
+- No deletion of any feature.
+- No iOS workflow changes (already shipped in earlier turns).
+
+## Rough effort
+
+~1 large DB migration, ~7 edge functions ported, ~12 new React components, 2 dashboards edited, 1 dashboard created, ~3 small wiring edits. Single build mode session can deliver it in 2–3 batches.
