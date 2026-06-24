@@ -32,7 +32,7 @@ interface Props {
 }
 
 interface Mover { id: string; first_name: string; last_name: string; }
-interface Crew { id: string; name: string; }
+interface Crew { id: string; name: string; crew_date?: string | null; }
 interface Truck { id: string; truck_number: string; }
 interface ExistingAssignment {
   mover_id: string;
@@ -74,7 +74,7 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
             .select("id, first_name, last_name, user_roles!inner(role)")
             .eq("user_roles.role", "mover")
             .order("first_name"),
-          supabase.from("crews").select("id, name").order("crew_date", { ascending: false }).limit(100),
+          supabase.from("crews").select("id, name, crew_date").order("crew_date", { ascending: false }).limit(200),
           supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
           supabase
             .from("inv_job_orders")
@@ -231,7 +231,7 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
                 <SearchableSelect
                   value={form.crew_id}
                   onValueChange={applyCrewTemplate}
-                  options={[{ value: "none", label: "— Ad-hoc —" }, ...crews.map(c => ({ value: c.id, label: c.name }))]}
+                  options={[{ value: "none", label: "— Ad-hoc —" }, ...crews.map(c => ({ value: c.id, label: c.crew_date ? `${c.name} · ${c.crew_date}` : c.name }))]}
                   placeholder="Select crew"
                   searchPlaceholder="Search crews..."
                   emptyMessage="No crews"

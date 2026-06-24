@@ -23,6 +23,7 @@ const CrewsManager = ({ userId }: Props) => {
   const [members, setMembers] = useState<Record<string, { id: string; user_id: string; name: string }[]>>({});
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", crew_date: new Date().toISOString().slice(0,10), lead_user_id: "", truck_id: "" });
+  const [extraMembers, setExtraMembers] = useState<string[]>([""]);
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const [memberPick, setMemberPick] = useState("");
 
@@ -56,17 +57,47 @@ const CrewsManager = ({ userId }: Props) => {
 
   const createCrew = async () => {
     if (!form.name || !form.crew_date) return toast.error("Name and date required");
-    const { error } = await supabase.from("crews").insert([{
+    const { data: created, error } = await supabase.from("crews").insert([{
       name: form.name, crew_date: form.crew_date,
       lead_user_id: form.lead_user_id || null, truck_id: form.truck_id || null,
       created_by: userId,
-    }]);
-    if (error) return toast.error(handleError(error));
+    }]).select("id").single();
+    if (error || !created) return toast.error(handleError(error));
+
+    // Insert lead + extra members into crew_members (dedup, skip empties)
+    const memberIds = Array.from(new Set(
+      [form.lead_user_id, ...extraMembers].filter((x) => x && x.trim() !== "")
+    ));
+    if (memberIds.length > 0) {
+      const { error: mErr } = await supabase
+        .from("crew_members")
+        .insert(memberIds.map((uid) => ({ crew_id: created.id, user_id: uid })));
+      if (mErr) toast.error(handleError(mErr));
+    }
+
     toast.success("Crew created");
     setOpen(false);
-    setForm({ ...form, name: "" });
+    setForm({ name: "", crew_date: new Date().toISOString().slice(0,10), lead_user_id: "", truck_id: "" });
+    setExtraMembers([""]);
     load();
   };
+
+  const updateExtraMember = (index: number, value: string) => {
+    setExtraMembers((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      // Auto-append a new empty slot when the last slot just got filled
+      if (value && index === next.length - 1) next.push("");
+      return next;
+    });
+  };
+  const removeExtraMember = (index: number) => {
+    setExtraMembers((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return next.length === 0 ? [""] : next;
+    });
+  };
+
 
   const addMember = async (crewId: string) => {
     if (!memberPick) return;
@@ -102,12 +133,45 @@ const CrewsManager = ({ userId }: Props) => {
                   options={movers.map(m => ({ value: m.id, label: `${m.first_name} ${m.last_name}` }))}
                   placeholder="Select lead" searchPlaceholder="Search movers..." emptyMessage="No movers" />
               </div>
+
+              {form.lead_user_id && (
+                <div className="space-y-2">
+                  <Label>Additional crew members</Label>
+                  <p className="text-xs text-muted-foreground">A new slot is added automatically once the previous one is filled.</p>
+                  {extraMembers.map((val, i) => {
+                    const taken = new Set([form.lead_user_id, ...extraMembers.filter((_, j) => j !== i)]);
+                    const opts = movers
+                      .filter(m => !taken.has(m.id))
+                      .map(m => ({ value: m.id, label: `${m.first_name} ${m.last_name}` }));
+                    return (
+                      <div key={i} className="flex gap-2">
+                        <SearchableSelect
+                          value={val}
+                          onValueChange={(v) => updateExtraMember(i, v)}
+                          options={opts}
+                          placeholder={`Member ${i + 1}`}
+                          searchPlaceholder="Search movers..."
+                          emptyMessage="No movers"
+                          triggerClassName="flex-1"
+                        />
+                        {(val || extraMembers.length > 1) && (
+                          <Button type="button" size="sm" variant="ghost" onClick={() => removeExtraMember(i)}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <div><Label>Truck</Label>
                 <SearchableSelect value={form.truck_id} onValueChange={v => setForm({ ...form, truck_id: v })}
                   options={trucks.map(t => ({ value: t.id, label: t.truck_number }))}
                   placeholder="Select truck" searchPlaceholder="Search..." emptyMessage="None" />
               </div>
             </div>
+
             <DialogFooter><Button onClick={createCrew}>Create</Button></DialogFooter>
           </DialogContent>
         </Dialog>
