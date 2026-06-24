@@ -1439,6 +1439,7 @@ export type Database = {
           job_type_id: string | null
           notes: string | null
           pickup_address: string | null
+          planned_from_smartmoving_id: string | null
           smartmoving_id: string | null
           status: string
           truck_id: string | null
@@ -1455,6 +1456,7 @@ export type Database = {
           job_type_id?: string | null
           notes?: string | null
           pickup_address?: string | null
+          planned_from_smartmoving_id?: string | null
           smartmoving_id?: string | null
           status?: string
           truck_id?: string | null
@@ -1471,6 +1473,7 @@ export type Database = {
           job_type_id?: string | null
           notes?: string | null
           pickup_address?: string | null
+          planned_from_smartmoving_id?: string | null
           smartmoving_id?: string | null
           status?: string
           truck_id?: string | null
@@ -2748,6 +2751,66 @@ export type Database = {
         }
         Relationships: []
       }
+      planning_jobs: {
+        Row: {
+          address: string | null
+          branch_name: string | null
+          created_at: string
+          customer_name: string | null
+          end_time: string | null
+          estimated_total: number | null
+          id: string
+          job_number: string | null
+          job_type: string | null
+          last_synced_at: string
+          move_size: string | null
+          raw: Json | null
+          service_date: string | null
+          smartmoving_id: string
+          start_time: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          branch_name?: string | null
+          created_at?: string
+          customer_name?: string | null
+          end_time?: string | null
+          estimated_total?: number | null
+          id?: string
+          job_number?: string | null
+          job_type?: string | null
+          last_synced_at?: string
+          move_size?: string | null
+          raw?: Json | null
+          service_date?: string | null
+          smartmoving_id: string
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          branch_name?: string | null
+          created_at?: string
+          customer_name?: string | null
+          end_time?: string | null
+          estimated_total?: number | null
+          id?: string
+          job_number?: string | null
+          job_type?: string | null
+          last_synced_at?: string
+          move_size?: string | null
+          raw?: Json | null
+          service_date?: string | null
+          smartmoving_id?: string
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       planning_routes: {
         Row: {
           created_at: string
@@ -2855,6 +2918,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      planning_sync_runs: {
+        Row: {
+          error: string | null
+          fetched_count: number
+          finished_at: string | null
+          from_date: string | null
+          id: string
+          started_at: string
+          status: string
+          to_date: string | null
+          triggered_by: string | null
+          upserted_count: number
+        }
+        Insert: {
+          error?: string | null
+          fetched_count?: number
+          finished_at?: string | null
+          from_date?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          to_date?: string | null
+          triggered_by?: string | null
+          upserted_count?: number
+        }
+        Update: {
+          error?: string | null
+          fetched_count?: number
+          finished_at?: string | null
+          from_date?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          to_date?: string | null
+          triggered_by?: string | null
+          upserted_count?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
