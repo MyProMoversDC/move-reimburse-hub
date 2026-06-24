@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Plus, ClipboardList, Trash2 } from "lucide-react";
+import { Plus, ClipboardList, Trash2, UserCheck } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
+import AssignMoversDialog from "./AssignMoversDialog";
 
 interface Row {
   id: string;
@@ -32,6 +33,8 @@ const JobOrdersManager = ({ userId }: Props) => {
   const [jobTypes, setJobTypes] = useState<{ id: string; name: string }[]>([]);
   const [trucks, setTrucks] = useState<{ id: string; truck_number: string }[]>([]);
   const [open, setOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<Row | null>(null);
+  const [assignedCounts, setAssignedCounts] = useState<Record<string, { total: number; pending: number; confirmed: number; declined: number }>>({});
   const [form, setForm] = useState({
     job_number: "", client_name: "", job_date: new Date().toISOString().slice(0,10),
     job_type_id: "", truck_id: "", pickup_address: "", dropoff_address: "", notes: "", status: "pending"
@@ -46,7 +49,29 @@ const JobOrdersManager = ({ userId }: Props) => {
     if (j.error) toast.error(handleError(j.error)); else setRows((j.data || []) as Row[]);
     if (!t.error) setJobTypes(t.data || []);
     if (!tr.error) setTrucks(tr.data || []);
+    await loadAssignedCounts((j.data || []).map((x: any) => x.id));
   };
+
+  const loadAssignedCounts = async (jobIds: string[]) => {
+    if (jobIds.length === 0) { setAssignedCounts({}); return; }
+    const { data, error } = await supabase
+      .from("job_assignments")
+      .select("external_job_id, mover_job_assignments(status)")
+      .in("external_job_id", jobIds);
+    if (error) return;
+    const counts: typeof assignedCounts = {};
+    (data ?? []).forEach((row: any) => {
+      const list = (row.mover_job_assignments ?? []) as { status: string }[];
+      counts[row.external_job_id] = {
+        total: list.length,
+        pending: list.filter(m => m.status === "pending").length,
+        confirmed: list.filter(m => m.status === "confirmed" || m.status === "in_progress" || m.status === "completed").length,
+        declined: list.filter(m => m.status === "declined").length,
+      };
+    });
+    setAssignedCounts(counts);
+  };
+
   useEffect(() => { load(); }, []);
 
   const create = async () => {
@@ -115,12 +140,14 @@ const JobOrdersManager = ({ userId }: Props) => {
           <TableHeader>
             <TableRow>
               <TableHead>Job #</TableHead><TableHead>Client</TableHead><TableHead>Date</TableHead>
-              <TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead>Status</TableHead><TableHead>Movers</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>
-            : rows.map(r => (
+            {rows.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>
+            : rows.map(r => {
+              const c = assignedCounts[r.id];
+              return (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.job_number}</TableCell>
                 <TableCell>{r.client_name}</TableCell>
@@ -131,14 +158,36 @@ const JobOrdersManager = ({ userId }: Props) => {
                     <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                   </select>
                 </TableCell>
+                <TableCell className="text-xs">
+                  {!c || c.total === 0 ? <span className="text-muted-foreground">None</span> : (
+                    <div className="flex flex-wrap gap-1">
+                      {c.pending > 0 && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">{c.pending} pending</Badge>}
+                      {c.confirmed > 0 && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{c.confirmed} accepted</Badge>}
+                      {c.declined > 0 && <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">{c.declined} declined</Badge>}
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => setAssignTarget(r)} title="Assign / view movers">
+                    <UserCheck className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </CardContent>
+      {assignTarget && (
+        <AssignMoversDialog
+          open={!!assignTarget}
+          onOpenChange={(o) => !o && setAssignTarget(null)}
+          jobOrderId={assignTarget.id}
+          jobNumber={assignTarget.job_number}
+          clientName={assignTarget.client_name}
+          onAssigned={load}
+        />
+      )}
     </Card>
   );
 };
