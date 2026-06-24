@@ -286,7 +286,7 @@ Deno.serve(async (req) => {
       fetched_count: items.length, upserted_count: upserted,
     }).eq("id", runId);
 
-    return new Response(JSON.stringify({ success: true, fetched: items.length, upserted, fromDate, toDate: toDateStr }), {
+    return new Response(JSON.stringify({ success: true, fetched: items.length, upserted, job_orders_upserted: jobOrdersUpserted, fromDate, toDate: toDateStr }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
