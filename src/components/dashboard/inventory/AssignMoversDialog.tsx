@@ -63,7 +63,6 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   const [movers, setMovers] = useState<Mover[]>([]);
   const [existing, setExisting] = useState<ExistingAssignment[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
