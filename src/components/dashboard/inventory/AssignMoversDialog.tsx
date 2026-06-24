@@ -100,14 +100,6 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
 
   const alreadyAssigned = new Set(existing.map((e) => e.mover_id));
 
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
   const submit = async () => {
     if (selected.size === 0) return toast.error("Select at least one mover");
     setSubmitting(true);
@@ -128,10 +120,6 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
     }
   };
 
-  const filtered = movers.filter((m) => {
-    const name = `${m.first_name ?? ""} ${m.last_name ?? ""}`.toLowerCase();
-    return name.includes(search.toLowerCase());
-  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
