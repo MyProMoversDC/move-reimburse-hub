@@ -144,24 +144,38 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
           <>
             {existing.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Current assignments</Label>
-                <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
-                  {existing.map((e) => (
-                    <div key={e.mover_id} className="p-2 text-sm flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-medium">{e.first_name ?? ""} {e.last_name ?? ""}</div>
-                        <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
-                          {e.responded_at && <div>Responded: {fmtEst(e.responded_at)}</div>}
-                          {e.decline_reason && <div className="text-red-700 dark:text-red-300">Reason: {e.decline_reason}</div>}
-                          {e.arrived_parking_at && <div>Arrived parking: {fmtEst(e.arrived_parking_at)}</div>}
-                          {e.arrived_site_at && <div>Arrived site: {fmtEst(e.arrived_site_at)}</div>}
-                          {e.started_at && <div>Started: {fmtEst(e.started_at)}</div>}
-                          {e.ended_at && <div>Ended: {fmtEst(e.ended_at)}</div>}
+                <Label className="text-sm font-semibold">Crew assignments & history log</Label>
+                <div className="border rounded-lg divide-y max-h-72 overflow-y-auto">
+                  {existing.map((e) => {
+                    const events: { at: string; label: string }[] = [];
+                    if (e.created_at) events.push({ at: e.created_at, label: "Assigned by Ops Manager" });
+                    if (e.responded_at) events.push({ at: e.responded_at, label: e.status === "declined" ? `Declined${e.decline_reason ? ` — ${e.decline_reason}` : ""}` : "Accepted job" });
+                    if (e.arrived_parking_at) events.push({ at: e.arrived_parking_at, label: "Arrived at parking lot" });
+                    if (e.moving_to_site_at) events.push({ at: e.moving_to_site_at, label: "Moving to customer site (GPS tracking on)" });
+                    if (e.arrived_site_at) events.push({ at: e.arrived_site_at, label: "Arrived at customer site" });
+                    if (e.ended_at) events.push({ at: e.ended_at, label: "Completed job (tracking stopped)" });
+                    events.sort((a, b) => a.at.localeCompare(b.at));
+                    return (
+                      <div key={e.mover_id} className="p-3 text-sm">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="font-medium">{e.first_name ?? ""} {e.last_name ?? ""}</div>
+                          <Badge className={statusBadge(e.status)}>{e.status.replace("_", " ")}</Badge>
                         </div>
+                        {events.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No activity yet.</p>
+                        ) : (
+                          <ol className="space-y-1 border-l-2 border-muted pl-3">
+                            {events.map((ev, i) => (
+                              <li key={i} className="text-xs">
+                                <span className="text-muted-foreground">{fmtEst(ev.at)} — </span>
+                                <span>{ev.label}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        )}
                       </div>
-                      <Badge className={statusBadge(e.status)}>{e.status.replace("_", " ")}</Badge>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
