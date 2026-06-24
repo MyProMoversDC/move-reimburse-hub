@@ -32,7 +32,7 @@ interface Props {
 }
 
 interface Mover { id: string; first_name: string; last_name: string; }
-interface Crew { id: string; name: string; }
+interface Crew { id: string; name: string; crew_date?: string | null; }
 interface Truck { id: string; truck_number: string; }
 interface ExistingAssignment {
   mover_id: string;
