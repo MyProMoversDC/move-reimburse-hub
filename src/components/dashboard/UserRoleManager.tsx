@@ -32,7 +32,7 @@ interface UserRoleManagerProps {
   language: DashboardLanguage;
 }
 
-const availableRoles = ["mover", "admin", "accountant", "operations_manager", "reviews_admin", "hr_manager", "office_staff"] as const;
+const availableRoles = ["mover", "admin", "accountant", "operations_manager", "reviews_admin", "hr_manager", "office_staff", "warehouse_keeper"] as const;
 
 const roleColors: Record<string, string> = {
   mover: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
@@ -42,6 +42,7 @@ const roleColors: Record<string, string> = {
   reviews_admin: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
   hr_manager: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
   office_staff: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300",
+  warehouse_keeper: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
 };
 
 const roleDisplayNames: Record<string, string> = {
@@ -52,6 +53,7 @@ const roleDisplayNames: Record<string, string> = {
   reviews_admin: "Customer Review Manager",
   hr_manager: "HR Manager",
   office_staff: "Office Staff",
+  warehouse_keeper: "Warehouse Keeper",
 };
 
 const UserRoleManager = ({ language }: UserRoleManagerProps) => {
@@ -99,7 +101,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
   };
 
   const handleAddRole = async (userId: string) => {
-    const role = selectedRole[userId] as "mover" | "admin" | "accountant" | "operations_manager";
+    const role = selectedRole[userId] as "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff" | "warehouse_keeper";
     if (!role) {
       toast.error("Please select a role to add");
       return;
@@ -139,7 +141,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
         .from("user_roles")
         .delete()
         .eq("user_id", userId)
-        .eq("role", role as "mover" | "admin" | "accountant" | "operations_manager");
+        .eq("role", role as "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff" | "warehouse_keeper");
 
       if (error) throw error;
 

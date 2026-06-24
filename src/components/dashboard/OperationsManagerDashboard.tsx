@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Shield, MessageSquare, Wine, DollarSign, GraduationCap, Clock } from "lucide-react";
+import { FileText, Shield, MessageSquare, Wine, DollarSign, GraduationCap, Clock, Truck, ClipboardList, Map, MapPin, Users } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PerformanceReportsList from "./PerformanceReportsList";
@@ -11,6 +11,11 @@ import ChatContainer from "./chat/ChatContainer";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
+import FleetManager from "./inventory/FleetManager";
+import JobOrdersManager from "./inventory/JobOrdersManager";
+import PlanningBoard from "./inventory/PlanningBoard";
+import CrewTrackingMap from "./inventory/CrewTrackingMap";
+import CrewsManager from "./inventory/CrewsManager";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +31,11 @@ const navItems = [
   { id: "chat", label: "Chat", shortLabel: "Chat", icon: MessageSquare },
   { id: "shift-schedule", label: "Shift Schedule", shortLabel: "Schedule", icon: Clock },
   { id: "knowledge-base", label: "Knowledge Base", shortLabel: "KB", icon: GraduationCap },
+  { id: "fleet", label: "Fleet", shortLabel: "Fleet", icon: Truck },
+  { id: "job-orders", label: "Job Orders", shortLabel: "Jobs", icon: ClipboardList },
+  { id: "planning", label: "Planning", shortLabel: "Plan", icon: Map },
+  { id: "crew-tracking", label: "Crew Tracking", shortLabel: "Track", icon: MapPin },
+  { id: "crews", label: "Crews", shortLabel: "Crews", icon: Users },
 ] as const;
 
 const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps) => {
@@ -122,6 +132,11 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           {activeTab === "knowledge-base" && (
             <KnowledgeBaseViewer userId={userId} />
           )}
+          {activeTab === "fleet" && <FleetManager />}
+          {activeTab === "job-orders" && <JobOrdersManager userId={userId} />}
+          {activeTab === "planning" && <PlanningBoard userId={userId} />}
+          {activeTab === "crew-tracking" && <CrewTrackingMap />}
+          {activeTab === "crews" && <CrewsManager userId={userId} />}
         </div>
       </div>
 
@@ -171,6 +186,11 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
             <KnowledgeBaseViewer userId={userId} />
           </div>
         )}
+        {activeTab === "fleet" && <FleetManager />}
+        {activeTab === "job-orders" && <JobOrdersManager userId={userId} />}
+        {activeTab === "planning" && <PlanningBoard userId={userId} />}
+        {activeTab === "crew-tracking" && <CrewTrackingMap />}
+        {activeTab === "crews" && <CrewsManager userId={userId} />}
       </div>
     </div>
   );
