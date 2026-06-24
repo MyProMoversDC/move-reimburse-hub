@@ -253,12 +253,40 @@ Deno.serve(async (req) => {
       upserted = count ?? rows.length;
     }
 
+    // Mirror booked jobs into inv_job_orders so Ops Manager can see and assign movers
+    // directly from the Job Orders tab. Uniqueness is enforced on job_number.
+    let jobOrdersUpserted = 0;
+    const jobOrderRows = rows
+      .filter((r: any) => r.job_number && r.service_date)
+      .map((r: any) => ({
+        job_number: r.job_number,
+        client_name: r.customer_name || "SmartMoving customer",
+        job_date: r.service_date,
+        pickup_address: r.address ?? null,
+        notes: r.move_size ? `Move size: ${r.move_size}` : null,
+        status: "pending",
+        smartmoving_id: r.smartmoving_id,
+        planned_from_smartmoving_id: r.smartmoving_id,
+        created_by: u.user.id,
+      }));
+    if (jobOrderRows.length) {
+      const { error: joErr, count: joCount } = await admin
+        .from("inv_job_orders")
+        .upsert(jobOrderRows, { onConflict: "job_number", ignoreDuplicates: false, count: "exact" });
+      if (joErr) {
+        console.error("inv_job_orders upsert error:", joErr.message);
+      } else {
+        jobOrdersUpserted = joCount ?? jobOrderRows.length;
+      }
+    }
+
+
     if (runId) await admin.from("planning_sync_runs").update({
       status: "success", finished_at: new Date().toISOString(),
       fetched_count: items.length, upserted_count: upserted,
     }).eq("id", runId);
 
-    return new Response(JSON.stringify({ success: true, fetched: items.length, upserted, fromDate, toDate: toDateStr }), {
+    return new Response(JSON.stringify({ success: true, fetched: items.length, upserted, job_orders_upserted: jobOrdersUpserted, fromDate, toDate: toDateStr }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

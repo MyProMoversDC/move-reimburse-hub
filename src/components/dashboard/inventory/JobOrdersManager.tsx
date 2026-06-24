@@ -37,6 +37,8 @@ const JobOrdersManager = ({ userId }: Props) => {
   const [assignedCounts, setAssignedCounts] = useState<Record<string, { total: number; pending: number; confirmed: number; declined: number }>>({});
   const [search, setSearch] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const [form, setForm] = useState({
     job_number: "", client_name: "", job_date: new Date().toISOString().slice(0,10),
     job_type_id: "", truck_id: "", pickup_address: "", dropoff_address: "", notes: "", status: "pending"
@@ -44,7 +46,7 @@ const JobOrdersManager = ({ userId }: Props) => {
 
   const load = async () => {
     const [j, t, tr] = await Promise.all([
-      supabase.from("inv_job_orders").select("*").order("job_date", { ascending: false }).limit(200),
+      supabase.from("inv_job_orders").select("*").order("job_date", { ascending: true }).limit(2000),
       supabase.from("job_types").select("id,name").order("name"),
       supabase.from("trucks").select("id,truck_number").eq("is_active", true).order("truck_number"),
     ]);
@@ -75,6 +77,7 @@ const JobOrdersManager = ({ userId }: Props) => {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { setPage(1); }, [search, filterDate]);
 
   const create = async () => {
     if (!form.job_number || !form.client_name || !form.job_date) return toast.error("Job number, client, date required");
@@ -175,7 +178,11 @@ const JobOrdersManager = ({ userId }: Props) => {
               if (filteredRows.length === 0) {
                 return <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>;
               }
-              return filteredRows.map(r => {
+              const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+              const safePage = Math.min(page, totalPages);
+              const start = (safePage - 1) * PAGE_SIZE;
+              const pageRows = filteredRows.slice(start, start + PAGE_SIZE);
+              return pageRows.map(r => {
               const c = assignedCounts[r.id];
               return (
               <TableRow key={r.id}>
@@ -208,7 +215,31 @@ const JobOrdersManager = ({ userId }: Props) => {
             })()}
           </TableBody>
         </Table>
+        {(() => {
+          const q = search.trim().toLowerCase();
+          const total = rows.filter(r => {
+            if (filterDate && r.job_date !== filterDate) return false;
+            if (q && !`${r.job_number} ${r.client_name}`.toLowerCase().includes(q)) return false;
+            return true;
+          }).length;
+          const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+          const safePage = Math.min(page, totalPages);
+          if (total === 0) return null;
+          const first = (safePage - 1) * PAGE_SIZE + 1;
+          const last = Math.min(safePage * PAGE_SIZE, total);
+          return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 border-t bg-muted/30 text-sm">
+              <div className="text-muted-foreground">Showing {first}–{last} of {total}</div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" disabled={safePage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</Button>
+                <span>Page {safePage} of {totalPages}</span>
+                <Button size="sm" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</Button>
+              </div>
+            </div>
+          );
+        })()}
       </CardContent>
+
 
       {assignTarget && (
         <AssignMoversDialog
