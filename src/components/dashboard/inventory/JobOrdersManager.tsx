@@ -44,7 +44,7 @@ const JobOrdersManager = ({ userId }: Props) => {
 
   const load = async () => {
     const [j, t, tr] = await Promise.all([
-      supabase.from("inv_job_orders").select("*").order("job_date", { ascending: false }).limit(200),
+      supabase.from("inv_job_orders").select("*").order("job_date", { ascending: true }).limit(2000),
       supabase.from("job_types").select("id,name").order("name"),
       supabase.from("trucks").select("id,truck_number").eq("is_active", true).order("truck_number"),
     ]);
