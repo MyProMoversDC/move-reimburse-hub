@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Loader2 } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
+import MoverAutocomplete from "./MoverAutocomplete";
 
 interface PlanningJob {
   id: string;
