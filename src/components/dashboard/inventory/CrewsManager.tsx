@@ -57,17 +57,47 @@ const CrewsManager = ({ userId }: Props) => {
 
   const createCrew = async () => {
     if (!form.name || !form.crew_date) return toast.error("Name and date required");
-    const { error } = await supabase.from("crews").insert([{
+    const { data: created, error } = await supabase.from("crews").insert([{
       name: form.name, crew_date: form.crew_date,
       lead_user_id: form.lead_user_id || null, truck_id: form.truck_id || null,
       created_by: userId,
-    }]);
-    if (error) return toast.error(handleError(error));
+    }]).select("id").single();
+    if (error || !created) return toast.error(handleError(error));
+
+    // Insert lead + extra members into crew_members (dedup, skip empties)
+    const memberIds = Array.from(new Set(
+      [form.lead_user_id, ...extraMembers].filter((x) => x && x.trim() !== "")
+    ));
+    if (memberIds.length > 0) {
+      const { error: mErr } = await supabase
+        .from("crew_members")
+        .insert(memberIds.map((uid) => ({ crew_id: created.id, user_id: uid })));
+      if (mErr) toast.error(handleError(mErr));
+    }
+
     toast.success("Crew created");
     setOpen(false);
-    setForm({ ...form, name: "" });
+    setForm({ name: "", crew_date: new Date().toISOString().slice(0,10), lead_user_id: "", truck_id: "" });
+    setExtraMembers([""]);
     load();
   };
+
+  const updateExtraMember = (index: number, value: string) => {
+    setExtraMembers((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      // Auto-append a new empty slot when the last slot just got filled
+      if (value && index === next.length - 1) next.push("");
+      return next;
+    });
+  };
+  const removeExtraMember = (index: number) => {
+    setExtraMembers((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return next.length === 0 ? [""] : next;
+    });
+  };
+
 
   const addMember = async (crewId: string) => {
     if (!memberPick) return;
