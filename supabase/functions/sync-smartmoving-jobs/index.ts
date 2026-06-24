@@ -215,8 +215,8 @@ Deno.serve(async (req) => {
       const c = it.customer ?? {}, o = it.opportunity ?? {}, j = it.job ?? {};
       const id = String(pick(j, "id", "Id") ?? "");
       if (!id) return null;
-      const customerName = pick<string>(c, "name","fullName","Name","FullName")
-        ?? [pick<string>(c,"firstName","FirstName"), pick<string>(c,"lastName","LastName")].filter(Boolean).join(" ") || null;
+      const customerName = (pick<string>(c, "name","fullName","Name","FullName")
+        ?? [pick<string>(c,"firstName","FirstName"), pick<string>(c,"lastName","LastName")].filter(Boolean).join(" ")) || null;
       const serviceDate = toDate(pick(j, "serviceDate","ServiceDate","jobDate","JobDate","date","Date"));
       const start = toIso(pick(j, "startTimeUtc","StartTimeUtc","startTime","StartTime","scheduledStart","ScheduledStart"));
       const end = toIso(pick(j, "endTimeUtc","EndTimeUtc","endTime","EndTime","scheduledEnd","ScheduledEnd"));
