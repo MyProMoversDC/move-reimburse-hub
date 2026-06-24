@@ -1560,7 +1560,7 @@ export type Database = {
       }
       job_assignments: {
         Row: {
-          callback_url: string
+          callback_url: string | null
           client_name: string
           created_at: string
           external_job_id: string
@@ -1573,7 +1573,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          callback_url: string
+          callback_url?: string | null
           client_name: string
           created_at?: string
           external_job_id: string
@@ -1586,7 +1586,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          callback_url?: string
+          callback_url?: string | null
           client_name?: string
           created_at?: string
           external_job_id?: string
@@ -3944,6 +3944,10 @@ export type Database = {
           new_stars: number
         }[]
       }
+      assign_movers_to_inv_job_order: {
+        Args: { _inv_job_id: string; _user_ids: string[] }
+        Returns: Json
+      }
       check_duplicate_invoice_number: {
         Args: { p_invoice_number: string }
         Returns: boolean
@@ -3988,6 +3992,22 @@ export type Database = {
           id: string
           last_name: string
           roles: string[]
+        }[]
+      }
+      list_inv_job_order_assignments: {
+        Args: { _inv_job_id: string }
+        Returns: {
+          arrived_parking_at: string
+          arrived_site_at: string
+          assignment_id: string
+          decline_reason: string
+          ended_at: string
+          first_name: string
+          last_name: string
+          mover_id: string
+          responded_at: string
+          started_at: string
+          status: string
         }[]
       }
       match_office_ai_chunks: {
