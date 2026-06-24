@@ -68,12 +68,8 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
     (async () => {
       setLoading(true);
       try {
-        const [moversRes, crewsRes, trucksRes, existingRes] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("id, first_name, last_name, user_roles!inner(role)")
-            .eq("user_roles.role", "mover")
-            .order("first_name"),
+        const [roleRes, crewsRes, trucksRes, existingRes] = await Promise.all([
+          supabase.from("user_roles").select("user_id").eq("role", "mover"),
           supabase.from("crews").select("id, name, crew_date").order("crew_date", { ascending: false }).limit(200),
           supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
           supabase
@@ -83,7 +79,18 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
             .maybeSingle(),
         ]);
 
-        setMovers((moversRes.data as any) ?? []);
+        const moverIds = (roleRes.data ?? []).map((r: any) => r.user_id);
+        let moversList: Mover[] = [];
+        if (moverIds.length > 0) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("id, first_name, last_name")
+            .in("id", moverIds);
+          moversList = [...(profs ?? [])].sort((a: any, b: any) =>
+            `${a.first_name ?? ""} ${a.last_name ?? ""}`.localeCompare(`${b.first_name ?? ""} ${b.last_name ?? ""}`)
+          ) as Mover[];
+        }
+        setMovers(moversList);
         setCrews(crewsRes.data ?? []);
         setTrucks(trucksRes.data ?? []);
 
