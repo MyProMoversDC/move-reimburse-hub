@@ -2010,6 +2010,7 @@ export type Database = {
           decline_reason: string | null
           ended_at: string | null
           id: string
+          moving_to_site_at: string | null
           responded_at: string | null
           started_at: string | null
           status: string
@@ -2024,6 +2025,7 @@ export type Database = {
           decline_reason?: string | null
           ended_at?: string | null
           id?: string
+          moving_to_site_at?: string | null
           responded_at?: string | null
           started_at?: string | null
           status?: string
@@ -2038,6 +2040,7 @@ export type Database = {
           decline_reason?: string | null
           ended_at?: string | null
           id?: string
+          moving_to_site_at?: string | null
           responded_at?: string | null
           started_at?: string | null
           status?: string
@@ -4102,11 +4105,13 @@ export type Database = {
           arrived_parking_at: string
           arrived_site_at: string
           assignment_id: string
+          created_at: string
           decline_reason: string
           ended_at: string
           first_name: string
           last_name: string
           mover_id: string
+          moving_to_site_at: string
           responded_at: string
           started_at: string
           status: string
