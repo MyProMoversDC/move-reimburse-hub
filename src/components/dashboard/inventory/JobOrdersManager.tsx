@@ -49,7 +49,29 @@ const JobOrdersManager = ({ userId }: Props) => {
     if (j.error) toast.error(handleError(j.error)); else setRows((j.data || []) as Row[]);
     if (!t.error) setJobTypes(t.data || []);
     if (!tr.error) setTrucks(tr.data || []);
+    await loadAssignedCounts((j.data || []).map((x: any) => x.id));
   };
+
+  const loadAssignedCounts = async (jobIds: string[]) => {
+    if (jobIds.length === 0) { setAssignedCounts({}); return; }
+    const { data, error } = await supabase
+      .from("job_assignments")
+      .select("external_job_id, mover_job_assignments(status)")
+      .in("external_job_id", jobIds);
+    if (error) return;
+    const counts: typeof assignedCounts = {};
+    (data ?? []).forEach((row: any) => {
+      const list = (row.mover_job_assignments ?? []) as { status: string }[];
+      counts[row.external_job_id] = {
+        total: list.length,
+        pending: list.filter(m => m.status === "pending").length,
+        confirmed: list.filter(m => m.status === "confirmed" || m.status === "in_progress" || m.status === "completed").length,
+        declined: list.filter(m => m.status === "declined").length,
+      };
+    });
+    setAssignedCounts(counts);
+  };
+
   useEffect(() => { load(); }, []);
 
   const create = async () => {
