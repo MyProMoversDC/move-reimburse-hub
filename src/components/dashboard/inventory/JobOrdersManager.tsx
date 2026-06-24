@@ -140,12 +140,14 @@ const JobOrdersManager = ({ userId }: Props) => {
           <TableHeader>
             <TableRow>
               <TableHead>Job #</TableHead><TableHead>Client</TableHead><TableHead>Date</TableHead>
-              <TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead>Status</TableHead><TableHead>Movers</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>
-            : rows.map(r => (
+            {rows.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>
+            : rows.map(r => {
+              const c = assignedCounts[r.id];
+              return (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.job_number}</TableCell>
                 <TableCell>{r.client_name}</TableCell>
@@ -156,14 +158,36 @@ const JobOrdersManager = ({ userId }: Props) => {
                     <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
                   </select>
                 </TableCell>
+                <TableCell className="text-xs">
+                  {!c || c.total === 0 ? <span className="text-muted-foreground">None</span> : (
+                    <div className="flex flex-wrap gap-1">
+                      {c.pending > 0 && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">{c.pending} pending</Badge>}
+                      {c.confirmed > 0 && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{c.confirmed} accepted</Badge>}
+                      {c.declined > 0 && <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">{c.declined} declined</Badge>}
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => setAssignTarget(r)} title="Assign / view movers">
+                    <UserCheck className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </CardContent>
+      {assignTarget && (
+        <AssignMoversDialog
+          open={!!assignTarget}
+          onOpenChange={(o) => !o && setAssignTarget(null)}
+          jobOrderId={assignTarget.id}
+          jobNumber={assignTarget.job_number}
+          clientName={assignTarget.client_name}
+          onAssigned={load}
+        />
+      )}
     </Card>
   );
 };
