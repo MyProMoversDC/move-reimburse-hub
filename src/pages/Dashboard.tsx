@@ -10,23 +10,64 @@ import HRDashboard from "@/components/dashboard/HRDashboard";
 import OfficeStaffDashboard from "@/components/dashboard/OfficeStaffDashboard";
 import WarehouseKeeperDashboard from "@/components/dashboard/WarehouseKeeperDashboard";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, UserCog, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-type UserRole = "mover" | "admin" | "accountant" | "operations_manager" | "reviews_admin" | "hr_manager" | "office_staff" | "warehouse_keeper";
+type UserRole =
+  | "mover"
+  | "admin"
+  | "accountant"
+  | "operations_manager"
+  | "reviews_admin"
+  | "hr_manager"
+  | "office_staff"
+  | "warehouse_keeper";
+
+const ROLE_PRIORITY: UserRole[] = [
+  "admin",
+  "reviews_admin",
+  "accountant",
+  "operations_manager",
+  "hr_manager",
+  "office_staff",
+  "warehouse_keeper",
+  "mover",
+];
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  admin: "Admin Portal",
+  reviews_admin: "Reviews Admin Portal",
+  accountant: "Accountant Portal",
+  operations_manager: "Ops Manager Portal",
+  hr_manager: "HR Portal",
+  office_staff: "Office Staff Portal",
+  warehouse_keeper: "Warehouse Keeper Portal",
+  mover: "Mover Portal",
+};
+
+const ACTIVE_ROLE_STORAGE_KEY = "activeUserRole";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         navigate("/auth");
         return;
@@ -34,7 +75,6 @@ const Dashboard = () => {
 
       setUserId(session.user.id);
 
-      // Fetch user profile and roles
       const { data: profile } = await supabase
         .from("profiles")
         .select("first_name, last_name, signup_status")
@@ -42,14 +82,8 @@ const Dashboard = () => {
         .single();
 
       if (profile) {
-        // Check signup approval status
         const signupStatus = (profile as any).signup_status;
-        if (signupStatus === "pending") {
-          await supabase.auth.signOut();
-          navigate("/auth");
-          return;
-        }
-        if (signupStatus === "declined") {
+        if (signupStatus === "pending" || signupStatus === "declined") {
           await supabase.auth.signOut();
           navigate("/auth");
           return;
@@ -63,24 +97,13 @@ const Dashboard = () => {
         .eq("user_id", session.user.id);
 
       if (roles && roles.length > 0) {
-        // Priority: admin > reviews_admin > accountant > operations_manager > hr_manager > office_staff > mover
-        if (roles.some((r) => r.role === "admin")) {
-          setUserRole("admin");
-        } else if (roles.some((r) => r.role === "reviews_admin")) {
-          setUserRole("reviews_admin");
-        } else if (roles.some((r) => r.role === "accountant")) {
-          setUserRole("accountant");
-        } else if (roles.some((r) => r.role === "operations_manager")) {
-          setUserRole("operations_manager");
-        } else if (roles.some((r) => r.role === "hr_manager")) {
-          setUserRole("hr_manager");
-        } else if (roles.some((r) => r.role === "office_staff")) {
-          setUserRole("office_staff");
-        } else if (roles.some((r) => r.role === "warehouse_keeper")) {
-          setUserRole("warehouse_keeper");
-        } else {
-          setUserRole("mover");
-        }
+        const userRoles = roles.map((r) => r.role as UserRole);
+        const sorted = ROLE_PRIORITY.filter((r) => userRoles.includes(r));
+        setAvailableRoles(sorted);
+
+        const stored = localStorage.getItem(ACTIVE_ROLE_STORAGE_KEY) as UserRole | null;
+        const initial = stored && sorted.includes(stored) ? stored : sorted[0];
+        setUserRole(initial);
       }
 
       setLoading(false);
@@ -90,6 +113,7 @@ const Dashboard = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
+        localStorage.removeItem(ACTIVE_ROLE_STORAGE_KEY);
         navigate("/auth");
       }
     });
@@ -98,8 +122,16 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
+    localStorage.removeItem(ACTIVE_ROLE_STORAGE_KEY);
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
+  };
+
+  const handleSwitchRole = (role: UserRole) => {
+    if (role === userRole) return;
+    localStorage.setItem(ACTIVE_ROLE_STORAGE_KEY, role);
+    setUserRole(role);
+    toast.success(`Switched to ${ROLE_LABELS[role]}`);
   };
 
   if (loading) {
@@ -118,39 +150,59 @@ const Dashboard = () => {
     );
   }
 
+  const canSwitch = availableRoles.length > 1;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
-              <img 
-                src={logo} 
-                alt="MyProMovers" 
-                className="h-10 md:h-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+              <img
+                src={logo}
+                alt="MyProMovers"
+                className="h-10 md:h-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => navigate("/")}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && navigate("/")}
+                onKeyDown={(e) => e.key === "Enter" && navigate("/")}
               />
               <div className="min-w-0">
-                <h1 className="text-lg md:text-xl font-bold truncate">
-                  {userRole === "admin" && "Admin Portal"}
-                  {userRole === "reviews_admin" && "Reviews Admin Portal"}
-                  {userRole === "accountant" && "Accountant Portal"}
-                  {userRole === "operations_manager" && "Ops Manager Portal"}
-                  {userRole === "hr_manager" && "HR Portal"}
-                  {userRole === "office_staff" && "Office Staff Portal"}
-                  {userRole === "warehouse_keeper" && "Warehouse Keeper Portal"}
-                  {userRole === "mover" && "Mover Portal"}
-                </h1>
+                <h1 className="text-lg md:text-xl font-bold truncate">{ROLE_LABELS[userRole]}</h1>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
               </div>
             </div>
-            <Button variant="outline" onClick={handleLogout} size="sm">
-              <LogOut className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {canSwitch && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" title="Switch role">
+                      <UserCog className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Switch Role</span>
+                      <ChevronDown className="h-3 w-3 ml-1 hidden md:inline" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                    <DropdownMenuLabel>Switch Cabinet</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {availableRoles.map((role) => (
+                      <DropdownMenuItem
+                        key={role}
+                        onClick={() => handleSwitchRole(role)}
+                        className="cursor-pointer"
+                      >
+                        <span className="flex-1">{ROLE_LABELS[role]}</span>
+                        {role === userRole && <Check className="h-4 w-4 ml-2" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <Button variant="outline" onClick={handleLogout} size="sm">
+                <LogOut className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Logout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
