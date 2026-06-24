@@ -77,6 +77,7 @@ const JobOrdersManager = ({ userId }: Props) => {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { setPage(1); }, [search, filterDate]);
 
   const create = async () => {
     if (!form.job_number || !form.client_name || !form.job_date) return toast.error("Job number, client, date required");
