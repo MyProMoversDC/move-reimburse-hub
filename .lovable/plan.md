@@ -1,116 +1,65 @@
+## Goal
 
-# Plan: Port MovePro Inventory Hub features + add Warehouse Keeper role
+Replace the current text-list `PlanningBoard` with a monthly **calendar view** for the Ops Manager (and Warehouse Keeper) that:
 
-## Scope
+1. Pulls Booked-stage opportunities directly from SmartMoving into a staging table.
+2. Lets the manager click a day → see jobs → open an **Assign Crew** dialog ported from MovePro Inventory Hub.
+3. Reuses the existing `mover_job_assignments` accept/decline workflow that we built in the previous step (so movers still get push + in-app notifications and must Accept/Decline).
 
-- **Operations Manager** gains: Fleet, Job Orders, Planning, Crew Tracking, Crews.
-- **New role `warehouse_keeper`** gains: Warehouse, Warehouse Live Map, Purchases, Reports, Fleet.
-- **Fleet** is shared (full CRUD for both roles).
-- Existing Android, push notifications, movers cabinet, and current schema are untouched. All inventory tables are **net-new additions** — nothing in the current schema is altered.
+## Architectural mapping (Inventory Hub → this project)
 
-## Architecture decisions (from your answers)
+| Inventory Hub | This project |
+|---|---|
+| `workers` table | `profiles` filtered to `mover` role |
+| `truck_crew_assignments` + `truck_crew_workers` | existing `mover_job_assignments` (with accept/decline) |
+| `shifts` + `shift_trucks` | not used — truck is stored directly on `inv_job_orders.truck_id` |
+| `job_orders` (created on assign) | `inv_job_orders` (created on assign from a `planning_jobs` row) |
+| `planning_jobs` (SmartMoving cache) | **new** `planning_jobs` table (Booked opportunities) |
+| `crew_members.position` | `crew_members` (already exists) |
+| `inventory_movements` + truck inventory load step | **skipped for now** — keep dialog focused on crew/truck/notes (warehouse load can be added later) |
 
-1. Schema is ported into THIS project's Supabase (no cross-project API).
-2. Crews link to existing `profiles` (real movers), not standalone people.
-3. Both roles get full CRUD on Fleet.
-4. SmartMoving + Mapbox + location-ingest edge functions are ported.
+## What gets built
 
-## Step 1 — Database migration (one migration, additive only)
+### 1. Database migration
+- New `planning_jobs` table: `smartmoving_id` (unique), `job_number`, `customer_name`, `status`, `job_type`, `branch_name`, `service_date`, `start_time`, `end_time`, `estimated_total`, `address`, `move_size`, `raw jsonb`, `synced_at`. RLS: admin + operations_manager + warehouse_keeper read; service_role write.
+- New `planning_sync_runs` table: `status`, `fetched_count`, `upserted_count`, `started_at`, `finished_at`, `error`. Same RLS.
+- Add `planned_from_smartmoving_id text` to `inv_job_orders` (nullable) so we know which planning_job an inv_job_order came from, and badge the calendar.
 
-New `app_role` enum value: `warehouse_keeper`.
+### 2. Edge function rewrite: `sync-smartmoving-jobs`
+- Port the Inventory Hub version that pages through `/opportunities?Status=4` (Booked) for a date range, fetches full opportunity details (estimates, addresses, move size), and upserts into `planning_jobs` keyed by `smartmoving_id`. Records a row in `planning_sync_runs`.
+- Replaces the current version that wrote into `inv_job_orders` directly.
 
-New tables (all under `public`, all with `GRANT … TO authenticated` + `service_role`, RLS enabled, policies use existing `has_role()`):
+### 3. New component: `PlanningCalendar.tsx` (replaces `PlanningBoard.tsx`)
+- Monthly grid (Mon–Sun), prev/next month, "Today" button.
+- "Refresh from SmartMoving" button → invokes `sync-smartmoving-jobs` for visible range, then reloads.
+- Each day cell shows count of Booked jobs + colored dots (assigned vs unassigned).
+- Click a day → side panel listing jobs for that day with: job#, customer, time, address, move size. Each has an **Assign Crew** button (or "Assigned" badge if already in `inv_job_orders`).
 
-| Table | Purpose | Write access |
-|---|---|---|
-| `inventory_categories` | warehouse item categories | warehouse_keeper, admin |
-| `inventory_items` | stock catalog (name, uom, qty, min_stock) | warehouse_keeper, admin |
-| `trucks` | fleet vehicles | warehouse_keeper, operations_manager, admin |
-| `truck_inventory` | per-truck stock | warehouse_keeper, operations_manager, admin |
-| `job_types` + `job_type_requirements` | templates | operations_manager, admin |
-| `inv_job_orders` | job orders (renamed to avoid collision with existing `job_assignments`) | operations_manager, admin |
-| `purchases` | restock log | warehouse_keeper, admin |
-| `daily_locks` | end-of-day inventory lock | warehouse_keeper, admin |
-| `inv_audit_logs` | inventory audit trail | system insert; admin read |
-| `warehouse_zones` | warehouse-map zones | warehouse_keeper, admin |
-| `warehouse_zone_items` | items per zone | warehouse_keeper, admin |
-| `crews` | named crew (date, lead) | operations_manager, admin |
-| `crew_members` (`user_id → profiles.id`) | crew↔mover link | operations_manager, admin |
-| `crew_assignments` (`crew_id`, `inv_job_order_id`) | crew↔job link | operations_manager, admin |
-| `planning_routes` + `planning_stops` | optimized routes | operations_manager, admin |
-| `mover_location_pings` | live GPS for crew tracking | mover insert self; ops_manager/warehouse_keeper/admin read |
+### 4. New component: `AssignCrewDialog.tsx` (ported & adapted)
+- Inputs: Truck (from `trucks` where is_active), Crew template (from `crews`), Movers checklist (from `profiles` with mover role), Scope of work, Parking-lot time, Job-site time, Notes.
+- Selecting a Crew template auto-fills movers from `crew_members`.
+- On Save: 
+  1. Create row in `inv_job_orders` (truck, job_number, customer, date, scope, planned_from_smartmoving_id).
+  2. Call existing RPC `assign_movers_to_inv_job_order(inv_job_id, mover_ids[])` — this reuses the accept/decline + notification flow we already shipped.
+- Movers get push + in-app notification → Accept/Decline in their Mover cabinet (unchanged).
+- Status badges in the dialog (Pending / Accepted / Declined) via existing `list_inv_job_order_assignments` RPC, so the Ops Manager can re-open the dialog and see who confirmed.
 
-Read access: `operations_manager` and `warehouse_keeper` can read all of the above (so Fleet works on both sides; Ops can see warehouse stock when building job orders).
+### 5. Wire-up
+- `OperationsManagerDashboard` and `WarehouseKeeperDashboard`: swap `<PlanningBoard />` → `<PlanningCalendar />`.
+- Keep existing `JobOrdersManager` "Assign Movers" button intact (already shipped).
 
-Reuse existing `has_role()` (already present, no need to recreate).
+## Out of scope (will not change)
+- Mover-side accept/decline UI (already exists).
+- Push/email notifications (already wired through `trg_push_on_mover_notification`).
+- Inventory-loading-onto-truck step from Inventory Hub — deferred; can add later if needed.
+- `shifts`/`shift_trucks` concept from Inventory Hub — not introduced.
 
-> Note: this is purely **additive**. No existing column or policy is modified, so the current Mover / Admin / HR / Accountant / etc. cabinets are unaffected.
+## File changes
+- **New**: `supabase/migrations/<ts>_planning_calendar.sql`
+- **New**: `src/components/dashboard/inventory/PlanningCalendar.tsx`
+- **New**: `src/components/dashboard/inventory/AssignCrewDialog.tsx`
+- **Rewrite**: `supabase/functions/sync-smartmoving-jobs/index.ts`
+- **Edit**: `src/components/dashboard/OperationsManagerDashboard.tsx`, `WarehouseKeeperDashboard.tsx` (swap component).
+- **Delete (after swap)**: `PlanningBoard.tsx`
 
-## Step 2 — Edge functions (port from source project)
-
-Copy and adapt to this project's auth + secrets:
-
-- `sync-smartmoving-jobs`, `sync-workers`, `fetch-smartmoving-crew-notes`
-- `optimize-routes`
-- `receive-mover-location`, `report-job-confirmation`, `notify-job-assignment`
-- Reuse existing `get-mapbox-token` (already deployed here).
-
-Required secrets to add (via `add_secret` when ready): `SMARTMOVING_API_KEY`, `SMARTMOVING_API_URL`, plus any SmartMoving webhook secret.
-
-## Step 3 — Role & permission wiring
-
-- Add `warehouse_keeper` to `availableRoles` and `roleDisplayNames` in `src/components/dashboard/UserRoleManager.tsx`.
-- Add `warehouse_keeper` to the priority ladder in `src/pages/Dashboard.tsx` and render a new `WarehouseKeeperDashboard`.
-- Add `warehouse_keeper` to the `UserRole` union type.
-
-## Step 4 — New cabinet: Warehouse Keeper
-
-New file `src/components/dashboard/WarehouseKeeperDashboard.tsx` following the existing sidebar+content pattern (mirrors `OperationsManagerDashboard.tsx` structure for visual consistency, logo always present, EN/ES/RU support, EST timestamps).
-
-Tabs: **Warehouse**, **Live Map**, **Fleet**, **Purchases**, **Reports**, **Chat**, **Settings**.
-
-## Step 5 — Operations Manager cabinet additions
-
-Edit `src/components/dashboard/OperationsManagerDashboard.tsx` to add tabs: **Fleet**, **Job Orders**, **Planning**, **Crew Tracking**, **Crews** — appended after existing tabs so current behavior is preserved.
-
-## Step 6 — Feature components (ported from source, adapted to shadcn/Tailwind tokens already used here)
-
-New folder `src/components/dashboard/inventory/`:
-
-- `FleetManager.tsx` (shared by both cabinets)
-- `JobOrdersManager.tsx`
-- `PlanningBoard.tsx` + `RouteSuggestionDialog.tsx`
-- `CrewTrackingMap.tsx` (uses `useMapboxToken` + `mover_location_pings`)
-- `CrewsManager.tsx` + `AssignCrewDialog.tsx` (uses `SearchableSelect` filtered to movers — per existing project rule)
-- `WarehouseManager.tsx` (items, categories, daily-lock)
-- `WarehouseLiveMap.tsx` + `WarehouseCanvas.tsx` + `ZoneEditorDialog.tsx` + `ZoneDetailsDrawer.tsx` + `ZoneItemsList.tsx` + `AnalyticsWidgets.tsx`
-- `PurchasesManager.tsx`
-- `ReportsDashboard.tsx`
-
-All UI follows project standards already in memory: SearchableSelect for user pickers (admins/accountants filtered out for mover lists), transparent file-input overlay for uploads, calendars auto-close, "Approved" terminology, removable file uploads, EST timestamps, multilingual EN/ES/RU.
-
-## Step 7 — Mobile parity
-
-Add the new tabs to the mobile horizontal nav in both dashboards (same pattern used for "Shift Clock" addition).
-
-## Step 8 — Verification
-
-- Build passes.
-- Existing Mover / Admin / Accountant / HR / Reviews / Office cabinets render unchanged.
-- New roles' RLS policies tested via SQL: an `operations_manager` user cannot write to `purchases`; a `warehouse_keeper` cannot write to `inv_job_orders`; both can read/write `trucks` and `truck_inventory`.
-- Live map shows pings only to allowed roles.
-
-## Open items handled at build time (will request from you in build mode)
-
-- SmartMoving API credentials (added via `add_secret` only when you confirm you want to enable sync).
-- Optional: copy any seed data (job types, categories) from source project via CSV.
-
-## Out of scope (explicit)
-
-- No changes to: Android, push notification architecture, existing tables, existing edge functions, mover compliance flows, Checkr, handbook, consent, chat, feed, shift clock.
-- No deletion of any feature.
-- No iOS workflow changes (already shipped in earlier turns).
-
-## Rough effort
-
-~1 large DB migration, ~7 edge functions ported, ~12 new React components, 2 dashboards edited, 1 dashboard created, ~3 small wiring edits. Single build mode session can deliver it in 2–3 batches.
+Confirm and I'll build it.

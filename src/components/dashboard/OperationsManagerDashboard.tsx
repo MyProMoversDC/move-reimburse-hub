@@ -13,7 +13,7 @@ import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
 import FleetManager from "./inventory/FleetManager";
 import JobOrdersManager from "./inventory/JobOrdersManager";
-import PlanningBoard from "./inventory/PlanningBoard";
+import PlanningCalendar from "./inventory/PlanningCalendar";
 import CrewTrackingMap from "./inventory/CrewTrackingMap";
 import CrewsManager from "./inventory/CrewsManager";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -134,7 +134,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           )}
           {activeTab === "fleet" && <FleetManager />}
           {activeTab === "job-orders" && <JobOrdersManager userId={userId} />}
-          {activeTab === "planning" && <PlanningBoard userId={userId} />}
+          {activeTab === "planning" && <PlanningCalendar userId={userId} />}
           {activeTab === "crew-tracking" && <CrewTrackingMap />}
           {activeTab === "crews" && <CrewsManager userId={userId} />}
         </div>
@@ -188,7 +188,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
         )}
         {activeTab === "fleet" && <FleetManager />}
         {activeTab === "job-orders" && <JobOrdersManager userId={userId} />}
-        {activeTab === "planning" && <PlanningBoard userId={userId} />}
+        {activeTab === "planning" && <PlanningCalendar userId={userId} />}
         {activeTab === "crew-tracking" && <CrewTrackingMap />}
         {activeTab === "crews" && <CrewsManager userId={userId} />}
       </div>
