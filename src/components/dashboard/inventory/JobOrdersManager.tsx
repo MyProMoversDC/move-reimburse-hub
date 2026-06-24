@@ -138,6 +138,25 @@ const JobOrdersManager = ({ userId }: Props) => {
         <div className="bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-yellow-400 p-3 text-sm">
           Create job orders and assign trucks. Crews can be linked from the Crews tab.
         </div>
+        <div className="flex flex-col sm:flex-row gap-2 p-3 border-b bg-muted/30">
+          <Input
+            placeholder="Search by job # or client name…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="sm:max-w-xs"
+          />
+          <Input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="sm:w-44"
+          />
+          {(search || filterDate) && (
+            <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setFilterDate(""); }}>
+              Clear
+            </Button>
+          )}
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -146,8 +165,19 @@ const JobOrdersManager = ({ userId }: Props) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>
-            : rows.map(r => {
+            {(() => {
+              const q = search.trim().toLowerCase();
+              const filteredRows = rows.filter(r => {
+                if (filterDate && r.job_date !== filterDate) return false;
+                if (q && !`${r.job_number} ${r.client_name}`.toLowerCase().includes(q)) return false;
+                return true;
+              });
+              if (filteredRows.length === 0) {
+                return <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>;
+              }
+              return filteredRows.map(r => {
+              const c = assignedCounts[r.id];
+              return (
               const c = assignedCounts[r.id];
               return (
               <TableRow key={r.id}>
