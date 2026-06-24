@@ -231,7 +231,7 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
                 <SearchableSelect
                   value={form.crew_id}
                   onValueChange={applyCrewTemplate}
-                  options={[{ value: "none", label: "— Ad-hoc —" }, ...crews.map(c => ({ value: c.id, label: c.name }))]}
+                  options={[{ value: "none", label: "— Ad-hoc —" }, ...crews.map(c => ({ value: c.id, label: c.crew_date ? `${c.name} · ${c.crew_date}` : c.name }))]}
                   placeholder="Select crew"
                   searchPlaceholder="Search crews..."
                   emptyMessage="No crews"
