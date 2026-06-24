@@ -178,8 +178,6 @@ const JobOrdersManager = ({ userId }: Props) => {
               return filteredRows.map(r => {
               const c = assignedCounts[r.id];
               return (
-              const c = assignedCounts[r.id];
-              return (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.job_number}</TableCell>
                 <TableCell>{r.client_name}</TableCell>
@@ -206,10 +204,12 @@ const JobOrdersManager = ({ userId }: Props) => {
                   <Button variant="ghost" size="sm" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
-            );})}
+            );});
+            })()}
           </TableBody>
         </Table>
       </CardContent>
+
       {assignTarget && (
         <AssignMoversDialog
           open={!!assignTarget}
