@@ -134,7 +134,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           )}
           {activeTab === "fleet" && <FleetManager />}
           {activeTab === "job-orders" && <JobOrdersManager userId={userId} />}
-          {activeTab === "planning" && <PlanningBoard userId={userId} />}
+          {activeTab === "planning" && <PlanningCalendar userId={userId} />}
           {activeTab === "crew-tracking" && <CrewTrackingMap />}
           {activeTab === "crews" && <CrewsManager userId={userId} />}
         </div>
@@ -188,7 +188,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
         )}
         {activeTab === "fleet" && <FleetManager />}
         {activeTab === "job-orders" && <JobOrdersManager userId={userId} />}
-        {activeTab === "planning" && <PlanningBoard userId={userId} />}
+        {activeTab === "planning" && <PlanningCalendar userId={userId} />}
         {activeTab === "crew-tracking" && <CrewTrackingMap />}
         {activeTab === "crews" && <CrewsManager userId={userId} />}
       </div>
