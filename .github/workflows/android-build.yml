@@ -134,7 +134,8 @@ jobs:
           set -e
           GRADLE=android/app/build.gradle
           if ! grep -q "signingConfigs {" "$GRADLE"; then
-            python3 - "$GRADLE" <<'PY'
+            # Write a python helper to /tmp so YAML indentation does not break Python.
+            cat > /tmp/patch_gradle.py <<'PY'
           import re, sys, pathlib
           p = pathlib.Path(sys.argv[1])
           src = p.read_text()
@@ -156,8 +157,12 @@ jobs:
           )
           p.write_text(src)
           PY
+            # Strip the 10-space YAML indent that bash preserved in the heredoc.
+            sed -i 's/^          //' /tmp/patch_gradle.py
+            python3 /tmp/patch_gradle.py "$GRADLE"
           fi
           grep -n "signingConfig" "$GRADLE" || true
+
 
       - name: Build signed AAB
         env:
