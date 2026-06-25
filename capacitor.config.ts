@@ -6,7 +6,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 //
 // LOCAL DEVELOPMENT only: export CAP_SERVER_URL before `npx cap sync` to
 // hot-reload the device against your dev server, e.g.
-//   CAP_SERVER_URL="https://7f537c65-877a-4327-ba61-217e1a56fd12.lovableproject.com?forceHideBadge=true" npx cap sync
+//   CAP_SERVER_URL="https://<your-sandbox-id>.<preview-host>?forceHideBadge=true" npx cap sync
 // CI / release builds must NEVER set CAP_SERVER_URL.
 const devServerUrl = process.env.CAP_SERVER_URL;
 
