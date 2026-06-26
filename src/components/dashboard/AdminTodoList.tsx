@@ -543,6 +543,20 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
                     </div>
                     <Button
                       variant="ghost"
+                      size="icon"
+                      title="Mark complete"
+                      aria-label="Mark complete"
+                      disabled={dismissingKey === `${item.type}-${item.id}`}
+                      onClick={() => handleMarkComplete(item)}
+                    >
+                      {dismissingKey === `${item.type}-${item.id}` ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4 text-green-600" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={() => onNavigate(getNavigationTab(item.type))}
                     >
