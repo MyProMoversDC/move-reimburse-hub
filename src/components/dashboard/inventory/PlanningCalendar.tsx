@@ -218,7 +218,8 @@ const PlanningCalendar = ({ userId }: Props) => {
               {selectedJobs.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No Booked jobs on this day.</p>
               ) : selectedJobs.map(j => {
-                const assigned = assignedIds.has(j.smartmoving_id);
+                const assignedRef = assignedMap.get(j.smartmoving_id);
+                const assigned = !!assignedRef;
                 return (
                   <div key={j.id} className="flex items-start justify-between gap-3 p-3 border rounded-md">
                     <div className="min-w-0 flex-1">
@@ -236,9 +237,16 @@ const PlanningCalendar = ({ userId }: Props) => {
                         </p>
                       )}
                     </div>
-                    <Button size="sm" onClick={() => openAssign(j)}>
-                      {assigned ? "Edit crew" : "Assign crew"}
-                    </Button>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <Button size="sm" onClick={() => openAssign(j)}>
+                        {assigned ? "Edit crew" : "Assign crew"}
+                      </Button>
+                      {assigned && assignedRef && (
+                        <Button size="sm" variant="outline" onClick={() => setHistoryJob(assignedRef)}>
+                          <History className="h-3.5 w-3.5 mr-1" /> History
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -254,6 +262,16 @@ const PlanningCalendar = ({ userId }: Props) => {
         userId={userId}
         onSaved={load}
       />
+      {historyJob && (
+        <AssignMoversDialog
+          open={!!historyJob}
+          onOpenChange={(o) => !o && setHistoryJob(null)}
+          jobOrderId={historyJob.id}
+          jobNumber={historyJob.job_number ?? "—"}
+          clientName={historyJob.client_name ?? ""}
+          onAssigned={load}
+        />
+      )}
     </Card>
   );
 };
