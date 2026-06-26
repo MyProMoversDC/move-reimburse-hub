@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import AnonymousFeedbackEntry from "./pages/AnonymousFeedbackEntry";
 import MoverClockRedeem from "./pages/MoverClockRedeem";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
