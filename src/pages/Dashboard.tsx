@@ -65,6 +65,7 @@ const Dashboard = () => {
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const isTouch = useTouchShell();
 
   useEffect(() => {
     const checkAuth = async () => {
