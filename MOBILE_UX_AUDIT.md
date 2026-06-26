@@ -141,3 +141,45 @@ Before submitting to Play Store / App Store, run through this short checklist (v
 - `src/index.css` — global native font stack on `html/body` + `h1–h6`.
 
 No other files were modified.
+
+---
+
+## Pass 2 — Per-Screen Polish (June 26, 2026)
+
+Following user approval of the polish plan, this pass focused on the High-priority items from the Pass 1 report.
+
+### Fixes Applied
+
+| # | Area | File | Change |
+|---|------|------|--------|
+| 1 | iOS zoom on focus | `src/components/ui/textarea.tsx` | Default font size raised to `text-base` (16px) with `md:text-sm` override to prevent Safari auto-zoom when tapping a textarea. `Input` was already correct. |
+| 2 | Duplicate page title | `AccountantDashboard.tsx` → `renderContent` "requests" | Removed in-page `<h2>Confirmed Reimbursements</h2>` — the mobile top bar already shows the active tab name. Export button now sits flush right. |
+| 3 | Duplicate page title | `ReviewsAdminDashboard.tsx` → `renderContent` "reviews" + "missing-payments" | Removed two duplicate `<h2>` headers. Action buttons (Add Bonus, Export) now sit alone, right-aligned. |
+| 4 | Raw 6-col table on mobile | `inventory/PurchasesManager.tsx` | Wrapped existing table in `hidden md:block` and added a stacked mobile card list with item name, qty × unit cost, timestamp, vendor, notes. |
+| 5 | Raw 6-col table on mobile | `inventory/WarehouseManager.tsx` | Same treatment — desktop table preserved, mobile renders compact cards with name, qty/UOM/min line, low-stock badge, and inline edit/delete buttons. |
+
+### Verified Already Clean (No Changes Needed)
+
+- `OperationsManagerDashboard.tsx` — `renderContent()` has no duplicate H2s; the H2s found in earlier audit live inside the `hidden md:block` desktop branch only.
+- `WarehouseKeeperDashboard.tsx` — no in-page H1/H2 at all on mobile path.
+- `HRDashboard.tsx` — desktop H2 (`{t.title}`) lives inside the desktop children (not invoked on touch). Mobile HR tab shows a short helper note instead, no duplicate title.
+- `inventory/FleetManager.tsx` — already split into `hidden md:block` desktop table + `md:hidden` cards.
+- `inventory/JobOrdersManager.tsx` — already split into desktop table + mobile cards with pagination.
+- `inventory/CrewsManager.tsx` — natively card-based on all viewports.
+- `src/components/ui/input.tsx` — already `text-base md:text-sm`, immune to iOS zoom.
+
+### Still Recommended Before Store Submission
+
+- **Badge tokenization sweep**: Several inventory & assignment components still use hard-coded `bg-yellow-100 text-yellow-800` / `bg-green-100 text-green-800` etc. Move to semantic `Badge` variants in a follow-up so brand theming & dark mode behave consistently.
+- **`ReportsDashboard` low-stock table** (4 columns): fits in horizontal scroll today; convert to cards if the column count grows.
+- **Dialogs not yet using `ResponsiveDialog`**: `AssignMoversDialog`, `AssignCrewDialog`, `MoverLiveTrackDialog`, `FleetManager` edit dialog still use plain `<Dialog>`. They work but don't slide up as a sheet on phones. Worth migrating in a dedicated pass.
+- **HR Cabinet on phones**: intentionally shows a "use a larger screen" notice. Full mobile rework is a larger feature, not a polish item.
+- **Safe-area sweep**: `MobileShell` already applies `pt-safe` / `pb-safe`; individual long-scroll components should add `pb-safe` to their bottom action bars in a future pass.
+
+### Pre-Release Checklist (carry forward)
+
+- [ ] Test on real iPhone with Dynamic Island (top bar should not collide with island).
+- [ ] Test on Android device with edge-to-edge gesture nav (drawer should clear the gesture handle).
+- [ ] Verify push-notification deep-links land on the correct tab via `setActiveTab`.
+- [ ] Confirm `capacitor.config.ts` has no preview `server.url` before producing release builds.
+- [ ] Run the Play Console internal-test build once more after this pass to confirm no regression in the auth flow.
