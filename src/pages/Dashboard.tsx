@@ -235,8 +235,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-    </div>
-  );
-};
 
-export default Dashboard;
