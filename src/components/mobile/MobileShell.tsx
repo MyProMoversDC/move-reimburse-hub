@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type ComponentType } from "react";
-import { Menu, LogOut, UserCog, Check, X, ChevronDown } from "lucide-react";
+import { Menu, LogOut, UserCog, X, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTouchShell } from "@/hooks/use-touch-shell";
