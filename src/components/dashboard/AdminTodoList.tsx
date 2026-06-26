@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Star, AlertCircle, Clock, ArrowRight, MessageCircle, Shield, DollarSign, HelpCircle } from "lucide-react";
+import { FileText, Star, AlertCircle, Clock, ArrowRight, MessageCircle, Shield, DollarSign, HelpCircle, Check, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface TodoItem {
   id: string;
