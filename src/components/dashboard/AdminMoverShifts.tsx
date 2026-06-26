@@ -224,7 +224,7 @@ const AdminMoverShifts = () => {
                           <p className="font-medium">{a.first_name} {a.last_name}</p>
                           <p className="text-xs text-muted-foreground">Clocked in: {formatDateTimeEST(a.clock_in)}</p>
                         </div>
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <Badge variant="secondary">
                           {Math.floor(mins / 60)}h {mins % 60}m
                         </Badge>
                       </div>

@@ -96,58 +96,95 @@ const AdminEmailLogs = () => {
     );
 
   const renderEmailTable = (emails: EmailLog[]) => (
-    <div className="border rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[140px]">Date (EST)</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>{activeTab === "outbound" ? "To" : "From"}</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead className="w-[80px]">Status</TableHead>
-            <TableHead className="w-[60px]">View</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
+    <>
+      {/* Desktop table */}
+      <div className="hidden md:block border rounded-md">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                Loading emails...
-              </TableCell>
+              <TableHead className="w-[140px]">Date (EST)</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>{activeTab === "outbound" ? "To" : "From"}</TableHead>
+              <TableHead>Subject</TableHead>
+              <TableHead className="w-[80px]">Status</TableHead>
+              <TableHead className="w-[60px]">View</TableHead>
             </TableRow>
-          ) : emails.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                No email logs found
-              </TableCell>
-            </TableRow>
-          ) : (
-            emails.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="text-xs">{formatToEST(log.created_at)}</TableCell>
-                <TableCell>{getEmailTypeBadge(log.email_type)}</TableCell>
-                <TableCell className="text-sm max-w-[200px] truncate">
-                  {activeTab === "outbound" ? log.to_emails.join(", ") : log.from_email}
-                </TableCell>
-                <TableCell className="text-sm max-w-[250px] truncate">{log.subject}</TableCell>
-                <TableCell>
-                  {log.status === "sent" ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedEmail(log)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Loading emails...
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ) : emails.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No email logs found
+                </TableCell>
+              </TableRow>
+            ) : (
+              emails.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell className="text-xs">{formatToEST(log.created_at)}</TableCell>
+                  <TableCell>{getEmailTypeBadge(log.email_type)}</TableCell>
+                  <TableCell className="text-sm max-w-[200px] truncate">
+                    {activeTab === "outbound" ? log.to_emails.join(", ") : log.from_email}
+                  </TableCell>
+                  <TableCell className="text-sm max-w-[250px] truncate">{log.subject}</TableCell>
+                  <TableCell>
+                    {log.status === "sent" ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedEmail(log)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {loading ? (
+          <p className="text-center text-muted-foreground py-6 text-sm">Loading emails…</p>
+        ) : emails.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6 text-sm">No email logs found</p>
+        ) : (
+          emails.map((log) => (
+            <button
+              key={log.id}
+              type="button"
+              onClick={() => setSelectedEmail(log)}
+              className="w-full text-left border rounded-lg p-3 active:bg-muted/40 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="font-semibold text-sm leading-tight line-clamp-2 flex-1">{log.subject}</p>
+                {log.status === "sent" ? (
+                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground truncate mb-1.5">
+                {activeTab === "outbound" ? `To: ${log.to_emails.join(", ")}` : `From: ${log.from_email}`}
+              </p>
+              <div className="flex items-center justify-between gap-2">
+                {getEmailTypeBadge(log.email_type)}
+                <span className="text-[11px] text-muted-foreground">{formatToEST(log.created_at)}</span>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    </>
   );
 
   return (

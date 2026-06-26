@@ -57,7 +57,7 @@ export function SearchableSelect({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between font-normal",
+            "w-full justify-between font-normal h-11 text-base md:h-10 md:text-sm",
             !value && "text-muted-foreground",
             triggerClassName
           )}
