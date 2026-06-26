@@ -52,11 +52,13 @@ const PlanningCalendar = ({ userId }: Props) => {
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
   const [jobs, setJobs] = useState<PlanningJob[]>([]);
-  const [assignedIds, setAssignedIds] = useState<Set<string>>(new Set());
+  const [assignedMap, setAssignedMap] = useState<Map<string, AssignedJobRef>>(new Map());
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [assignJob, setAssignJob] = useState<PlanningJob | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [historyJob, setHistoryJob] = useState<AssignedJobRef | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const grid = useMemo(() => buildGrid(viewDate), [viewDate]);
