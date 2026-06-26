@@ -301,6 +301,7 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
               </div>
             </div>
 
+            <div className="space-y-2">
               <Label className="text-sm font-semibold">Add movers</Label>
               <MoverAutocomplete
                 movers={movers}
