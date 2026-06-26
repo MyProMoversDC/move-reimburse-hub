@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/anonymous-feedback" element={<AnonymousFeedbackEntry />} />
             <Route path="/mover/clock" element={<MoverClockRedeem />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
