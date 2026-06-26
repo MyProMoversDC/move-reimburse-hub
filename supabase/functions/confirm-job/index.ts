@@ -79,6 +79,36 @@ Deno.serve(async (req) => {
       .eq("id", body.assignment_id)
       .single();
 
+    // Auto-update inv_job_orders status based on mover lifecycle.
+    if (assignment?.external_job_id) {
+      try {
+        if (body.status === "moving_to_site") {
+          await admin
+            .from("inv_job_orders")
+            .update({ status: "in_progress" })
+            .eq("id", assignment.external_job_id)
+            .eq("status", "pending");
+        } else if (body.status === "completed") {
+          // Mark the job completed only when every non-declined mover has finished.
+          const { data: siblings } = await admin
+            .from("mover_job_assignments")
+            .select("status")
+            .eq("assignment_id", body.assignment_id);
+          const active = (siblings ?? []).filter((s) => s.status !== "declined");
+          const allDone = active.length > 0 && active.every((s) => s.status === "completed");
+          if (allDone) {
+            await admin
+              .from("inv_job_orders")
+              .update({ status: "completed" })
+              .eq("id", assignment.external_job_id);
+          }
+        }
+      } catch (e) {
+        console.error("inv_job_orders sync failed", e);
+      }
+    }
+
+
     let callback: { ok: boolean; error?: string } = { ok: false };
     if (assignment && SHARED_KEY) {
       try {
