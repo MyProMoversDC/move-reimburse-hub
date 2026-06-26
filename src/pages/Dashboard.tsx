@@ -154,8 +154,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3 md:py-4">
+      <header className="border-b bg-card/95 backdrop-blur sticky top-0 z-40 pt-safe md:static md:pt-0 md:backdrop-blur-none md:bg-card">
+        <div className="container mx-auto px-3 md:px-4 py-2 md:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <img
