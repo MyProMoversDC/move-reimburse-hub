@@ -79,13 +79,14 @@ serve(async (req) => {
       return successResponse();
     }
 
-    const actionLink = data?.properties?.action_link;
-    if (!actionLink) {
+    const tokenHash = data?.properties?.hashed_token;
+    if (!tokenHash) {
       throw new Error("Password reset link was not created");
     }
 
-    const resetLink = new URL(actionLink);
-    resetLink.searchParams.set("redirect_to", RESET_URL);
+    const resetLink = new URL(RESET_URL);
+    resetLink.searchParams.set("token_hash", tokenHash);
+    resetLink.searchParams.set("type", "recovery");
     const safeLink = htmlEscape(resetLink.toString());
 
     const subject = "Reset your MyProMovers password";
@@ -93,7 +94,7 @@ serve(async (req) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111827; line-height: 1.6;">
         <h2 style="margin: 0 0 16px;">Reset your password</h2>
         <p>Use this secure password reset link for your MyProMovers account:</p>
-        <p style="word-break: break-all;"><a href="${safeLink}" style="color: #2563eb;">${RESET_URL}</a></p>
+        <p style="word-break: break-all;"><a href="${safeLink}" style="color: #2563eb;">${safeLink}</a></p>
         <p>If you did not request this reset, you can ignore this email.</p>
       </div>
     `;
