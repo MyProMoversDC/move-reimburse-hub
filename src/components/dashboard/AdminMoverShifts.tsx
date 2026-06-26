@@ -288,7 +288,8 @@ const AdminMoverShifts = () => {
                 Total: <span className="text-primary">{(grandTotalMins / 60).toFixed(2)} hours</span> across {Object.keys(totalsByMover).length} mover(s)
               </div>
 
-              <div className="overflow-x-auto">
+              {/* Desktop table — unchanged */}
+              <div className="hidden md:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -311,6 +312,40 @@ const AdminMoverShifts = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+
+              {/* Mobile cards — mover-first with prominent hours */}
+              <div className="md:hidden">
+                {entries.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">No records in this range</p>
+                ) : (
+                  <div className="space-y-2">
+                    {entries.map((e: any) => (
+                      <div key={e.entry_id} className="border rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <p className="font-semibold leading-tight truncate">{e.first_name} {e.last_name}</p>
+                          {e.clock_out ? (
+                            <Badge className="bg-primary/10 text-primary font-mono">
+                              {e.net_minutes ? (e.net_minutes / 60).toFixed(2) : "—"}h
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">Open</Badge>
+                          )}
+                        </div>
+                        <dl className="text-xs space-y-0.5">
+                          <div className="flex justify-between gap-2">
+                            <dt className="text-muted-foreground">In</dt>
+                            <dd>{formatDateTimeEST(e.clock_in)}</dd>
+                          </div>
+                          <div className="flex justify-between gap-2">
+                            <dt className="text-muted-foreground">Out</dt>
+                            <dd>{e.clock_out ? formatDateTimeEST(e.clock_out) : "—"}</dd>
+                          </div>
+                        </dl>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {Object.keys(totalsByMover).length > 0 && (

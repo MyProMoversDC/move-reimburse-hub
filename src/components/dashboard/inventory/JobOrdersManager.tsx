@@ -176,61 +176,128 @@ const JobOrdersManager = ({ userId }: Props) => {
             </Button>
           )}
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Job #</TableHead><TableHead>Client</TableHead><TableHead>Date</TableHead>
-              <TableHead>Status</TableHead><TableHead>Movers</TableHead><TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(() => {
-              const q = search.trim().toLowerCase();
-              const filteredRows = rows.filter(r => {
-                if (filterDate && r.job_date !== filterDate) return false;
-                if (q && !`${r.job_number} ${r.client_name}`.toLowerCase().includes(q)) return false;
-                return true;
-              });
-              if (filteredRows.length === 0) {
-                return <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No job orders</TableCell></TableRow>;
-              }
-              const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-              const safePage = Math.min(page, totalPages);
-              const start = (safePage - 1) * PAGE_SIZE;
-              const pageRows = filteredRows.slice(start, start + PAGE_SIZE);
-              return pageRows.map(r => {
-              const c = assignedCounts[r.id];
-              return (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.job_number}</TableCell>
-                <TableCell>{r.client_name}</TableCell>
-                <TableCell>{r.job_date}</TableCell>
-                <TableCell>
-                  <select value={r.status} onChange={e => updateStatus(r.id, e.target.value)} className="border rounded px-2 py-1 text-sm bg-background">
-                    <option value="pending">Pending</option><option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-                  </select>
-                </TableCell>
-                <TableCell className="text-xs">
-                  {!c || c.total === 0 ? <span className="text-muted-foreground">None</span> : (
-                    <div className="flex flex-wrap gap-1">
-                      {c.pending > 0 && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">{c.pending} pending</Badge>}
-                      {c.confirmed > 0 && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{c.confirmed} accepted</Badge>}
-                      {c.declined > 0 && <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">{c.declined} declined</Badge>}
+        {(() => {
+          const q = search.trim().toLowerCase();
+          const filteredRows = rows.filter(r => {
+            if (filterDate && r.job_date !== filterDate) return false;
+            if (q && !`${r.job_number} ${r.client_name}`.toLowerCase().includes(q)) return false;
+            return true;
+          });
+          if (filteredRows.length === 0) {
+            return <div className="text-center text-muted-foreground py-6">No job orders</div>;
+          }
+          const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+          const safePage = Math.min(page, totalPages);
+          const start = (safePage - 1) * PAGE_SIZE;
+          const pageRows = filteredRows.slice(start, start + PAGE_SIZE);
+          const statusPill: Record<string, string> = {
+            pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+            in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+            completed: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+            cancelled: "bg-muted text-muted-foreground",
+          };
+          return (
+            <>
+              {/* Desktop table — unchanged */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Job #</TableHead><TableHead>Client</TableHead><TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead><TableHead>Movers</TableHead><TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pageRows.map(r => {
+                      const c = assignedCounts[r.id];
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell className="font-medium">{r.job_number}</TableCell>
+                          <TableCell>{r.client_name}</TableCell>
+                          <TableCell>{r.job_date}</TableCell>
+                          <TableCell>
+                            <select value={r.status} onChange={e => updateStatus(r.id, e.target.value)} className="border rounded px-2 py-1 text-sm bg-background">
+                              <option value="pending">Pending</option><option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+                            </select>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {!c || c.total === 0 ? <span className="text-muted-foreground">None</span> : (
+                              <div className="flex flex-wrap gap-1">
+                                {c.pending > 0 && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">{c.pending} pending</Badge>}
+                                {c.confirmed > 0 && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{c.confirmed} accepted</Badge>}
+                                {c.declined > 0 && <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">{c.declined} declined</Badge>}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" onClick={() => setAssignTarget(r)} title="Assign / view movers">
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards — customer-first hierarchy */}
+              <div className="md:hidden divide-y">
+                {pageRows.map(r => {
+                  const c = assignedCounts[r.id];
+                  return (
+                    <div key={r.id} className="p-3 space-y-2 active:bg-muted/40">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-base leading-tight truncate">{r.client_name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Job #{r.job_number} · {r.job_date}
+                          </p>
+                        </div>
+                        <span className={`text-[10px] uppercase tracking-wide font-medium px-2 py-1 rounded-full whitespace-nowrap ${statusPill[r.status] ?? "bg-muted"}`}>
+                          {r.status.replace("_", " ")}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {!c || c.total === 0 ? (
+                          <span className="text-xs text-muted-foreground">No crew assigned</span>
+                        ) : (
+                          <>
+                            {c.confirmed > 0 && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">{c.confirmed} accepted</Badge>}
+                            {c.pending > 0 && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">{c.pending} pending</Badge>}
+                            {c.declined > 0 && <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">{c.declined} declined</Badge>}
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <select
+                          value={r.status}
+                          onChange={e => updateStatus(r.id, e.target.value)}
+                          className="flex-1 h-10 border rounded px-2 text-sm bg-background"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <Button variant="outline" size="sm" className="h-10" onClick={() => setAssignTarget(r)}>
+                          <UserCheck className="h-4 w-4 mr-1" /> Crew
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-10" onClick={() => remove(r.id)} aria-label="Delete">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => setAssignTarget(r)} title="Assign / view movers">
-                    <UserCheck className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </TableCell>
-              </TableRow>
-            );});
-            })()}
-          </TableBody>
-        </Table>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
         {(() => {
           const q = search.trim().toLowerCase();
           const total = rows.filter(r => {

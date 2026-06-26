@@ -179,12 +179,13 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] sm:w-full max-h-[calc(100vh-2rem)] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5" /> Assign Movers — Job #{jobNumber}
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <UserCheck className="h-5 w-5 shrink-0" />
+            <span className="truncate">Assign Movers — Job #{jobNumber}</span>
           </DialogTitle>
-          <DialogDescription>{clientName}</DialogDescription>
+          <DialogDescription className="truncate">{clientName}</DialogDescription>
         </DialogHeader>
 
         <div className="bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-400 p-3 text-sm rounded">
@@ -210,14 +211,14 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
                     events.sort((a, b) => a.at.localeCompare(b.at));
                     return (
                       <div key={e.mover_id} className="p-3 text-sm">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="font-medium">{e.first_name ?? ""} {e.last_name ?? ""}</div>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
+                          <div className="font-medium min-w-0 break-words">{e.first_name ?? ""} {e.last_name ?? ""}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
                             {e.moving_to_site_at && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-7 px-2"
+                                className="h-8 px-2"
                                 onClick={() => setTrackTarget(e)}
                                 title="Track this mover's live location"
                               >
