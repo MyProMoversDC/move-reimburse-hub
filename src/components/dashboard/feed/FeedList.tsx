@@ -240,7 +240,8 @@ const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListP
   };
 
   return (
-    <div className="space-y-4">
+    <PullToRefresh onRefresh={fetchPosts} className="space-y-4 max-h-[calc(100vh-9rem)] md:max-h-none md:overflow-visible">
+
       {/* Header - only show for admin */}
       {isAdmin && (
         <div className="flex items-center justify-between">
