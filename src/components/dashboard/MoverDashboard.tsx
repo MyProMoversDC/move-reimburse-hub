@@ -777,19 +777,41 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     </SidebarProvider>
   );
 
+  const moverShellNav: MobileShellNavItem[] = [
+    { id: "feed", label: "Feed", icon: Newspaper, badgeCount: unacknowledgedCount },
+    { id: "refer-friend", label: "Refer a Friend", icon: UserPlus },
+    { id: "todo", label: "To-Do List", icon: ClipboardList },
+    { id: "my-jobs", label: "My Jobs", icon: Truck },
+    { id: "shift-clock", label: "Shift Clock", icon: Clock },
+    { id: "reimbursements", label: "Reimbursements", icon: DollarSign },
+    { id: "reviews", label: "Customer Reviews", icon: Star },
+    { id: "missing-payments", label: "Missing Payments", icon: AlertTriangle },
+    { id: "violence", label: "Incident Reports", icon: Shield },
+    { id: "misconduct", label: "My Cases", icon: AlertTriangle },
+    { id: "feedback", label: "Feedback", icon: Lightbulb },
+    { id: "anonymous-feedback", label: "Anonymous Feedback", icon: EyeOff },
+    { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
+    { id: "chat", label: "Chat", icon: MessageSquare, dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
+  ];
+
   return (
-    <>
-      {/* Mobile Layout */}
-      <div className="md:hidden">
-        <MobileLayout />
-      </div>
-      
-      {/* Desktop Layout */}
-      <div className="hidden md:block">
-        <DesktopLayout />
-      </div>
-    </>
+    <MobileShell
+      navItems={moverShellNav}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      renderContent={renderContent}
+      rightActions={
+        <>
+          <MoverNotificationBell userId={userId} language={language} />
+          <MoverSettings userId={userId} language={language} ref={settingsButtonRef} onClose={handleSettingsClose} />
+          <LanguageSelector language={language} onLanguageChange={setLanguage} />
+        </>
+      }
+    >
+      <DesktopLayout />
+    </MobileShell>
   );
 };
+
 
 export default MoverDashboard;
