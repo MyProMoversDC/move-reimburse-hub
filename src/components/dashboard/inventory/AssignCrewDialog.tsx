@@ -71,7 +71,9 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
         const [roleRes, crewsRes, trucksRes, existingRes] = await Promise.all([
           supabase.from("user_roles").select("user_id").eq("role", "mover"),
           supabase.from("crews").select("id, name, crew_date").order("crew_date", { ascending: false }).limit(200),
-          supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
+          job.service_date
+            ? supabase.rpc("list_trucks_with_status", { _date: job.service_date })
+            : supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
           supabase
             .from("inv_job_orders")
             .select("id, truck_id, notes")
