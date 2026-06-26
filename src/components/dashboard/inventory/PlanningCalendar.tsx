@@ -192,7 +192,7 @@ const PlanningCalendar = ({ userId }: Props) => {
                   <div className="mt-1 space-y-0.5">
                     {dayJobs.slice(0, 2).map(j => (
                       <div key={j.id} className="text-[10px] truncate flex items-center gap-1">
-                        {assignedIds.has(j.smartmoving_id) && <CheckCircle2 className="h-2.5 w-2.5 text-green-600 shrink-0" />}
+                        {assignedMap.has(j.smartmoving_id) && <CheckCircle2 className="h-2.5 w-2.5 text-green-600 shrink-0" />}
                         <span className="truncate">{j.customer_name ?? j.job_number ?? "Job"}</span>
                       </div>
                     ))}
