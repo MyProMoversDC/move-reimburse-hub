@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserCheck } from "lucide-react";
+import { Loader2, UserCheck, MapPin } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import MoverAutocomplete from "./MoverAutocomplete";
+import MoverLiveTrackDialog from "./MoverLiveTrackDialog";
+
 
 interface Mover {
   id: string;
@@ -68,6 +70,8 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [trackTarget, setTrackTarget] = useState<ExistingAssignment | null>(null);
+
 
   const loadAll = async () => {
     setLoading(true);
@@ -159,8 +163,22 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
                       <div key={e.mover_id} className="p-3 text-sm">
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="font-medium">{e.first_name ?? ""} {e.last_name ?? ""}</div>
-                          <Badge className={statusBadge(e.status)}>{e.status.replace("_", " ")}</Badge>
+                          <div className="flex items-center gap-2">
+                            {e.moving_to_site_at && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2"
+                                onClick={() => setTrackTarget(e)}
+                                title="Track this mover's live location"
+                              >
+                                <MapPin className="h-3 w-3 mr-1" /> Track
+                              </Button>
+                            )}
+                            <Badge className={statusBadge(e.status)}>{e.status.replace("_", " ")}</Badge>
+                          </div>
                         </div>
+
                         {events.length === 0 ? (
                           <p className="text-xs text-muted-foreground">No activity yet.</p>
                         ) : (
@@ -202,7 +220,17 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
           </Button>
         </DialogFooter>
       </DialogContent>
+      {trackTarget && (
+        <MoverLiveTrackDialog
+          open={!!trackTarget}
+          onOpenChange={(o) => !o && setTrackTarget(null)}
+          assignmentRowId={trackTarget.assignment_id}
+          moverName={`${trackTarget.first_name ?? ""} ${trackTarget.last_name ?? ""}`.trim() || "Mover"}
+          jobNumber={jobNumber}
+        />
+      )}
     </Dialog>
+
   );
 };
 

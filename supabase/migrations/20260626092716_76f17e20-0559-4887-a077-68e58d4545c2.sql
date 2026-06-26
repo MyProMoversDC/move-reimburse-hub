@@ -1,0 +1,1 @@
+CREATE POLICY "Ops managers can view all job pings" ON public.job_location_pings FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'operations_manager'::app_role));
