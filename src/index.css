@@ -21,6 +21,17 @@
   .no-native-ptr { overscroll-behavior-y: contain; }
 }
 
+/* Mobile-first polish applied globally below the md breakpoint (≤767px).
+   Desktop layout (≥768px) is intentionally untouched. */
+@media (max-width: 767px) {
+  h1 { font-size: 1.5rem !important; line-height: 1.2 !important; }
+  h2 { font-size: 1.25rem !important; line-height: 1.25 !important; }
+  h3 { font-size: 1.125rem !important; line-height: 1.3 !important; }
+  table { font-size: 0.875rem; }
+  input, select, textarea { font-size: 16px; }
+  [role="tablist"] [role="tab"] { font-size: 0.8125rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+}
+
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
