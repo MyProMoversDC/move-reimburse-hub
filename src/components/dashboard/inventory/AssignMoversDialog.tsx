@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserCheck } from "lucide-react";
+import { Loader2, UserCheck, MapPin } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import MoverAutocomplete from "./MoverAutocomplete";
+import MoverLiveTrackDialog from "./MoverLiveTrackDialog";
+
 
 interface Mover {
   id: string;
