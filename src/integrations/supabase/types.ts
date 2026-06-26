@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_todo_dismissals: {
+        Row: {
+          dismissed_at: string
+          dismissed_by: string
+          id: string
+          item_id: string
+          item_type: string
+        }
+        Insert: {
+          dismissed_at?: string
+          dismissed_by: string
+          id?: string
+          item_id: string
+          item_type: string
+        }
+        Update: {
+          dismissed_at?: string
+          dismissed_by?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+        }
+        Relationships: []
+      }
       alcohol_test_reports: {
         Row: {
           actions_taken: string[]
