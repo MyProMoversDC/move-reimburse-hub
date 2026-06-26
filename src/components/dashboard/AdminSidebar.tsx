@@ -86,7 +86,7 @@ type NavGroup = {
   items: NavItem[];
 };
 
-const groups: NavGroup[] = [
+export const groups: NavGroup[] = [
   {
     id: "users",
     label: "User Management",
