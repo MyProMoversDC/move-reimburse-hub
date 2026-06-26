@@ -22,6 +22,7 @@ import { LogOut, UserCog, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { AppShellProvider, type AppShellRole } from "@/components/mobile/AppShellContext";
+import { useTouchShell } from "@/hooks/use-touch-shell";
 
 type UserRole =
   | "mover"
