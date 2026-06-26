@@ -215,3 +215,17 @@ Applied at the design-system layer so every cabinet (Admin, Operations Manager, 
 - Desktop (≥768px) layout, typography, and spacing are byte-identical
 - No business logic, no database, no Capacitor config, no push-notification code touched
 - Per-cabinet dashboards inherit all improvements via shadcn primitives
+
+---
+
+## Pass 4 — 2026-06-26
+
+Shipped this turn:
+
+- **SearchableSelect** trigger now renders at `h-11` + 16px text on mobile (no iOS zoom on focus) while keeping `h-10`/`text-sm` on desktop. Applied automatically everywhere it's used (Crews, Job Orders, Add Shift, Mover Filter, etc.).
+- **Sheet (drawer + side panels)** now sets `max-h-[100dvh] overflow-y-auto overscroll-contain` on its content so long drawers scroll inside themselves instead of rubber-banding the underlying page on iOS.
+- **AdminEmailLogs** got a `md:hidden` card list: subject as primary line, recipient/sender + type badge + EST timestamp on secondary lines, full-row tap target opens the existing detail dialog. Desktop `<Table>` preserved behind `hidden md:block`.
+- **AdminMoverShifts** "Active Now" badge swapped from hardcoded `bg-green-100 text-green-800` to the semantic `<Badge variant="secondary">` so theming follows tokens.
+
+Verified by re-reading the components; no business logic, RPC, or schema changes.
+
