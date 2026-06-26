@@ -76,12 +76,18 @@ const PlanningCalendar = ({ userId }: Props) => {
           .order("service_date", { ascending: true }),
         supabase
           .from("inv_job_orders")
-          .select("planned_from_smartmoving_id")
+          .select("id, job_number, client_name, planned_from_smartmoving_id")
           .not("planned_from_smartmoving_id", "is", null),
       ]);
       if (jRes.error) throw jRes.error;
       setJobs((jRes.data ?? []) as PlanningJob[]);
-      setAssignedIds(new Set((oRes.data ?? []).map((r: any) => r.planned_from_smartmoving_id)));
+      const m = new Map<string, AssignedJobRef>();
+      for (const r of (oRes.data ?? []) as any[]) {
+        if (r.planned_from_smartmoving_id) {
+          m.set(r.planned_from_smartmoving_id, { id: r.id, job_number: r.job_number, client_name: r.client_name });
+        }
+      }
+      setAssignedMap(m);
     } catch (e) {
       toast.error(handleError(e));
     } finally {
