@@ -163,8 +163,22 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
                       <div key={e.mover_id} className="p-3 text-sm">
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="font-medium">{e.first_name ?? ""} {e.last_name ?? ""}</div>
-                          <Badge className={statusBadge(e.status)}>{e.status.replace("_", " ")}</Badge>
+                          <div className="flex items-center gap-2">
+                            {e.moving_to_site_at && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2"
+                                onClick={() => setTrackTarget(e)}
+                                title="Track this mover's live location"
+                              >
+                                <MapPin className="h-3 w-3 mr-1" /> Track
+                              </Button>
+                            )}
+                            <Badge className={statusBadge(e.status)}>{e.status.replace("_", " ")}</Badge>
+                          </div>
                         </div>
+
                         {events.length === 0 ? (
                           <p className="text-xs text-muted-foreground">No activity yet.</p>
                         ) : (
