@@ -4,10 +4,13 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, RefreshCw, Map as MapIcon, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Map as MapIcon, Loader2, CheckCircle2, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { handleError } from "@/lib/errorHandler";
 import AssignCrewDialog from "./AssignCrewDialog";
+import AssignMoversDialog from "./AssignMoversDialog";
+
+interface AssignedJobRef { id: string; job_number: string | null; client_name: string | null; }
 
 interface PlanningJob {
   id: string;
