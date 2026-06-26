@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import PullToRefresh from "@/components/mobile/PullToRefresh";
+
 
 interface Attachment {
   id: string;
@@ -238,7 +240,8 @@ const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListP
   };
 
   return (
-    <div className="space-y-4">
+    <PullToRefresh onRefresh={fetchPosts} className="space-y-4 max-h-[calc(100vh-9rem)] md:max-h-none md:overflow-visible">
+
       {/* Header - only show for admin */}
       {isAdmin && (
         <div className="flex items-center justify-between">
@@ -327,7 +330,8 @@ const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListP
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PullToRefresh>
+
   );
 };
 
