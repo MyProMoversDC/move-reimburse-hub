@@ -70,6 +70,8 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [trackTarget, setTrackTarget] = useState<ExistingAssignment | null>(null);
+
 
   const loadAll = async () => {
     setLoading(true);
