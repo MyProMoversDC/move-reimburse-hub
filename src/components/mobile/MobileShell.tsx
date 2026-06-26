@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type ComponentType } from "react";
-import { Menu, LogOut, UserCog, X, ChevronDown } from "lucide-react";
+import { Menu, LogOut, UserCog, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -153,14 +153,6 @@ const MobileShell = ({
             <div className="flex items-center gap-2">
               <img src={logo} alt="MyProMovers" className="h-8" />
             </div>
-            <button
-              type="button"
-              aria-label="Close menu"
-              onClick={() => setOpen(false)}
-              className="touch-target rounded-md hover:bg-muted flex items-center justify-center"
-            >
-              <X className="h-5 w-5" />
-            </button>
             <SheetTitle className="sr-only">Navigation</SheetTitle>
           </SheetHeader>
 
