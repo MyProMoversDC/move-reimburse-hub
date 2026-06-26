@@ -61,6 +61,22 @@ const MobileShell = ({
   const [open, setOpen] = useState(false);
   const activeItemRef = useRef<HTMLButtonElement>(null);
   const shell = useAppShell();
+  const [roleExpanded, setRoleExpanded] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem("mobileShell.switchRole.expanded") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleRoleExpanded = () => {
+    setRoleExpanded((v) => {
+      const next = !v;
+      try {
+        sessionStorage.setItem("mobileShell.switchRole.expanded", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  };
 
   // When the drawer opens, scroll the active item into view
   useEffect(() => {
