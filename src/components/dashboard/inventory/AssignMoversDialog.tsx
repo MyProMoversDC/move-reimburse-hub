@@ -211,14 +211,14 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
                     events.sort((a, b) => a.at.localeCompare(b.at));
                     return (
                       <div key={e.mover_id} className="p-3 text-sm">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="font-medium">{e.first_name ?? ""} {e.last_name ?? ""}</div>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
+                          <div className="font-medium min-w-0 break-words">{e.first_name ?? ""} {e.last_name ?? ""}</div>
+                          <div className="flex items-center gap-2 flex-wrap">
                             {e.moving_to_site_at && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-7 px-2"
+                                className="h-8 px-2"
                                 onClick={() => setTrackTarget(e)}
                                 title="Track this mover's live location"
                               >
