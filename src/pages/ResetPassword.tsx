@@ -22,18 +22,41 @@ const ResetPassword = () => {
   const [confirm, setConfirm] = useState("");
 
   useEffect(() => {
-    // Supabase recovery link includes tokens in the URL hash; the client auto-processes them.
+    let cancelled = false;
+
+    const prepareRecoverySession = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const authCode = searchParams.get("code");
+
+      if (authCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(authCode);
+        if (!cancelled) {
+          if (error) {
+            toast.error(handleError(error));
+          } else {
+            setReady(true);
+          }
+        }
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!cancelled && session) setReady(true);
+    };
+
+    // Recovery links may arrive with tokens in the hash or with a one-time code.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
         setReady(true);
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-    });
+    prepareRecoverySession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
