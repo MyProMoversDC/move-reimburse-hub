@@ -57,13 +57,31 @@ const fmtEst = (iso: string | null) => {
 const statusBadge = (s: string) => {
   const map: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+    assigned: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
     confirmed: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+    en_route: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
     declined: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
     in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
     completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    cancelled: "bg-muted text-muted-foreground",
   };
   return map[s] ?? "bg-muted text-muted-foreground";
 };
+
+interface StatusEvent {
+  id: string;
+  from_status: string | null;
+  to_status: string;
+  trigger_source: string;
+  mover_action: string | null;
+  quorum_snapshot: Record<string, number> | null;
+  note: string | null;
+  created_at: string;
+  actor_first_name: string | null;
+  actor_last_name: string | null;
+}
+
+const STATUS_OPTIONS = ["pending","assigned","confirmed","en_route","in_progress","completed","cancelled"];
 
 const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientName, onAssigned }: Props) => {
   const [movers, setMovers] = useState<Mover[]>([]);
