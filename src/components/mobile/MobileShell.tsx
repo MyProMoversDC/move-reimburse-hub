@@ -139,7 +139,7 @@ const MobileShell = ({
       </header>
 
       {/* Edge-to-edge content area */}
-      <main className="flex-1 w-full min-w-0 px-3 pt-3 pb-safe scroll-touch">
+      <main className="flex-1 w-full min-w-0 px-4 pt-4 pb-safe scroll-touch">
         {renderContent()}
       </main>
 
