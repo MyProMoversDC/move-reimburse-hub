@@ -944,7 +944,9 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
         </TabsContent>
       </Tabs>
     </div>
+    </MobileShell>
   );
+
 };
 
 export default HRDashboard;
