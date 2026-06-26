@@ -131,8 +131,19 @@ const JobOrdersManager = ({ userId }: Props) => {
                   options={jobTypes.map(j => ({ value: j.id, label: j.name }))} placeholder="Select type" searchPlaceholder="Search..." emptyMessage="None" />
               </div>
               <div><Label>Truck</Label>
-                <SearchableSelect value={form.truck_id} onValueChange={v => setForm({ ...form, truck_id: v })}
-                  options={trucks.map(t => ({ value: t.id, label: t.truck_number }))} placeholder="Select truck" searchPlaceholder="Search..." emptyMessage="None" />
+                <SearchableSelect
+                  value={form.truck_id}
+                  onValueChange={v => setForm({ ...form, truck_id: v })}
+                  options={trucks
+                    .filter(t => t.is_available || t.id === form.truck_id)
+                    .map(t => ({ value: t.id, label: t.truck_number }))}
+                  placeholder="Select available truck"
+                  searchPlaceholder="Search..."
+                  emptyMessage="No trucks available on this date"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Only trucks available on {form.job_date} are shown (excludes maintenance, reserved, in use, inactive, out of service).
+                </p>
               </div>
               <div><Label>Pickup Address</Label><Input value={form.pickup_address} onChange={e => setForm({ ...form, pickup_address: e.target.value })} /></div>
               <div><Label>Dropoff Address</Label><Input value={form.dropoff_address} onChange={e => setForm({ ...form, dropoff_address: e.target.value })} /></div>
