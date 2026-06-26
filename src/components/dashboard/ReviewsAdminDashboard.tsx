@@ -89,15 +89,12 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
         return (
           <div className="space-y-4">
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <h2 className="text-lg font-bold">Review Submissions</h2>
-                <div className="flex items-center gap-2">
-                  <AddBonusDialog userId={userId} language={language} />
-                  <Button onClick={handleExportReviews} disabled={exportingReviews} size="sm" className="text-xs">
-                    <Download className="h-3 w-3 mr-1" />
-                    Export
-                  </Button>
-                </div>
+              <div className="flex items-center justify-end gap-2 flex-wrap">
+                <AddBonusDialog userId={userId} language={language} />
+                <Button onClick={handleExportReviews} disabled={exportingReviews} size="sm" className="text-xs">
+                  <Download className="h-3 w-3 mr-1" />
+                  Export
+                </Button>
               </div>
               <DateRangeFilter startDate={reviewStartDate} endDate={reviewEndDate} onStartDateChange={setReviewStartDate} onEndDateChange={setReviewEndDate} onClear={() => { setReviewStartDate(undefined); setReviewEndDate(undefined); }} />
             </div>
@@ -107,10 +104,7 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
       case "missing-payments":
         return (
           <div className="space-y-4">
-            <div className="flex flex-col gap-3">
-              <h2 className="text-lg font-bold">Missing Payments</h2>
-              <DateRangeFilter startDate={missingPaymentStartDate} endDate={missingPaymentEndDate} onStartDateChange={setMissingPaymentStartDate} onEndDateChange={setMissingPaymentEndDate} onClear={() => { setMissingPaymentStartDate(undefined); setMissingPaymentEndDate(undefined); }} />
-            </div>
+            <DateRangeFilter startDate={missingPaymentStartDate} endDate={missingPaymentEndDate} onStartDateChange={setMissingPaymentStartDate} onEndDateChange={setMissingPaymentEndDate} onClear={() => { setMissingPaymentStartDate(undefined); setMissingPaymentEndDate(undefined); }} />
             <AdminMissingPaymentList language={language} startDate={missingPaymentStartDate} endDate={missingPaymentEndDate} />
           </div>
         );

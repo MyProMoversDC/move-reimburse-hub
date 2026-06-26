@@ -1,34 +1,50 @@
-# Mobile UI Sweep — Approved Plan
+Based on the Mobile UX Audit Report (`MOBILE_UX_AUDIT.md`), the global shell, font stack, and collapsible Switch Cabinet are done. The next pass focuses on the remaining per-screen polish issues flagged as High priority so the app feels fully native on phones before release.
 
-## Hard constraints (do not violate in any phase)
-- DO NOT modify `capacitor.config.ts`, native Capacitor plugins, Keyboard config, StatusBar config, or `<meta viewport>` settings. Native shell is production-stable.
-- DO NOT auto-transform every shadcn `<Table>` globally. `ResponsiveCardTable` is a shared foundation; each major business table (Jobs, Fleet, Warehouse, Reviews, Payments, Reports, etc.) gets its own optimized mobile card layout to preserve usability and information hierarchy.
-- Desktop layouts must remain byte-for-byte unchanged.
-- Preserve all business logic, RLS, Capacitor config, push notifications.
+## Scope (mobile only, ≤430px width — desktop untouched)
 
-## Phase A — Shell polish (this turn, DONE)
-- `src/pages/Dashboard.tsx`: top header is now sticky, safe-area-padded (`pt-safe`), backdrop-blurred on mobile; desktop unchanged.
-- Existing `pt-safe`/`pb-safe`/`pl-safe`/`pr-safe` utilities in `src/index.css` stay as the safe-area foundation.
-- `MobileHeader`, `ResponsiveDialog`, `ResponsiveCardTable`, `PullToRefresh`, `StickySaveBar` primitives remain available for per-screen use.
+### 1. Remove duplicate page headers
+Several dashboards render an in-page H1/title that duplicates the sticky top bar title.
+- `OperationsManagerDashboard.tsx`
+- `WarehouseKeeperDashboard.tsx`
+- `HRManagerDashboard.tsx`
+- `AccountantDashboard.tsx`
+- `CustomerReviewManagerDashboard.tsx`
+Hide the in-page header on touch shells (`useTouchShell()` → `hidden`), keep it on desktop.
 
-## Phase B — Per-table mobile card migrations (hand-tuned, batched)
-Each table gets its own card design (not a generic auto-stack). Priority order:
+### 2. Convert remaining desktop tables to mobile cards
+Wrap each table in `<div className="hidden md:block">` and add a `<div className="md:hidden">` card list using the existing `ResponsiveCardTable` primitive.
+Targets identified in the audit:
+- Ops Manager: `JobOrdersManager.tsx`, `FleetManager.tsx`, `CrewsManager.tsx`
+- Warehouse Keeper: `WarehouseInventory.tsx`, `PurchasesManager.tsx`, `ReportsView.tsx`
+- HR Manager: employee directory table
+- Accountant: reimbursements payout table
 
-- B1 (operations-critical): `JobOrdersManager`, `AdminMoverShifts`, `MoversList`, `AssignMoversDialog` crew list, `FleetManager`
-- B2 (finance): `AdminCustomerRefundList`, `ReimbursementHistory`, `ReimbursementReportingDashboard`, `DeductiblesReport`, `AdminMissingPaymentList`, `AdminPaymentQuestionList`
-- B3 (reviews/HR): `AdminReviewBonusList`, `CustomerReviewReportingDashboard`, `MissingPaymentReportingDashboard`, `HRDashboard`, `AdminAlcoholTestList`, `AdminViolenceIncidentList`, `PerformanceReportsList`
-- B4 (inventory): `WarehouseManager`, `PurchasesManager`, `ReportsDashboard`
-- B5 (admin/utility): `AdminSignupApprovals`, `UserRoleManager`, `AdminReferralList`, `UserActivityLog`, `AdminEmailLogs`, `SignedConsentDocuments`, `ConsentDocumentManager`, `ReferFriendHistory`, `ViolenceIncidentHistory`, `AddressHistoryView`
+### 3. Forms & inputs
+- Force `text-base` (16px) on all `<Input>`/`<Textarea>` on mobile to prevent iOS zoom-on-focus.
+- Make HR Manager search input full-width with `min-w-0` so it stops clipping at the right edge.
+- Ensure every dialog opened on mobile uses `ResponsiveDialog` (sheet from bottom) — audit `AssignMoversDialog`, `AssignCrewDialog`, `MoverLiveTrackDialog`, `FleetManager` edit dialog.
 
-## Phase C — ResponsiveDialog sweep (form + assignment dialogs)
-Swap `Dialog` → `ResponsiveDialog` so mobile gets bottom-sheet / full-screen sheet, desktop stays modal:
-`AssignMoversDialog`, `AssignCrewDialog`, `AddBonusDialog`, `ApplyDeductibleDialog`, `AppealForm`, `AlcoholTestReportForm`, `MoverLiveTrackDialog`, `AnnualAddressDisclaimer`, plus the remaining form dialogs across cabinets.
+### 4. Badge & status chip tokenization
+Replace ad-hoc `bg-green-500`/`bg-red-500` chips across job-order, shift, and assignment views with semantic variants of `<Badge>` so dark mode and brand theming work consistently.
 
-## Phase D — MobileHeader standardization
-Add `MobileHeader` inside each role dashboard that owns its own scroll area (Admin, Mover use SidebarTrigger; tab-based cabinets get a title-only variant). Shared Dashboard.tsx top bar already covers brand + role switcher + logout.
+### 5. Safe-area & scroll polish
+- Add `pb-safe` to the bottom of every primary scroll container so the last row clears the iOS home indicator.
+- Add `overscroll-contain` to drawer and dialog bodies to stop rubber-band bleed.
+- Confirm the sticky top bar keeps `pt-safe` after the recent changes (spot-check on Dynamic Island viewport).
 
-## Phase E — Pull-to-Refresh polish (final pass)
-Wrap each cabinet's main list/feed with `PullToRefresh` bound to its refetch.
+### 6. Verification
+Drive Playwright at 390×844:
+- One screenshot per role dashboard after fixes.
+- One screenshot of each converted table view (before/after side-by-side in the report).
+- Open one dialog per role and confirm it slides up as a sheet.
+Append results to `MOBILE_UX_AUDIT.md` under a new "Pass 2" section and mark items complete.
 
-## Out of scope for the agent
-On-device native verification (Dynamic Island, gesture nav, keyboard avoidance, orientation, tablet split-view) must be done on your hardware via your Capacitor builds. After Phase B I will hand over a one-page on-device QA checklist.
+## Out of scope
+- Any desktop layout changes.
+- Business logic, RLS, edge functions, schema.
+- Native Capacitor config, push notifications, build pipelines.
+
+## Technical notes
+- Gate all mobile-only branches on `useTouchShell()` or Tailwind `md:` breakpoints — never on user agent.
+- Reuse existing primitives (`ResponsiveDialog`, `ResponsiveCardTable`, `MobileHeader`, `PullToRefresh`); do not introduce new ones.
+- No new dependencies.

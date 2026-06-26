@@ -83,25 +83,48 @@ const PurchasesManager = ({ userId }: Props) => {
         <div className="bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-yellow-400 p-3 text-sm">
           Recording a purchase automatically increases the warehouse inventory quantity for that item.
         </div>
-        <Table>
-          <TableHeader><TableRow>
-            <TableHead>When</TableHead><TableHead>Item</TableHead><TableHead>Qty</TableHead>
-            <TableHead>Unit Cost</TableHead><TableHead>Vendor</TableHead><TableHead>Notes</TableHead>
-          </TableRow></TableHeader>
-          <TableBody>
-            {rows.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No purchases yet</TableCell></TableRow>
-            : rows.map(r => (
-              <TableRow key={r.id}>
-                <TableCell>{new Date(r.purchased_at).toLocaleString("en-US", { timeZone: "America/New_York" })}</TableCell>
-                <TableCell className="font-medium">{nameOf(r.item_id)}</TableCell>
-                <TableCell>{r.quantity}</TableCell>
-                <TableCell>{r.unit_cost != null ? `$${r.unit_cost}` : "—"}</TableCell>
-                <TableCell>{r.vendor || "—"}</TableCell>
-                <TableCell className="max-w-xs truncate">{r.notes || "—"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        {/* Desktop table */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>When</TableHead><TableHead>Item</TableHead><TableHead>Qty</TableHead>
+              <TableHead>Unit Cost</TableHead><TableHead>Vendor</TableHead><TableHead>Notes</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {rows.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No purchases yet</TableCell></TableRow>
+              : rows.map(r => (
+                <TableRow key={r.id}>
+                  <TableCell>{new Date(r.purchased_at).toLocaleString("en-US", { timeZone: "America/New_York" })}</TableCell>
+                  <TableCell className="font-medium">{nameOf(r.item_id)}</TableCell>
+                  <TableCell>{r.quantity}</TableCell>
+                  <TableCell>{r.unit_cost != null ? `$${r.unit_cost}` : "—"}</TableCell>
+                  <TableCell>{r.vendor || "—"}</TableCell>
+                  <TableCell className="max-w-xs truncate">{r.notes || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y">
+          {rows.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6 text-sm">No purchases yet</p>
+          ) : rows.map(r => (
+            <div key={r.id} className="p-3 space-y-1">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold text-sm">{nameOf(r.item_id)}</p>
+                <span className="text-sm font-medium shrink-0">
+                  {r.quantity}{r.unit_cost != null ? ` × $${r.unit_cost}` : ""}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {new Date(r.purchased_at).toLocaleString("en-US", { timeZone: "America/New_York" })}
+              </p>
+              {r.vendor && <p className="text-xs"><span className="text-muted-foreground">Vendor:</span> {r.vendor}</p>}
+              {r.notes && <p className="text-xs text-muted-foreground break-words">{r.notes}</p>}
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

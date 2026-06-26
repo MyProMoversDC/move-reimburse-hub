@@ -124,33 +124,61 @@ const WarehouseManager = ({ userId }: Props) => {
         <div className="bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-yellow-400 p-3 text-sm">
           Manage warehouse stock. Items with quantity at or below minimum stock level show a low-stock warning.
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item</TableHead><TableHead>UOM</TableHead><TableHead>Qty</TableHead>
-              <TableHead>Min</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No items</TableCell></TableRow>
-            : items.map(it => {
-              const low = it.quantity <= it.min_stock_level;
-              return (
-                <TableRow key={it.id}>
-                  <TableCell className="font-medium">{it.name}</TableCell>
-                  <TableCell>{it.uom}</TableCell>
-                  <TableCell>{it.quantity}</TableCell>
-                  <TableCell>{it.min_stock_level}</TableCell>
-                  <TableCell><Badge variant={low ? "destructive" : "default"}>{low ? "Low" : "OK"}</Badge></TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(it)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => remove(it.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        {/* Desktop table */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead><TableHead>UOM</TableHead><TableHead>Qty</TableHead>
+                <TableHead>Min</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No items</TableCell></TableRow>
+              : items.map(it => {
+                const low = it.quantity <= it.min_stock_level;
+                return (
+                  <TableRow key={it.id}>
+                    <TableCell className="font-medium">{it.name}</TableCell>
+                    <TableCell>{it.uom}</TableCell>
+                    <TableCell>{it.quantity}</TableCell>
+                    <TableCell>{it.min_stock_level}</TableCell>
+                    <TableCell><Badge variant={low ? "destructive" : "default"}>{low ? "Low" : "OK"}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(it)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => remove(it.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y">
+          {items.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6 text-sm">No items</p>
+          ) : items.map(it => {
+            const low = it.quantity <= it.min_stock_level;
+            return (
+              <div key={it.id} className="p-3 flex items-start justify-between gap-3 active:bg-muted/40">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{it.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {it.quantity} {it.uom} · min {it.min_stock_level}
+                  </p>
+                  <Badge variant={low ? "destructive" : "default"} className="mt-1 text-[10px]">
+                    {low ? "Low" : "OK"}
+                  </Badge>
+                </div>
+                <div className="flex shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(it)}><Pencil className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => remove(it.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
