@@ -274,6 +274,8 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [documentNotes, setDocumentNotes] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [activeTopTab, setActiveTopTab] = useState<string>("hr-cabinet");
+
 
   useEffect(() => {
     fetchUsers();
