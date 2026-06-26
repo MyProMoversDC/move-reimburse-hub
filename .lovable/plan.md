@@ -1,50 +1,45 @@
-Based on the Mobile UX Audit Report (`MOBILE_UX_AUDIT.md`), the global shell, font stack, and collapsible Switch Cabinet are done. The next pass focuses on the remaining per-screen polish issues flagged as High priority so the app feels fully native on phones before release.
+## Mobile UX Pass 4 — Per-screen polish & remaining table conversions
 
-## Scope (mobile only, ≤430px width — desktop untouched)
+With the global shell, typography, density, and centered max-width container now shipped, the next step is to clear the remaining High-priority items from `MOBILE_UX_AUDIT.md` so the app is release-ready on phones.
 
-### 1. Remove duplicate page headers
-Several dashboards render an in-page H1/title that duplicates the sticky top bar title.
-- `OperationsManagerDashboard.tsx`
-- `WarehouseKeeperDashboard.tsx`
-- `HRManagerDashboard.tsx`
-- `AccountantDashboard.tsx`
-- `CustomerReviewManagerDashboard.tsx`
-Hide the in-page header on touch shells (`useTouchShell()` → `hidden`), keep it on desktop.
+### 1. Convert remaining wide tables to mobile cards
+These still render as horizontally-scrolling desktop tables on phones:
+- `ShiftScheduleAdmin` (admin shift records)
+- `AdminMoverShifts` "Live Now" + history tables
+- `EmailLogs` inbound/outbound trail
+- `JobOrdersManager` job list (desktop table stays; add `md:hidden` card list)
+- `CrewsManager` crews & members table
 
-### 2. Convert remaining desktop tables to mobile cards
-Wrap each table in `<div className="hidden md:block">` and add a `<div className="md:hidden">` card list using the existing `ResponsiveCardTable` primitive.
-Targets identified in the audit:
-- Ops Manager: `JobOrdersManager.tsx`, `FleetManager.tsx`, `CrewsManager.tsx`
-- Warehouse Keeper: `WarehouseInventory.tsx`, `PurchasesManager.tsx`, `ReportsView.tsx`
-- HR Manager: employee directory table
-- Accountant: reimbursements payout table
+Each gets a `md:hidden` card list (Title, key fields, status Badge, actions in a row) while the existing `<Table>` is preserved behind `hidden md:block`.
 
-### 3. Forms & inputs
-- Force `text-base` (16px) on all `<Input>`/`<Textarea>` on mobile to prevent iOS zoom-on-focus.
-- Make HR Manager search input full-width with `min-w-0` so it stops clipping at the right edge.
-- Ensure every dialog opened on mobile uses `ResponsiveDialog` (sheet from bottom) — audit `AssignMoversDialog`, `AssignCrewDialog`, `MoverLiveTrackDialog`, `FleetManager` edit dialog.
+### 2. Badge & status tokenization sweep
+Replace remaining hardcoded color chips (`bg-green-100 text-green-700`, etc.) in Ops/HR/Reviews/Accountant lists with the semantic `<Badge variant="...">` component so they theme correctly and read consistently on mobile.
 
-### 4. Badge & status chip tokenization
-Replace ad-hoc `bg-green-500`/`bg-red-500` chips across job-order, shift, and assignment views with semantic variants of `<Badge>` so dark mode and brand theming work consistently.
+### 3. Drawer & dialog polish
+- Add `overscroll-contain` to `Sheet` body (drawer no longer rubber-bands the page underneath on iOS).
+- Make `ResponsiveDialog` snap to bottom-sheet on phones with a drag handle for the dialogs that are still center-modals (Assign Movers, Assign Crew, Mover Live Track, Force Status).
 
-### 5. Safe-area & scroll polish
-- Add `pb-safe` to the bottom of every primary scroll container so the last row clears the iOS home indicator.
-- Add `overscroll-contain` to drawer and dialog bodies to stop rubber-band bleed.
-- Confirm the sticky top bar keeps `pt-safe` after the recent changes (spot-check on Dynamic Island viewport).
+### 4. Forms polish
+- `MoverAutocomplete`, `SearchableSelect`: bump trigger to `h-11` and 16px on mobile to match the design-system update.
+- Date pickers: ensure calendar popovers don't overflow the 640px container.
 
-### 6. Verification
-Drive Playwright at 390×844:
-- One screenshot per role dashboard after fixes.
-- One screenshot of each converted table view (before/after side-by-side in the report).
-- Open one dialog per role and confirm it slides up as a sheet.
-Append results to `MOBILE_UX_AUDIT.md` under a new "Pass 2" section and mark items complete.
+### 5. Empty states & loading skeletons
+Standardize empty states (icon + one line + optional CTA) for Reimbursements history, Payment Questions, Feed, Job Orders, Shifts — currently several show raw "No data" text.
 
-## Out of scope
-- Any desktop layout changes.
-- Business logic, RLS, edge functions, schema.
-- Native Capacitor config, push notifications, build pipelines.
+### 6. Audit verification
+Re-run the Playwright mobile sweep across all 8 cabinets at 390×844 and append a Pass 4 section to `MOBILE_UX_AUDIT.md` with before/after screenshots and the final pre-release checklist (Dynamic Island, Android gesture nav, landscape).
 
-## Technical notes
-- Gate all mobile-only branches on `useTouchShell()` or Tailwind `md:` breakpoints — never on user agent.
-- Reuse existing primitives (`ResponsiveDialog`, `ResponsiveCardTable`, `MobileHeader`, `PullToRefresh`); do not introduce new ones.
-- No new dependencies.
+### Out of scope
+- No business logic / DB / RLS changes.
+- Desktop layout untouched.
+- No changes to Capacitor config, push notifications, or auth flows.
+
+### Files expected to change
+- `src/components/dashboard/shifts/ShiftScheduleAdmin.tsx`
+- `src/components/dashboard/AdminMoverShifts.tsx`
+- `src/components/dashboard/EmailLogs.tsx`
+- `src/components/dashboard/inventory/JobOrdersManager.tsx`
+- `src/components/dashboard/inventory/CrewsManager.tsx`
+- `src/components/ui/sheet.tsx`, `src/components/ui/responsive-dialog.tsx`
+- `src/components/MoverAutocomplete.tsx`, `src/components/SearchableSelect.tsx`
+- `MOBILE_UX_AUDIT.md`
