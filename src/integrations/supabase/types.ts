@@ -3693,6 +3693,10 @@ export type Database = {
           id: string
           is_active: boolean
           license_plate: string | null
+          maintenance_end_date: string | null
+          maintenance_notes: string | null
+          maintenance_start_date: string | null
+          manual_status: Database["public"]["Enums"]["truck_manual_status"]
           truck_number: string
           updated_at: string
         }
@@ -3702,6 +3706,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           license_plate?: string | null
+          maintenance_end_date?: string | null
+          maintenance_notes?: string | null
+          maintenance_start_date?: string | null
+          manual_status?: Database["public"]["Enums"]["truck_manual_status"]
           truck_number: string
           updated_at?: string
         }
@@ -3711,6 +3719,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           license_plate?: string | null
+          maintenance_end_date?: string | null
+          maintenance_notes?: string | null
+          maintenance_start_date?: string | null
+          manual_status?: Database["public"]["Enums"]["truck_manual_status"]
           truck_number?: string
           updated_at?: string
         }
@@ -4071,6 +4083,10 @@ export type Database = {
         Args: { input_username: string }
         Returns: string
       }
+      get_truck_status: {
+        Args: { _date?: string; _exclude_job_id?: string; _truck_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4115,6 +4131,21 @@ export type Database = {
           responded_at: string
           started_at: string
           status: string
+        }[]
+      }
+      list_trucks_with_status: {
+        Args: { _date?: string; _exclude_job_id?: string }
+        Returns: {
+          capacity_notes: string
+          computed_status: string
+          id: string
+          is_available: boolean
+          license_plate: string
+          maintenance_end_date: string
+          maintenance_notes: string
+          maintenance_start_date: string
+          manual_status: string
+          truck_number: string
         }[]
       }
       match_office_ai_chunks: {
@@ -4187,6 +4218,11 @@ export type Database = {
         | "appeal"
       review_bonus_status: "pending" | "confirmed" | "declined" | "appeal"
       shift_status: "pending" | "confirmed" | "cancelled"
+      truck_manual_status:
+        | "active"
+        | "under_maintenance"
+        | "inactive"
+        | "out_of_service"
       unit_of_measure: "piece" | "roll" | "box" | "pack" | "set" | "ft" | "lb"
       violence_incident_type:
         | "verbal_threat"
@@ -4381,6 +4417,12 @@ export const Constants = {
       ],
       review_bonus_status: ["pending", "confirmed", "declined", "appeal"],
       shift_status: ["pending", "confirmed", "cancelled"],
+      truck_manual_status: [
+        "active",
+        "under_maintenance",
+        "inactive",
+        "out_of_service",
+      ],
       unit_of_measure: ["piece", "roll", "box", "pack", "set", "ft", "lb"],
       violence_incident_type: [
         "verbal_threat",
