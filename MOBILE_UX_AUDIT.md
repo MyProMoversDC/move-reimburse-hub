@@ -183,3 +183,35 @@ Following user approval of the polish plan, this pass focused on the High-priori
 - [ ] Verify push-notification deep-links land on the correct tab via `setActiveTab`.
 - [ ] Confirm `capacitor.config.ts` has no preview `server.url` before producing release builds.
 - [ ] Run the Play Console internal-test build once more after this pass to confirm no regression in the auth flow.
+
+---
+
+## Pass 3 — Global Font & Density Optimization (all 8 cabinets)
+
+Applied at the design-system layer so every cabinet (Admin, Operations Manager, Mover, HR, Customer Review Manager, Office Staff, Warehouse Keeper, Accountant) benefits in one shot — no per-screen edits required.
+
+### Typography (mobile only, ≤767px)
+- `h1` clamped to 1.5rem / 1.2 line-height
+- `h2` clamped to 1.25rem
+- `h3` clamped to 1.125rem
+- Tables forced to 14px so dense desktop tables stop overflowing
+- Tab triggers tightened (13px + 8px padding) so 4–6 tab rows fit a 390px viewport
+
+### Form controls (iOS zoom fix + touch targets)
+- `Input` height: `h-11` on phones, `h-10` on desktop
+- `Select` trigger: `h-11` + `text-base` on phones; `h-10` + `text-sm` on desktop
+- Global rule forces `font-size: 16px` on every `input/select/textarea` under 768px so iOS Safari never zooms on focus
+
+### Card density
+- `CardHeader`, `CardContent`, `CardFooter` padding: `p-4` on phones, `p-6` on desktop
+- `CardTitle`: `text-lg` on phones, `text-2xl` on desktop, tighter `leading-tight`
+
+### Dialogs
+- Constrained to `calc(100vw − 1.5rem)` with `max-h-[90dvh]`
+- `overflow-y-auto` + `overscroll-contain` so long forms scroll inside the dialog instead of the page bouncing behind it
+- Rounded on every breakpoint (was `sm:rounded-lg` only), padding `p-4` mobile / `p-6` desktop
+
+### Untouched on purpose
+- Desktop (≥768px) layout, typography, and spacing are byte-identical
+- No business logic, no database, no Capacitor config, no push-notification code touched
+- Per-cabinet dashboards inherit all improvements via shadcn primitives
