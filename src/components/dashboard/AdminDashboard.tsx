@@ -46,6 +46,10 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { LayoutDashboard, MessageSquare } from "lucide-react";
+import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
+import { groups as adminGroups } from "./AdminSidebar";
+
 
 interface AdminDashboardProps {
   userId: string;
