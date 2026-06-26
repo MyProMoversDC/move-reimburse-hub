@@ -51,7 +51,7 @@ import DriverLicenseDisclaimer from "./DriverLicenseDisclaimer";
 import AddressDisclaimer from "./AddressDisclaimer";
 import FeedPostPopup from "./FeedPostPopup";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
-import { EyeOff, Newspaper as NewspaperIcon } from "lucide-react";
+import { EyeOff } from "lucide-react";
 
 
 interface MoverDashboardProps {
