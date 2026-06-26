@@ -248,6 +248,59 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
             )}
 
             <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <History className="h-4 w-4" /> Job status timeline
+                </Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Current:</span>
+                  <Badge className={statusBadge(jobStatus)}>{jobStatus.replace("_", " ") || "—"}</Badge>
+                </div>
+              </div>
+              <div className="border rounded-lg p-3 max-h-56 overflow-y-auto bg-muted/30">
+                {events.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No status changes yet.</p>
+                ) : (
+                  <ol className="space-y-1 border-l-2 border-muted pl-3">
+                    {events.map((ev) => {
+                      const actor = `${ev.actor_first_name ?? ""} ${ev.actor_last_name ?? ""}`.trim();
+                      const snap = ev.quorum_snapshot
+                        ? `${ev.quorum_snapshot.arrived_site ?? 0}/${ev.quorum_snapshot.accepted ?? 0} arrived, ${ev.quorum_snapshot.completed ?? 0} completed`
+                        : "";
+                      return (
+                        <li key={ev.id} className="text-xs">
+                          <span className="text-muted-foreground">{fmtEst(ev.created_at)} — </span>
+                          <span className="font-medium">{(ev.from_status ?? "new").replace("_"," ")} → {ev.to_status.replace("_"," ")}</span>
+                          {ev.trigger_source && <span className="text-muted-foreground"> · {ev.trigger_source.replace("_"," ")}</span>}
+                          {actor && <span className="text-muted-foreground"> · by {actor}</span>}
+                          {snap && <span className="text-muted-foreground" title={JSON.stringify(ev.quorum_snapshot)}> · {snap}</span>}
+                          {ev.note && <span className="text-muted-foreground"> · {ev.note}</span>}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs text-muted-foreground">Force status:</span>
+                <Select value={overrideStatus} onValueChange={setOverrideStatus}>
+                  <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">{s.replace("_"," ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm" variant="outline" className="h-8"
+                  disabled={overrideBusy || overrideStatus === jobStatus}
+                  onClick={forceStatus}
+                >
+                  {overrideBusy && <Loader2 className="h-3 w-3 mr-1 animate-spin" />} Apply
+                </Button>
+              </div>
+            </div>
+
               <Label className="text-sm font-semibold">Add movers</Label>
               <MoverAutocomplete
                 movers={movers}
