@@ -90,7 +90,10 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [trackTarget, setTrackTarget] = useState<ExistingAssignment | null>(null);
-
+  const [events, setEvents] = useState<StatusEvent[]>([]);
+  const [jobStatus, setJobStatus] = useState<string>("");
+  const [overrideStatus, setOverrideStatus] = useState<string>("");
+  const [overrideBusy, setOverrideBusy] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
@@ -115,6 +118,15 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
       if (eErr) throw eErr;
       setExisting((ex ?? []) as ExistingAssignment[]);
       setSelected(new Set());
+
+      const { data: evts } = await supabase
+        .rpc("list_inv_job_status_events", { _inv_job_id: jobOrderId });
+      setEvents((evts ?? []) as StatusEvent[]);
+
+      const { data: job } = await supabase
+        .from("inv_job_orders").select("status").eq("id", jobOrderId).maybeSingle();
+      setJobStatus(job?.status ?? "");
+      setOverrideStatus(job?.status ?? "");
     } catch (e) {
       toast.error(handleError(e));
     } finally {
@@ -123,6 +135,24 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   };
 
   useEffect(() => { if (open) loadAll(); }, [open, jobOrderId]);
+
+  const forceStatus = async () => {
+    if (!overrideStatus || overrideStatus === jobStatus) return;
+    setOverrideBusy(true);
+    try {
+      const { error } = await supabase.rpc("ops_set_inv_job_status", {
+        _inv_job_id: jobOrderId, _new_status: overrideStatus, _note: "Ops manager manual override",
+      });
+      if (error) throw error;
+      toast.success(`Status set to ${overrideStatus.replace("_"," ")}`);
+      onAssigned?.();
+      loadAll();
+    } catch (e) {
+      toast.error(handleError(e));
+    } finally {
+      setOverrideBusy(false);
+    }
+  };
 
   const alreadyAssigned = new Set(existing.map((e) => e.mover_id));
 
