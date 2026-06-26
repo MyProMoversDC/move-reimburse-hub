@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type ComponentType } from "react";
-import { Menu, LogOut, UserCog, Check, X } from "lucide-react";
+import { Menu, LogOut, UserCog, X, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTouchShell } from "@/hooks/use-touch-shell";
@@ -61,6 +60,22 @@ const MobileShell = ({
   const [open, setOpen] = useState(false);
   const activeItemRef = useRef<HTMLButtonElement>(null);
   const shell = useAppShell();
+  const [roleExpanded, setRoleExpanded] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem("mobileShell.switchRole.expanded") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleRoleExpanded = () => {
+    setRoleExpanded((v) => {
+      const next = !v;
+      try {
+        sessionStorage.setItem("mobileShell.switchRole.expanded", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  };
 
   // When the drawer opens, scroll the active item into view
   useEffect(() => {
@@ -107,10 +122,17 @@ const MobileShell = ({
           >
             <Menu className="h-6 w-6" />
           </button>
-          <h1 className="flex-1 text-base font-semibold text-center truncate px-2">
+          <h1 className="flex-1 min-w-0 text-[15px] font-semibold text-center truncate px-1">
             {title}
           </h1>
-          <div className="flex items-center gap-1 min-w-[44px] justify-end">
+          <div
+            className={cn(
+              "flex items-center gap-1 shrink-0 justify-end max-w-[44vw] overflow-hidden",
+              // Compress whatever the dashboard passes in so it fits the native bar
+              "[&_button]:h-9 [&_button]:px-2 [&_button]:text-xs [&_button]:gap-1",
+              "[&_button>span]:truncate [&_svg]:h-4 [&_svg]:w-4",
+            )}
+          >
             {rightActions}
           </div>
         </div>
@@ -195,50 +217,66 @@ const MobileShell = ({
           {/* Drawer footer — role switcher + logout */}
           {shell && (
             <div className="border-t bg-card pb-safe">
-              <div className="px-3 py-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-2 pb-1">
-                  Signed in
-                </p>
-                <p className="text-sm font-medium truncate px-2 pb-2">{shell.userName}</p>
+              <div className="px-2 py-2 space-y-1">
                 {shell.availableRoles.length > 1 && (
-                  <div className="space-y-1 mb-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground px-2 flex items-center gap-1">
-                      <UserCog className="h-3 w-3" /> Switch cabinet
-                    </p>
-                    {shell.availableRoles.map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => {
-                          shell.switchRole(role);
-                          setOpen(false);
-                        }}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={toggleRoleExpanded}
+                      aria-expanded={roleExpanded}
+                      className="w-full touch-target flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      <UserCog className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="flex-1 text-left truncate">
+                        {shell.roleLabels[shell.currentRole]}
+                      </span>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Switch
+                      </span>
+                      <ChevronDown
                         className={cn(
-                          "w-full touch-target flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
-                          role === shell.currentRole
-                            ? "bg-muted text-foreground"
-                            : "hover:bg-muted text-muted-foreground",
+                          "h-4 w-4 text-muted-foreground transition-transform",
+                          roleExpanded && "rotate-180",
                         )}
-                      >
-                        <span className="flex-1 text-left truncate">
-                          {shell.roleLabels[role]}
-                        </span>
-                        {role === shell.currentRole && <Check className="h-4 w-4" />}
-                      </button>
-                    ))}
+                      />
+                    </button>
+                    {roleExpanded && (
+                      <div className="mt-1 ml-2 pl-2 border-l space-y-0.5">
+                        {shell.availableRoles
+                          .filter((r) => r !== shell.currentRole)
+                          .map((role) => (
+                            <button
+                              key={role}
+                              type="button"
+                              onClick={() => {
+                                shell.switchRole(role);
+                                setOpen(false);
+                              }}
+                              className="w-full touch-target flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            >
+                              <span className="flex-1 text-left truncate">
+                                {shell.roleLabels[role]}
+                              </span>
+                            </button>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
-                <Button
-                  variant="outline"
-                  className="w-full touch-target-lg justify-start"
+                <button
+                  type="button"
                   onClick={() => {
                     shell.logout();
                     setOpen(false);
                   }}
+                  className="w-full touch-target flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Log out
-                </Button>
+                  <LogOut className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="flex-1 text-left">Log out</span>
+                </button>
+                <p className="text-[11px] text-muted-foreground px-3 pt-1 truncate">
+                  {shell.userName}
+                </p>
               </div>
             </div>
           )}
