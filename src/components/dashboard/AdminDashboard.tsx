@@ -46,6 +46,10 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { LayoutDashboard, MessageSquare } from "lucide-react";
+import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
+import { groups as adminGroups } from "./AdminSidebar";
+
 
 interface AdminDashboardProps {
   userId: string;
@@ -634,55 +638,87 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     }
   };
 
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AdminSidebar 
-          activeTab={activeTab} 
-          onTabChange={async (tab) => {
-            setActiveTab(tab);
-            try {
-              let didMarkReviewed = false;
-              if (tab === "performance-reports") {
-                const { error } = await supabase
-                  .from("performance_reports")
-                  .update({ reviewed_at: new Date().toISOString() })
-                  .is("reviewed_at", null);
-                didMarkReviewed = !error;
-              } else if (tab === "alcohol-tests") {
-                const { error } = await supabase
-                  .from("alcohol_test_reports")
-                  .update({ reviewed_at: new Date().toISOString() })
-                  .is("reviewed_at", null);
-                didMarkReviewed = !error;
-              }
+  // Build the flat MobileShell nav list from the same AdminSidebar groups
+  const adminShellNav: MobileShellNavItem[] = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+    ...adminGroups.flatMap((g) =>
+      g.items.map((it) => {
+        const count = it.badgeKey ? (pendingCounts as any)[it.badgeKey] || 0 : 0;
+        return {
+          id: it.id,
+          label: it.label,
+          icon: it.icon,
+          group: g.label,
+          badgeCount: count,
+          dot: !!it.redDot && count > 0,
+        } as MobileShellNavItem;
+      }),
+    ),
+    { id: "chat", label: "Chat", icon: MessageSquare, group: "Communication & Logs", dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
+  ];
 
-              if (didMarkReviewed) {
-                setRefreshKey((k) => k + 1);
-              }
-            } catch (e) {
-              console.error("Failed to mark reports reviewed", e);
-            }
-            setTimeout(() => setRefreshKey((k) => k + 1), 600);
-          }}
-          pendingCounts={pendingCounts}
-          hasUnreadMessages={hasUnreadMessages}
-        />
-        <SidebarInset>
-          <header className="flex h-12 md:h-14 items-center gap-2 md:gap-4 border-b bg-background px-3 md:px-6">
-            <SidebarTrigger />
-            <div className="flex-1" />
-            <UserSettings userId={userId} language={language} />
-            <LanguageSelector language={language} onLanguageChange={setLanguage} />
-          </header>
-          <main className="flex-1 p-6">
-            {renderContent()}
-          </main>
-        </SidebarInset>
-        <AdminAIAssistant />
-      </div>
-    </SidebarProvider>
+  const handleAdminTabChange = async (tab: string) => {
+    setActiveTab(tab);
+    try {
+      let didMarkReviewed = false;
+      if (tab === "performance-reports") {
+        const { error } = await supabase
+          .from("performance_reports")
+          .update({ reviewed_at: new Date().toISOString() })
+          .is("reviewed_at", null);
+        didMarkReviewed = !error;
+      } else if (tab === "alcohol-tests") {
+        const { error } = await supabase
+          .from("alcohol_test_reports")
+          .update({ reviewed_at: new Date().toISOString() })
+          .is("reviewed_at", null);
+        didMarkReviewed = !error;
+      }
+      if (didMarkReviewed) setRefreshKey((k) => k + 1);
+    } catch (e) {
+      console.error("Failed to mark reports reviewed", e);
+    }
+    setTimeout(() => setRefreshKey((k) => k + 1), 600);
+  };
+
+  return (
+    <MobileShell
+      navItems={adminShellNav}
+      activeTab={activeTab}
+      onTabChange={handleAdminTabChange}
+      renderContent={renderContent}
+      rightActions={
+        <>
+          <UserSettings userId={userId} language={language} />
+          <LanguageSelector language={language} onLanguageChange={setLanguage} />
+        </>
+      }
+    >
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AdminSidebar
+            activeTab={activeTab}
+            onTabChange={handleAdminTabChange}
+            pendingCounts={pendingCounts}
+            hasUnreadMessages={hasUnreadMessages}
+          />
+          <SidebarInset>
+            <header className="flex h-12 md:h-14 items-center gap-2 md:gap-4 border-b bg-background px-3 md:px-6">
+              <SidebarTrigger />
+              <div className="flex-1" />
+              <UserSettings userId={userId} language={language} />
+              <LanguageSelector language={language} onLanguageChange={setLanguage} />
+            </header>
+            <main className="flex-1 p-6">
+              {renderContent()}
+            </main>
+          </SidebarInset>
+          <AdminAIAssistant />
+        </div>
+      </SidebarProvider>
+    </MobileShell>
   );
 };
+
 
 export default AdminDashboard;

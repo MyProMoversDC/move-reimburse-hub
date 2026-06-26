@@ -21,6 +21,8 @@ import {
 import { LogOut, UserCog, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { AppShellProvider, type AppShellRole } from "@/components/mobile/AppShellContext";
+import { useTouchShell } from "@/hooks/use-touch-shell";
 
 type UserRole =
   | "mover"
@@ -63,6 +65,7 @@ const Dashboard = () => {
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const isTouch = useTouchShell();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -153,72 +156,89 @@ const Dashboard = () => {
   const canSwitch = availableRoles.length > 1;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/95 backdrop-blur sticky top-0 z-40 pt-safe md:static md:pt-0 md:backdrop-blur-none md:bg-card">
-        <div className="container mx-auto px-3 md:px-4 py-2 md:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <img
-                src={logo}
-                alt="MyProMovers"
-                className="h-10 md:h-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => navigate("/")}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && navigate("/")}
-              />
-              <div className="min-w-0">
-                <h1 className="text-lg md:text-xl font-bold truncate">{ROLE_LABELS[userRole]}</h1>
-                <p className="text-xs md:text-sm text-muted-foreground truncate">{userName}</p>
+    <AppShellProvider
+      value={{
+        currentRole: userRole as AppShellRole,
+        availableRoles: availableRoles as AppShellRole[],
+        roleLabels: ROLE_LABELS as Record<AppShellRole, string>,
+        switchRole: (r) => handleSwitchRole(r as UserRole),
+        logout: handleLogout,
+        userName,
+      }}
+    >
+      <div className="min-h-screen bg-background">
+        {/* Desktop / landscape-tablet top bar — hidden when MobileShell takes over */}
+        {!isTouch && (
+        <header className="border-b bg-card">
+
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={logo}
+                  alt="MyProMovers"
+                  className="h-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => navigate("/")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && navigate("/")}
+                />
+                <div className="min-w-0">
+                  <h1 className="text-xl font-bold truncate">{ROLE_LABELS[userRole]}</h1>
+                  <p className="text-sm text-muted-foreground truncate">{userName}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {canSwitch && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" title="Switch role">
+                        <UserCog className="h-4 w-4 mr-2" />
+                        <span>Switch Role</span>
+                        <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                      <DropdownMenuLabel>Switch Cabinet</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {availableRoles.map((role) => (
+                        <DropdownMenuItem
+                          key={role}
+                          onClick={() => handleSwitchRole(role)}
+                          className="cursor-pointer"
+                        >
+                          <span className="flex-1">{ROLE_LABELS[role]}</span>
+                          {role === userRole && <Check className="h-4 w-4 ml-2" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                <Button variant="outline" onClick={handleLogout} size="sm">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Logout</span>
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {canSwitch && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" title="Switch role">
-                      <UserCog className="h-4 w-4 md:mr-2" />
-                      <span className="hidden md:inline">Switch Role</span>
-                      <ChevronDown className="h-3 w-3 ml-1 hidden md:inline" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-                    <DropdownMenuLabel>Switch Cabinet</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {availableRoles.map((role) => (
-                      <DropdownMenuItem
-                        key={role}
-                        onClick={() => handleSwitchRole(role)}
-                        className="cursor-pointer"
-                      >
-                        <span className="flex-1">{ROLE_LABELS[role]}</span>
-                        {role === userRole && <Check className="h-4 w-4 ml-2" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-              <Button variant="outline" onClick={handleLogout} size="sm">
-                <LogOut className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Logout</span>
-              </Button>
-            </div>
           </div>
-        </div>
-      </header>
+        </header>
+        )}
 
-      <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
-        {userRole === "mover" && <MoverDashboard userId={userId} />}
-        {userRole === "admin" && <AdminDashboard userId={userId} />}
-        {userRole === "reviews_admin" && <ReviewsAdminDashboard userId={userId} />}
-        {userRole === "accountant" && <AccountantDashboard userId={userId} />}
-        {userRole === "operations_manager" && <OperationsManagerDashboard userId={userId} />}
-        {userRole === "hr_manager" && <HRDashboard userId={userId} />}
-        {userRole === "office_staff" && <OfficeStaffDashboard userId={userId} />}
-        {userRole === "warehouse_keeper" && <WarehouseKeeperDashboard userId={userId} />}
-      </main>
-    </div>
+        <main className={isTouch ? "w-full" : "container mx-auto px-0 md:px-4 py-0 md:py-8"}>
+
+          {userRole === "mover" && <MoverDashboard userId={userId} />}
+          {userRole === "admin" && <AdminDashboard userId={userId} />}
+          {userRole === "reviews_admin" && <ReviewsAdminDashboard userId={userId} />}
+          {userRole === "accountant" && <AccountantDashboard userId={userId} />}
+          {userRole === "operations_manager" && <OperationsManagerDashboard userId={userId} />}
+          {userRole === "hr_manager" && <HRDashboard userId={userId} />}
+          {userRole === "office_staff" && <OfficeStaffDashboard userId={userId} />}
+          {userRole === "warehouse_keeper" && <WarehouseKeeperDashboard userId={userId} />}
+        </main>
+      </div>
+    </AppShellProvider>
   );
 };
 
 export default Dashboard;
+

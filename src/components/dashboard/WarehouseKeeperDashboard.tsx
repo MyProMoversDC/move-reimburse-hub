@@ -12,6 +12,7 @@ import PurchasesManager from "./inventory/PurchasesManager";
 import ReportsDashboard from "./inventory/ReportsDashboard";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
+import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 
 interface Props { userId: string; }
 
@@ -43,57 +44,53 @@ const WarehouseKeeperDashboard = ({ userId }: Props) => {
     }
   };
 
+  const shellNav: MobileShellNavItem[] = navItems.map((n) => ({
+    id: n.id,
+    label: n.label,
+    icon: n.icon,
+    dot: n.id === "chat" && hasUnread,
+    badgeCount: n.id === "chat" && hasUnread ? 1 : 0,
+  }));
+
   return (
-    <div className="flex gap-6">
-      <aside className="hidden md:flex flex-col w-56 shrink-0 border-r pr-4 pt-2 space-y-1">
-        {navItems.map((item) => (
-          <button key={item.id} onClick={() => setActiveTab(item.id)}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left relative",
-              activeTab === item.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}>
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.label}
-            {item.id === "chat" && hasUnread && (
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-destructive" />
-            )}
-          </button>
-        ))}
-      </aside>
-
-      <div className="md:hidden w-full">
-        <div className="flex justify-end gap-2 mb-4">
+    <MobileShell
+      navItems={shellNav}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      renderContent={renderContent}
+      rightActions={
+        <>
           <UserSettings userId={userId} language={language} />
           <LanguageSelector language={language} onLanguageChange={setLanguage} />
-        </div>
-        <div className="overflow-x-auto -mx-3 px-3 mb-4">
-          <div className="inline-flex min-w-max gap-1 p-1 bg-muted rounded-lg">
-            {navItems.map((item) => (
-              <button key={item.id} onClick={() => setActiveTab(item.id)}
-                className={cn(
-                  "flex items-center gap-1 px-2 py-1.5 rounded-md text-[11px] font-medium transition-colors relative",
-                  activeTab === item.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}>
-                <item.icon className="h-3 w-3 shrink-0" />
-                {item.shortLabel}
-                {item.id === "chat" && hasUnread && (
-                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
-                )}
-              </button>
-            ))}
+        </>
+      }
+    >
+      <div className="flex gap-6">
+        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r pr-4 pt-2 space-y-1">
+          {navItems.map((item) => (
+            <button key={item.id} onClick={() => setActiveTab(item.id)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left relative",
+                activeTab === item.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}>
+              <item.icon className="h-4 w-4 shrink-0" />
+              {item.label}
+              {item.id === "chat" && hasUnread && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-destructive" />
+              )}
+            </button>
+          ))}
+        </aside>
+
+        <div className="hidden md:block flex-1 min-w-0">
+          <div className="flex justify-end gap-2 mb-4">
+            <UserSettings userId={userId} language={language} />
+            <LanguageSelector language={language} onLanguageChange={setLanguage} />
           </div>
+          {renderContent()}
         </div>
-        <div className="space-y-4">{renderContent()}</div>
       </div>
-
-      <div className="hidden md:block flex-1 min-w-0">
-        <div className="flex justify-end gap-2 mb-4">
-          <UserSettings userId={userId} language={language} />
-          <LanguageSelector language={language} onLanguageChange={setLanguage} />
-        </div>
-        {renderContent()}
-      </div>
-    </div>
+    </MobileShell>
   );
 };
 
