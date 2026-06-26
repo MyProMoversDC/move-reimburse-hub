@@ -169,7 +169,7 @@ const PlanningCalendar = ({ userId }: Props) => {
             const k = ymd(d);
             const inMonth = d.getMonth() === viewDate.getMonth();
             const dayJobs = jobsByDate.get(k) ?? [];
-            const assignedCount = dayJobs.filter(j => assignedIds.has(j.smartmoving_id)).length;
+            const assignedCount = dayJobs.filter(j => assignedMap.has(j.smartmoving_id)).length;
             const isToday = k === today;
             const isSelected = k === selectedDate;
             return (
