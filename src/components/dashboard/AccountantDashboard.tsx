@@ -5,7 +5,7 @@ import ChatContainer from "./chat/ChatContainer";
 import AdminPaymentQuestionList from "./AdminPaymentQuestionList";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, MessageSquare, HelpCircle, GraduationCap } from "lucide-react";
+import { Download, MessageSquare, HelpCircle, GraduationCap, Receipt, Users, Clock } from "lucide-react";
 import { exportToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import UserSettings from "./UserSettings";
 import ShiftSchedule from "./ShiftSchedule";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
+import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 
 interface AccountantDashboardProps {
   userId: string;
@@ -26,7 +27,8 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const [exporting, setExporting] = useState(false);
   const { language, setLanguage } = useLanguage();
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
-  
+  const [activeTab, setActiveTab] = useState<string>("requests");
+
   const t = dashboardTranslations[language];
 
   const handleExport = async () => {
@@ -50,72 +52,129 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
     }
   };
 
+  const navItems = [
+    { id: "requests", label: t.confirmedReimbursements, icon: Receipt },
+    { id: "movers", label: t.moversDirectory, icon: Users },
+    { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
+    { id: "chat", label: "Chat", icon: MessageSquare },
+    { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
+    { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+  ];
+
+  const shellNav: MobileShellNavItem[] = navItems.map((n) => ({
+    id: n.id,
+    label: n.label,
+    icon: n.icon,
+    dot: n.id === "chat" && hasUnreadMessages,
+    badgeCount: n.id === "chat" && hasUnreadMessages ? 1 : 0,
+  }));
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "requests":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-bold">{t.confirmedReimbursements}</h2>
+              <Button onClick={handleExport} disabled={exporting} size="sm">
+                <Download className="h-3.5 w-3.5 mr-1" />
+                Export
+              </Button>
+            </div>
+            <ReimbursementHistory refreshKey={refreshKey} userRole="accountant" onUpdate={() => setRefreshKey((prev) => prev + 1)} language={language} />
+          </div>
+        );
+      case "movers":
+        return <MoversList language={language} />;
+      case "payment-questions":
+        return <AdminPaymentQuestionList language={language} userId={userId} />;
+      case "chat":
+        return <ChatContainer userId={userId} userRole="accountant" language={language} />;
+      case "shift-schedule":
+        return <ShiftSchedule userId={userId} language={language} />;
+      case "knowledge-base":
+        return <KnowledgeBaseViewer userId={userId} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end gap-2">
-        <UserSettings userId={userId} language={language} />
-        <LanguageSelector language={language} onLanguageChange={setLanguage} />
-      </div>
-      
-      <Tabs defaultValue="requests" className="w-full">
-        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
-          <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
-            <TabsTrigger value="requests" className="text-xs md:text-sm px-2 md:px-3 py-1.5">{t.confirmedReimbursements}</TabsTrigger>
-            <TabsTrigger value="movers" className="text-xs md:text-sm px-2 md:px-3 py-1.5">{t.moversDirectory}</TabsTrigger>
-            <TabsTrigger value="payment-questions" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <HelpCircle className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+    <MobileShell
+      navItems={shellNav}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      renderContent={renderContent}
+      rightActions={
+        <>
+          <UserSettings userId={userId} language={language} />
+          <LanguageSelector language={language} onLanguageChange={setLanguage} />
+        </>
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex justify-end gap-2">
+          <UserSettings userId={userId} language={language} />
+          <LanguageSelector language={language} onLanguageChange={setLanguage} />
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="flex gap-1 h-auto p-1">
+            <TabsTrigger value="requests" className="text-sm px-3 py-1.5">{t.confirmedReimbursements}</TabsTrigger>
+            <TabsTrigger value="movers" className="text-sm px-3 py-1.5">{t.moversDirectory}</TabsTrigger>
+            <TabsTrigger value="payment-questions" className="text-sm px-3 py-1.5">
+              <HelpCircle className="h-4 w-4 mr-2" />
               Payment Questions
             </TabsTrigger>
-            <TabsTrigger value="chat" className="relative text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+            <TabsTrigger value="chat" className="relative text-sm px-3 py-1.5">
+              <MessageSquare className="h-4 w-4 mr-2" />
               Chat
               {hasUnreadMessages && (
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
-            <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
-            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">
-              <GraduationCap className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">Knowledge Base</span>
-              <span className="sm:hidden">KB</span>
+            <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-sm px-3 py-1.5">
+              <GraduationCap className="h-4 w-4 mr-2" />
+              Knowledge Base
             </TabsTrigger>
           </TabsList>
-        </div>
-        
-        <TabsContent value="requests" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">{t.confirmedReimbursements}</h2>
-            <Button onClick={handleExport} disabled={exporting}>
-              <Download className="h-4 w-4 mr-2" />
-              {exporting ? t.exporting : t.exportToExcel}
-            </Button>
-          </div>
-          <ReimbursementHistory refreshKey={refreshKey} userRole="accountant" onUpdate={() => setRefreshKey((prev) => prev + 1)} language={language} />
-        </TabsContent>
-        
-        <TabsContent value="movers">
-          <MoversList language={language} />
-        </TabsContent>
 
-        <TabsContent value="payment-questions" className="space-y-6">
-          <h2 className="text-2xl font-bold">Payment Questions</h2>
-          <AdminPaymentQuestionList language={language} userId={userId} />
-        </TabsContent>
+          <TabsContent value="requests" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">{t.confirmedReimbursements}</h2>
+              <Button onClick={handleExport} disabled={exporting}>
+                <Download className="h-4 w-4 mr-2" />
+                {exporting ? t.exporting : t.exportToExcel}
+              </Button>
+            </div>
+            <ReimbursementHistory refreshKey={refreshKey} userRole="accountant" onUpdate={() => setRefreshKey((prev) => prev + 1)} language={language} />
+          </TabsContent>
 
-        <TabsContent value="chat" className="space-y-6">
-          <h2 className="text-2xl font-bold">Chat</h2>
-          <ChatContainer userId={userId} userRole="accountant" language={language} />
-        </TabsContent>
+          <TabsContent value="movers">
+            <MoversList language={language} />
+          </TabsContent>
 
-        <TabsContent value="shift-schedule">
-          <ShiftSchedule userId={userId} language={language} />
-        </TabsContent>
+          <TabsContent value="payment-questions" className="space-y-6">
+            <h2 className="text-2xl font-bold">Payment Questions</h2>
+            <AdminPaymentQuestionList language={language} userId={userId} />
+          </TabsContent>
 
-        <TabsContent value="knowledge-base" className="space-y-6">
-          <KnowledgeBaseViewer userId={userId} />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="chat" className="space-y-6">
+            <h2 className="text-2xl font-bold">Chat</h2>
+            <ChatContainer userId={userId} userRole="accountant" language={language} />
+          </TabsContent>
+
+          <TabsContent value="shift-schedule">
+            <ShiftSchedule userId={userId} language={language} />
+          </TabsContent>
+
+          <TabsContent value="knowledge-base" className="space-y-6">
+            <KnowledgeBaseViewer userId={userId} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </MobileShell>
   );
 };
 
