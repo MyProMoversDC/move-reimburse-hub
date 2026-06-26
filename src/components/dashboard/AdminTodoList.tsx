@@ -19,9 +19,12 @@ interface AdminTodoListProps {
   onNavigate: (tab: string) => void;
 }
 
+const PAGE_SIZE = 10;
+
 const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchPendingItems();
@@ -470,7 +473,9 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
             </p>
           ) : (
             <div className="space-y-3">
-              {todoItems.slice(0, 10).map((item) => (
+              {todoItems
+                .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+                .map((item) => (
                 <div
                   key={`${item.type}-${item.id}`}
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
@@ -500,10 +505,32 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
                   </div>
                 </div>
               ))}
-              {todoItems.length > 10 && (
-                <p className="text-center text-muted-foreground text-sm pt-2">
-                  And {todoItems.length - 10} more items...
-                </p>
+              {todoItems.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Page {page} of {Math.ceil(todoItems.length / PAGE_SIZE)} · {todoItems.length} items
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= Math.ceil(todoItems.length / PAGE_SIZE)}
+                    onClick={() =>
+                      setPage((p) =>
+                        Math.min(Math.ceil(todoItems.length / PAGE_SIZE), p + 1)
+                      )
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
               )}
             </div>
           )}
