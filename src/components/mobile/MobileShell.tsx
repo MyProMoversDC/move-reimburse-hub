@@ -153,14 +153,6 @@ const MobileShell = ({
             <div className="flex items-center gap-2">
               <img src={logo} alt="MyProMovers" className="h-8" />
             </div>
-            <button
-              type="button"
-              aria-label="Close menu"
-              onClick={() => setOpen(false)}
-              className="touch-target rounded-md hover:bg-muted flex items-center justify-center"
-            >
-              <X className="h-5 w-5" />
-            </button>
             <SheetTitle className="sr-only">Navigation</SheetTitle>
           </SheetHeader>
 
