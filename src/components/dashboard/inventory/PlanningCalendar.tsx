@@ -4,10 +4,13 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, RefreshCw, Map as MapIcon, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Map as MapIcon, Loader2, CheckCircle2, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { handleError } from "@/lib/errorHandler";
 import AssignCrewDialog from "./AssignCrewDialog";
+import AssignMoversDialog from "./AssignMoversDialog";
+
+interface AssignedJobRef { id: string; job_number: string | null; client_name: string | null; }
 
 interface PlanningJob {
   id: string;
@@ -49,12 +52,13 @@ const PlanningCalendar = ({ userId }: Props) => {
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
   const [jobs, setJobs] = useState<PlanningJob[]>([]);
-  const [assignedIds, setAssignedIds] = useState<Set<string>>(new Set());
+  const [assignedMap, setAssignedMap] = useState<Map<string, AssignedJobRef>>(new Map());
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [assignJob, setAssignJob] = useState<PlanningJob | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [historyJob, setHistoryJob] = useState<AssignedJobRef | null>(null);
 
   const grid = useMemo(() => buildGrid(viewDate), [viewDate]);
   const fromDate = ymd(grid[0]);
@@ -72,12 +76,18 @@ const PlanningCalendar = ({ userId }: Props) => {
           .order("service_date", { ascending: true }),
         supabase
           .from("inv_job_orders")
-          .select("planned_from_smartmoving_id")
+          .select("id, job_number, client_name, planned_from_smartmoving_id")
           .not("planned_from_smartmoving_id", "is", null),
       ]);
       if (jRes.error) throw jRes.error;
       setJobs((jRes.data ?? []) as PlanningJob[]);
-      setAssignedIds(new Set((oRes.data ?? []).map((r: any) => r.planned_from_smartmoving_id)));
+      const m = new Map<string, AssignedJobRef>();
+      for (const r of (oRes.data ?? []) as any[]) {
+        if (r.planned_from_smartmoving_id) {
+          m.set(r.planned_from_smartmoving_id, { id: r.id, job_number: r.job_number, client_name: r.client_name });
+        }
+      }
+      setAssignedMap(m);
     } catch (e) {
       toast.error(handleError(e));
     } finally {
@@ -159,7 +169,7 @@ const PlanningCalendar = ({ userId }: Props) => {
             const k = ymd(d);
             const inMonth = d.getMonth() === viewDate.getMonth();
             const dayJobs = jobsByDate.get(k) ?? [];
-            const assignedCount = dayJobs.filter(j => assignedIds.has(j.smartmoving_id)).length;
+            const assignedCount = dayJobs.filter(j => assignedMap.has(j.smartmoving_id)).length;
             const isToday = k === today;
             const isSelected = k === selectedDate;
             return (
@@ -182,7 +192,7 @@ const PlanningCalendar = ({ userId }: Props) => {
                   <div className="mt-1 space-y-0.5">
                     {dayJobs.slice(0, 2).map(j => (
                       <div key={j.id} className="text-[10px] truncate flex items-center gap-1">
-                        {assignedIds.has(j.smartmoving_id) && <CheckCircle2 className="h-2.5 w-2.5 text-green-600 shrink-0" />}
+                        {assignedMap.has(j.smartmoving_id) && <CheckCircle2 className="h-2.5 w-2.5 text-green-600 shrink-0" />}
                         <span className="truncate">{j.customer_name ?? j.job_number ?? "Job"}</span>
                       </div>
                     ))}
@@ -208,7 +218,8 @@ const PlanningCalendar = ({ userId }: Props) => {
               {selectedJobs.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No Booked jobs on this day.</p>
               ) : selectedJobs.map(j => {
-                const assigned = assignedIds.has(j.smartmoving_id);
+                const assignedRef = assignedMap.get(j.smartmoving_id);
+                const assigned = !!assignedRef;
                 return (
                   <div key={j.id} className="flex items-start justify-between gap-3 p-3 border rounded-md">
                     <div className="min-w-0 flex-1">
@@ -226,9 +237,16 @@ const PlanningCalendar = ({ userId }: Props) => {
                         </p>
                       )}
                     </div>
-                    <Button size="sm" onClick={() => openAssign(j)}>
-                      {assigned ? "Edit crew" : "Assign crew"}
-                    </Button>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <Button size="sm" onClick={() => openAssign(j)}>
+                        {assigned ? "Edit crew" : "Assign crew"}
+                      </Button>
+                      {assigned && assignedRef && (
+                        <Button size="sm" variant="outline" onClick={() => setHistoryJob(assignedRef)}>
+                          <History className="h-3.5 w-3.5 mr-1" /> History
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -244,6 +262,16 @@ const PlanningCalendar = ({ userId }: Props) => {
         userId={userId}
         onSaved={load}
       />
+      {historyJob && (
+        <AssignMoversDialog
+          open={!!historyJob}
+          onOpenChange={(o) => !o && setHistoryJob(null)}
+          jobOrderId={historyJob.id}
+          jobNumber={historyJob.job_number ?? "—"}
+          clientName={historyJob.client_name ?? ""}
+          onAssigned={load}
+        />
+      )}
     </Card>
   );
 };
