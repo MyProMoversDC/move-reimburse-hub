@@ -330,7 +330,8 @@ const FeedList = ({ userId, isAdmin, language, canSavePosts = false }: FeedListP
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PullToRefresh>
+
   );
 };
 
