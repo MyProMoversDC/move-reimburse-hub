@@ -480,7 +480,84 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
     }
   };
 
+  const hrNavItems: MobileShellNavItem[] = [
+    { id: "hr-cabinet", label: "HR Cabinet", icon: UsersIcon },
+    { id: "mover-ratings", label: "Mover Ratings", icon: Star },
+    { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
+    { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+  ];
+
+  const renderMobileTab = () => {
+    switch (activeTopTab) {
+      case "mover-ratings": return <MoverRatingsPage readOnly />;
+      case "shift-schedule": return <ShiftSchedule userId={userId} language={language} />;
+      case "knowledge-base": return <KnowledgeBaseViewer userId={userId} />;
+      case "hr-cabinet":
+      default:
+        return (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Full HR cabinet (user list & employee details) is optimized for larger screens.
+              Please use a tablet in landscape orientation or desktop for the best experience.
+            </p>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{t.allUsers}</CardTitle>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t.searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[60vh]">
+                  {loading ? (
+                    <div className="p-4 text-center text-muted-foreground">Loading...</div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">{t.noUsersFound}</div>
+                  ) : (
+                    <div className="divide-y">
+                      {filteredUsers.map((user) => (
+                        <div key={user.id} className="p-3 flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={user.avatar_url || undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {user.first_name?.[0]}{user.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{user.first_name} {user.last_name}</p>
+                            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
+        );
+    }
+  };
+
   return (
+    <MobileShell
+      navItems={hrNavItems}
+      activeTab={activeTopTab}
+      onTabChange={setActiveTopTab}
+      renderContent={renderMobileTab}
+      rightActions={
+        <>
+          <UserSettings userId={userId} language={language} />
+          <LanguageSelector language={language} onLanguageChange={() => {}} />
+        </>
+      }
+    >
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -491,13 +568,14 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
         </div>
       </div>
 
-      <Tabs defaultValue="hr-cabinet" className="w-full">
-        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
-          <TabsList className="inline-flex min-w-max md:flex gap-1 h-auto p-1">
-            <TabsTrigger value="hr-cabinet" className="text-xs md:text-sm px-2 md:px-3 py-1.5">HR Cabinet</TabsTrigger>
-            <TabsTrigger value="mover-ratings" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Mover Ratings</TabsTrigger>
-            <TabsTrigger value="shift-schedule" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Shift Schedule</TabsTrigger>
-            <TabsTrigger value="knowledge-base" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Knowledge Base</TabsTrigger>
+      <Tabs value={activeTopTab} onValueChange={setActiveTopTab} className="w-full">
+        <div>
+          <TabsList className="flex gap-1 h-auto p-1">
+            <TabsTrigger value="hr-cabinet" className="text-sm px-3 py-1.5">HR Cabinet</TabsTrigger>
+            <TabsTrigger value="mover-ratings" className="text-sm px-3 py-1.5">Mover Ratings</TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-sm px-3 py-1.5">Knowledge Base</TabsTrigger>
+
           </TabsList>
         </div>
 
