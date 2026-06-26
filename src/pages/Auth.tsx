@@ -32,23 +32,6 @@ const Auth = () => {
   
   const t = translations[language];
 
-  const getPasswordResetRedirectUrl = () => {
-    if (typeof window === "undefined") return "https://mypromoversreimbursements.com/reset-password";
-    const origin = window.location.origin;
-
-    // Native Capacitor, localhost, and Lovable editor origins are not reliable email-link targets.
-    if (
-      origin.startsWith("capacitor://") ||
-      origin.startsWith("ionic://") ||
-      origin.includes("localhost") ||
-      origin.includes("lovable.dev")
-    ) {
-      return "https://mypromoversreimbursements.com/reset-password";
-    }
-
-    return `${origin}/reset-password`;
-  };
-
   const isPasswordRecoveryUrl = () => {
     if (typeof window === "undefined") return false;
     const searchParams = new URLSearchParams(window.location.search);
@@ -262,8 +245,8 @@ const Auth = () => {
 
       setLoading(true);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
-        redirectTo: getPasswordResetRedirectUrl(),
+      const { error } = await supabase.functions.invoke("send-password-reset", {
+        body: { email: validated.email },
       });
 
       if (error) throw error;

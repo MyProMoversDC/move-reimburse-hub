@@ -27,6 +27,24 @@ const ResetPassword = () => {
     const prepareRecoverySession = async () => {
       const searchParams = new URLSearchParams(window.location.search);
       const authCode = searchParams.get("code");
+      const tokenHash = searchParams.get("token_hash");
+      const type = searchParams.get("type");
+
+      if (tokenHash && type === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+
+        if (!cancelled) {
+          if (error) {
+            toast.error(handleError(error));
+          } else {
+            setReady(true);
+          }
+        }
+        return;
+      }
 
       if (authCode) {
         const { error } = await supabase.auth.exchangeCodeForSession(authCode);
