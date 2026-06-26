@@ -244,7 +244,9 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
                 <SearchableSelect
                   value={form.truck_id}
                   onValueChange={(v) => setForm({ ...form, truck_id: v })}
-                  options={trucks.map(t => ({ value: t.id, label: t.truck_number }))}
+                  options={trucks
+                    .filter(t => t.is_available === undefined || t.is_available || t.id === form.truck_id)
+                    .map(t => ({ value: t.id, label: t.truck_number }))}
                   placeholder="Select truck"
                   searchPlaceholder="Search trucks..."
                   emptyMessage="No trucks"
