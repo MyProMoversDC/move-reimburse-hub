@@ -59,7 +59,6 @@ const PlanningCalendar = ({ userId }: Props) => {
   const [assignJob, setAssignJob] = useState<PlanningJob | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [historyJob, setHistoryJob] = useState<AssignedJobRef | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const grid = useMemo(() => buildGrid(viewDate), [viewDate]);
   const fromDate = ymd(grid[0]);
