@@ -197,42 +197,92 @@ const FleetManager = () => {
         <div className="bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-yellow-400 p-3 text-sm">
           Shared with Operations Manager and Warehouse Keeper. Status shown for today; Reserved/In Use are calculated automatically from scheduled and active jobs.
         </div>
-        {loading ? <p className="p-4">Loading...</p> : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Truck</TableHead><TableHead>Plate</TableHead><TableHead>Notes</TableHead>
-                <TableHead>Status (today)</TableHead><TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {trucks.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">No trucks yet</TableCell></TableRow>
-              : trucks.map(t => (
-                <TableRow key={t.id}>
-                  <TableCell className="font-medium">{t.truck_number}</TableCell>
-                  <TableCell>{t.license_plate || "—"}</TableCell>
-                  <TableCell>{t.capacity_notes || "—"}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <StatusBadge status={t.computed_status} />
-                      {t.computed_status !== t.manual_status && (
-                        <span className="text-[10px] text-muted-foreground">manual: {STATUS_LABEL[t.manual_status]}</span>
-                      )}
-                      {t.manual_status === "under_maintenance" && t.maintenance_start_date && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {t.maintenance_start_date} → {t.maintenance_end_date}
-                        </span>
+        {loading ? <p className="p-4">Loading...</p> : trucks.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">No trucks yet</p>
+        ) : (
+          <>
+            {/* Desktop table — unchanged */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Truck</TableHead><TableHead>Plate</TableHead><TableHead>Notes</TableHead>
+                    <TableHead>Status (today)</TableHead><TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {trucks.map(t => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium">{t.truck_number}</TableCell>
+                      <TableCell>{t.license_plate || "—"}</TableCell>
+                      <TableCell>{t.capacity_notes || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <StatusBadge status={t.computed_status} />
+                          {t.computed_status !== t.manual_status && (
+                            <span className="text-[10px] text-muted-foreground">manual: {STATUS_LABEL[t.manual_status]}</span>
+                          )}
+                          {t.manual_status === "under_maintenance" && t.maintenance_start_date && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {t.maintenance_start_date} → {t.maintenance_end_date}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile cards — truck# headline + availability-first */}
+            <div className="md:hidden divide-y">
+              {trucks.map(t => (
+                <div key={t.id} className="p-3 active:bg-muted/40">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-lg leading-none flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-muted-foreground" />
+                        {t.truck_number}
+                      </p>
+                      {t.license_plate && (
+                        <p className="text-xs text-muted-foreground mt-1">Plate: {t.license_plate}</p>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
+                    <StatusBadge status={t.computed_status} />
+                  </div>
+
+                  {(t.computed_status !== t.manual_status || (t.manual_status === "under_maintenance" && t.maintenance_start_date)) && (
+                    <div className="text-[11px] text-muted-foreground space-y-0.5 mb-2">
+                      {t.computed_status !== t.manual_status && (
+                        <div>Manual: {STATUS_LABEL[t.manual_status]}</div>
+                      )}
+                      {t.manual_status === "under_maintenance" && t.maintenance_start_date && (
+                        <div>Maintenance: {t.maintenance_start_date} → {t.maintenance_end_date}</div>
+                      )}
+                    </div>
+                  )}
+
+                  {t.capacity_notes && (
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{t.capacity_notes}</p>
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    <Button variant="outline" size="sm" className="flex-1 h-10" onClick={() => openEdit(t)}>
+                      <Pencil className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-10" onClick={() => remove(t.id)} aria-label="Delete">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
