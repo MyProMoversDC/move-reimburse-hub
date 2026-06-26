@@ -186,14 +186,58 @@ const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
         });
       });
 
-      // Sort by date (oldest first)
-      items.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      // Filter out items the admin has marked complete
+      const { data: dismissals } = await supabase
+        .from("admin_todo_dismissals")
+        .select("item_type, item_id");
+      const dismissedKeys = new Set(
+        (dismissals ?? []).map((d: any) => `${d.item_type}:${d.item_id}`)
+      );
+      const visibleItems = items.filter(
+        (i) => !dismissedKeys.has(`${i.type}:${i.id}`)
+      );
 
-      setTodoItems(items);
+      // Sort by date (oldest first)
+      visibleItems.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+      setTodoItems(visibleItems);
     } catch (error) {
       console.error("Error fetching pending items:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkComplete = async (item: TodoItem) => {
+    const key = `${item.type}-${item.id}`;
+    setDismissingKey(key);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from("admin_todo_dismissals").insert({
+        item_type: item.type,
+        item_id: item.id,
+        dismissed_by: userId,
+      });
+      if (error) throw error;
+
+      // Remove from current list and adjust page if it becomes empty
+      setTodoItems((prev) => {
+        const next = prev.filter(
+          (i) => !(i.type === item.type && i.id === item.id)
+        );
+        const totalPages = Math.max(1, Math.ceil(next.length / PAGE_SIZE));
+        if (page > totalPages) setPage(totalPages);
+        return next;
+      });
+      toast.success("Marked complete");
+    } catch (err: any) {
+      console.error("Mark complete failed", err);
+      toast.error(err?.message ?? "Could not mark complete");
+    } finally {
+      setDismissingKey(null);
     }
   };
 
