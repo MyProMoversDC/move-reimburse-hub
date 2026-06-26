@@ -44,6 +44,9 @@ import { format } from "date-fns";
 import { getSignedUrl } from "@/lib/storageUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MoverRatingsPage from "@/components/ratings/MoverRatingsPage";
+import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
+import { Users as UsersIcon, Star, Clock, GraduationCap } from "lucide-react";
+
 
 interface Profile {
   id: string;
