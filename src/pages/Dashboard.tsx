@@ -167,8 +167,10 @@ const Dashboard = () => {
       }}
     >
       <div className="min-h-screen bg-background">
-        {/* Desktop / landscape-tablet top bar — hidden on phones & portrait tablets where MobileShell takes over */}
-        <header className="hidden md:portrait:hidden md:block border-b bg-card">
+        {/* Desktop / landscape-tablet top bar — hidden when MobileShell takes over */}
+        {!isTouch && (
+        <header className="border-b bg-card">
+
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
