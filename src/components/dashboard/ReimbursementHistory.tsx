@@ -168,7 +168,8 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
 
   return (
     <>
-      <div className="rounded-md border overflow-x-auto">
+      {/* Desktop table (unchanged) */}
+      <div className="hidden md:block rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -246,6 +247,78 @@ const ReimbursementHistory = ({ userId, refreshKey, userRole, onUpdate, language
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filteredReimbursements.length === 0 ? (
+          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+            {t.noReimbursements}
+          </div>
+        ) : (
+          filteredReimbursements.map((reimbursement) => {
+            const isDuplicate = duplicateIds.has(reimbursement.id);
+            return (
+              <div
+                key={reimbursement.id}
+                className={`rounded-lg border p-4 space-y-3 ${isDuplicate ? "bg-destructive/10 border-destructive/40" : "bg-card"}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    {userRole !== "mover" && (
+                      <p className="font-semibold text-sm truncate">{reimbursement.mover_full_name}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      #{String(reimbursement.reimbursement_number).padStart(5, "0")}
+                      {isDuplicate && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Copy className="h-3 w-3 text-destructive" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Potential duplicate (same Job # & Customer)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      · {formatDate(reimbursement.created_at)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold leading-tight">${reimbursement.total_expenses.toFixed(2)}</p>
+                    <div className="mt-1">{getStatusBadge(reimbursement.status)}</div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">{t.job}:</span> {reimbursement.job_number}
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedReimbursement(reimbursement)}
+                    className="flex-1 min-h-[44px]"
+                  >
+                    <Eye className="h-4 w-4 mr-2" /> View
+                  </Button>
+                  {userRole === "mover" && reimbursement.status === "declined" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAppealReimbursement(reimbursement)}
+                      className="flex-1 min-h-[44px] text-orange-600 border-orange-600 hover:bg-orange-50"
+                    >
+                      <AlertCircle className="h-4 w-4 mr-2" /> Appeal
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       <Dialog open={!!selectedReimbursement} onOpenChange={() => setSelectedReimbursement(null)}>
