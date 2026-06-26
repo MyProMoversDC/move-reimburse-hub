@@ -19,9 +19,12 @@ interface AdminTodoListProps {
   onNavigate: (tab: string) => void;
 }
 
+const PAGE_SIZE = 10;
+
 const AdminTodoList = ({ onNavigate }: AdminTodoListProps) => {
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchPendingItems();
