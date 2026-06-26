@@ -221,78 +221,152 @@ const MoversList = ({ language }: MoversListProps) => {
           <CardTitle>{t.moversDirectory}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t.name}</TableHead>
-                <TableHead>{t.username}</TableHead>
-                <TableHead>{t.email}</TableHead>
-                <TableHead>{t.phone}</TableHead>
-                <TableHead>{et.hourlyRate}</TableHead>
-                <TableHead>{et.balance}</TableHead>
-                <TableHead className="text-right">{t.actions}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {movers.length === 0 ? (
+          {/* Desktop table — unchanged */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    {t.noMoversFound}
-                  </TableCell>
+                  <TableHead>{t.name}</TableHead>
+                  <TableHead>{t.username}</TableHead>
+                  <TableHead>{t.email}</TableHead>
+                  <TableHead>{t.phone}</TableHead>
+                  <TableHead>{et.hourlyRate}</TableHead>
+                  <TableHead>{et.balance}</TableHead>
+                  <TableHead className="text-right">{t.actions}</TableHead>
                 </TableRow>
-              ) : (
-                movers.map((mover) => {
+              </TableHeader>
+              <TableBody>
+                {movers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      {t.noMoversFound}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  movers.map((mover) => {
+                    const balance = getBalance(mover.id);
+                    return (
+                      <TableRow key={mover.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={mover.avatar_url || undefined} alt={`${mover.first_name} ${mover.last_name}`} />
+                              <AvatarFallback className="text-xs">
+                                {mover.first_name?.[0]}{mover.last_name?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{mover.first_name} {mover.last_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{mover.username}</TableCell>
+                        <TableCell>{mover.email}</TableCell>
+                        <TableCell>{mover.phone}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>${mover.hourly_rate?.toFixed(2) || "0.00"}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditHourlyRate(mover)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`font-medium ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ${balance.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteClick(mover)}
+                            disabled={deletingId === mover.id}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {deletingId === mover.id ? t.deleting : t.deleteMover}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile cards — identity-first */}
+          <div className="md:hidden">
+            {movers.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6">{t.noMoversFound}</p>
+            ) : (
+              <div className="space-y-2">
+                {movers.map((mover) => {
                   const balance = getBalance(mover.id);
                   return (
-                    <TableRow key={mover.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={mover.avatar_url || undefined} alt={`${mover.first_name} ${mover.last_name}`} />
-                            <AvatarFallback className="text-xs">
-                              {mover.first_name?.[0]}{mover.last_name?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{mover.first_name} {mover.last_name}</span>
+                    <div key={mover.id} className="border rounded-lg p-3 active:bg-muted/40">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={mover.avatar_url || undefined} alt={`${mover.first_name} ${mover.last_name}`} />
+                          <AvatarFallback>{mover.first_name?.[0]}{mover.last_name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold leading-tight truncate">
+                            {mover.first_name} {mover.last_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">@{mover.username}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>{mover.username}</TableCell>
-                      <TableCell>{mover.email}</TableCell>
-                      <TableCell>{mover.phone}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span>${mover.hourly_rate?.toFixed(2) || "0.00"}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditHourlyRate(mover)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`font-medium ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-sm font-semibold whitespace-nowrap ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           ${balance.toFixed(2)}
                         </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteClick(mover)}
-                          disabled={deletingId === mover.id}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {deletingId === mover.id ? t.deleting : t.deleteMover}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+
+                      <dl className="text-sm space-y-1 mb-3">
+                        {mover.email && (
+                          <div className="flex justify-between gap-2">
+                            <dt className="text-muted-foreground shrink-0">Email</dt>
+                            <dd className="truncate text-right min-w-0">
+                              <a href={`mailto:${mover.email}`} className="underline-offset-2 hover:underline">{mover.email}</a>
+                            </dd>
+                          </div>
+                        )}
+                        {mover.phone && (
+                          <div className="flex justify-between gap-2">
+                            <dt className="text-muted-foreground shrink-0">Phone</dt>
+                            <dd className="text-right">
+                              <a href={`tel:${mover.phone}`} className="underline-offset-2 hover:underline">{mover.phone}</a>
+                            </dd>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center gap-2">
+                          <dt className="text-muted-foreground shrink-0">{et.hourlyRate}</dt>
+                          <dd className="flex items-center gap-1">
+                            <span className="font-medium">${mover.hourly_rate?.toFixed(2) || "0.00"}</span>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditHourlyRate(mover)}>
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full h-10"
+                        onClick={() => handleDeleteClick(mover)}
+                        disabled={deletingId === mover.id}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deletingId === mover.id ? t.deleting : t.deleteMover}
+                      </Button>
+                    </div>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
+                })}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
