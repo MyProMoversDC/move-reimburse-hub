@@ -220,7 +220,17 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
           </Button>
         </DialogFooter>
       </DialogContent>
+      {trackTarget && (
+        <MoverLiveTrackDialog
+          open={!!trackTarget}
+          onOpenChange={(o) => !o && setTrackTarget(null)}
+          assignmentRowId={trackTarget.assignment_id}
+          moverName={`${trackTarget.first_name ?? ""} ${trackTarget.last_name ?? ""}`.trim() || "Mover"}
+          jobNumber={jobNumber}
+        />
+      )}
     </Dialog>
+
   );
 };
 
