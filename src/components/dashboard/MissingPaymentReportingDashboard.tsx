@@ -332,52 +332,64 @@ const MissingPaymentReportingDashboard = ({ language }: MissingPaymentReportingD
           ) : summaries.length === 0 ? (
             <p className="text-center py-4 text-muted-foreground">No data found</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mover Name</TableHead>
-                  <TableHead className="text-center">Total Submissions</TableHead>
-                  <TableHead className="text-center">Pending</TableHead>
-                  <TableHead className="text-center">Confirmed</TableHead>
-                  <TableHead className="text-center">Declined</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Mover Name</TableHead>
+                      <TableHead className="text-center">Total Submissions</TableHead>
+                      <TableHead className="text-center">Pending</TableHead>
+                      <TableHead className="text-center">Confirmed</TableHead>
+                      <TableHead className="text-center">Declined</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {summaries.map((summary) => (
+                      <TableRow key={summary.moverId}>
+                        <TableCell className="font-medium">{summary.moverName}</TableCell>
+                        <TableCell className="text-center">
+                          <Button variant="link" className="p-0 h-auto" onClick={() => handleViewBreakdown(summary)}>
+                            {summary.totalSubmissions}
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-center text-yellow-600">{summary.pendingCount}</TableCell>
+                        <TableCell className="text-center text-green-600">{summary.confirmedCount}</TableCell>
+                        <TableCell className="text-center text-red-600">{summary.declinedCount}</TableCell>
+                        <TableCell className="text-center">
+                          <Button variant="ghost" size="sm" onClick={() => handleViewBreakdown(summary)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3">
                 {summaries.map((summary) => (
-                  <TableRow key={summary.moverId}>
-                    <TableCell className="font-medium">{summary.moverName}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto"
-                        onClick={() => handleViewBreakdown(summary)}
-                      >
-                        {summary.totalSubmissions}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-center text-yellow-600">
-                      {summary.pendingCount}
-                    </TableCell>
-                    <TableCell className="text-center text-green-600">
-                      {summary.confirmedCount}
-                    </TableCell>
-                    <TableCell className="text-center text-red-600">
-                      {summary.declinedCount}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewBreakdown(summary)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <button
+                    key={summary.moverId}
+                    type="button"
+                    onClick={() => handleViewBreakdown(summary)}
+                    className="w-full text-left rounded-lg border bg-card p-4 space-y-2 active:bg-muted/40 min-h-[44px]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-semibold text-sm truncate">{summary.moverName}</p>
+                      <p className="text-lg font-bold leading-tight">{summary.totalSubmissions}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div><span className="text-yellow-600 font-semibold">{summary.pendingCount}</span><br/><span className="text-muted-foreground">Pending</span></div>
+                      <div><span className="text-green-600 font-semibold">{summary.confirmedCount}</span><br/><span className="text-muted-foreground">Confirmed</span></div>
+                      <div><span className="text-red-600 font-semibold">{summary.declinedCount}</span><br/><span className="text-muted-foreground">Declined</span></div>
+                    </div>
+                  </button>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
