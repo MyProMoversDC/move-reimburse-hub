@@ -1432,6 +1432,7 @@ export type Database = {
           client_name: string
           created_at: string
           created_by: string
+          crew_quorum_threshold: number
           dropoff_address: string | null
           id: string
           job_date: string
@@ -1449,6 +1450,7 @@ export type Database = {
           client_name: string
           created_at?: string
           created_by: string
+          crew_quorum_threshold?: number
           dropoff_address?: string | null
           id?: string
           job_date: string
@@ -1466,6 +1468,7 @@ export type Database = {
           client_name?: string
           created_at?: string
           created_by?: string
+          crew_quorum_threshold?: number
           dropoff_address?: string | null
           id?: string
           job_date?: string
@@ -1492,6 +1495,53 @@ export type Database = {
             columns: ["truck_id"]
             isOneToOne: false
             referencedRelation: "trucks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inv_job_status_events: {
+        Row: {
+          created_at: string
+          from_status: string | null
+          id: string
+          inv_job_id: string
+          mover_action: string | null
+          note: string | null
+          quorum_snapshot: Json | null
+          to_status: string
+          trigger_source: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          inv_job_id: string
+          mover_action?: string | null
+          note?: string | null
+          quorum_snapshot?: Json | null
+          to_status: string
+          trigger_source: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          inv_job_id?: string
+          mover_action?: string | null
+          note?: string | null
+          quorum_snapshot?: Json | null
+          to_status?: string
+          trigger_source?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inv_job_status_events_inv_job_id_fkey"
+            columns: ["inv_job_id"]
+            isOneToOne: false
+            referencedRelation: "inv_job_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -4133,6 +4183,21 @@ export type Database = {
           status: string
         }[]
       }
+      list_inv_job_status_events: {
+        Args: { _inv_job_id: string }
+        Returns: {
+          actor_first_name: string
+          actor_last_name: string
+          created_at: string
+          from_status: string
+          id: string
+          mover_action: string
+          note: string
+          quorum_snapshot: Json
+          to_status: string
+          trigger_source: string
+        }[]
+      }
       list_trucks_with_status: {
         Args: { _date?: string; _exclude_job_id?: string }
         Returns: {
@@ -4158,6 +4223,19 @@ export type Database = {
           page_number: number
           similarity: number
         }[]
+      }
+      ops_set_inv_job_status: {
+        Args: { _inv_job_id: string; _new_status: string; _note?: string }
+        Returns: string
+      }
+      recompute_inv_job_status: {
+        Args: {
+          _inv_job_id: string
+          _mover_action?: string
+          _trigger_source?: string
+          _triggered_by?: string
+        }
+        Returns: string
       }
       redeem_mover_shift_qr: {
         Args: { _action: string; _token: string }

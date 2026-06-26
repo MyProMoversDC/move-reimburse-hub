@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserCheck, MapPin } from "lucide-react";
+import { Loader2, UserCheck, MapPin, History } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { handleError } from "@/lib/errorHandler";
 import MoverAutocomplete from "./MoverAutocomplete";
 import MoverLiveTrackDialog from "./MoverLiveTrackDialog";
@@ -56,13 +57,31 @@ const fmtEst = (iso: string | null) => {
 const statusBadge = (s: string) => {
   const map: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+    assigned: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
     confirmed: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+    en_route: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
     declined: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
     in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
     completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    cancelled: "bg-muted text-muted-foreground",
   };
   return map[s] ?? "bg-muted text-muted-foreground";
 };
+
+interface StatusEvent {
+  id: string;
+  from_status: string | null;
+  to_status: string;
+  trigger_source: string;
+  mover_action: string | null;
+  quorum_snapshot: Record<string, number> | null;
+  note: string | null;
+  created_at: string;
+  actor_first_name: string | null;
+  actor_last_name: string | null;
+}
+
+const STATUS_OPTIONS = ["pending","assigned","confirmed","en_route","in_progress","completed","cancelled"];
 
 const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientName, onAssigned }: Props) => {
   const [movers, setMovers] = useState<Mover[]>([]);
@@ -71,7 +90,10 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [trackTarget, setTrackTarget] = useState<ExistingAssignment | null>(null);
-
+  const [events, setEvents] = useState<StatusEvent[]>([]);
+  const [jobStatus, setJobStatus] = useState<string>("");
+  const [overrideStatus, setOverrideStatus] = useState<string>("");
+  const [overrideBusy, setOverrideBusy] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
@@ -96,6 +118,15 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
       if (eErr) throw eErr;
       setExisting((ex ?? []) as ExistingAssignment[]);
       setSelected(new Set());
+
+      const { data: evts } = await supabase
+        .rpc("list_inv_job_status_events", { _inv_job_id: jobOrderId });
+      setEvents((evts ?? []) as StatusEvent[]);
+
+      const { data: job } = await supabase
+        .from("inv_job_orders").select("status").eq("id", jobOrderId).maybeSingle();
+      setJobStatus(job?.status ?? "");
+      setOverrideStatus(job?.status ?? "");
     } catch (e) {
       toast.error(handleError(e));
     } finally {
@@ -104,6 +135,24 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
   };
 
   useEffect(() => { if (open) loadAll(); }, [open, jobOrderId]);
+
+  const forceStatus = async () => {
+    if (!overrideStatus || overrideStatus === jobStatus) return;
+    setOverrideBusy(true);
+    try {
+      const { error } = await supabase.rpc("ops_set_inv_job_status", {
+        _inv_job_id: jobOrderId, _new_status: overrideStatus, _note: "Ops manager manual override",
+      });
+      if (error) throw error;
+      toast.success(`Status set to ${overrideStatus.replace("_"," ")}`);
+      onAssigned?.();
+      loadAll();
+    } catch (e) {
+      toast.error(handleError(e));
+    } finally {
+      setOverrideBusy(false);
+    }
+  };
 
   const alreadyAssigned = new Set(existing.map((e) => e.mover_id));
 
@@ -197,6 +246,60 @@ const AssignMoversDialog = ({ open, onOpenChange, jobOrderId, jobNumber, clientN
                 </div>
               </div>
             )}
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <History className="h-4 w-4" /> Job status timeline
+                </Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Current:</span>
+                  <Badge className={statusBadge(jobStatus)}>{jobStatus.replace("_", " ") || "—"}</Badge>
+                </div>
+              </div>
+              <div className="border rounded-lg p-3 max-h-56 overflow-y-auto bg-muted/30">
+                {events.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No status changes yet.</p>
+                ) : (
+                  <ol className="space-y-1 border-l-2 border-muted pl-3">
+                    {events.map((ev) => {
+                      const actor = `${ev.actor_first_name ?? ""} ${ev.actor_last_name ?? ""}`.trim();
+                      const snap = ev.quorum_snapshot
+                        ? `${ev.quorum_snapshot.arrived_site ?? 0}/${ev.quorum_snapshot.accepted ?? 0} arrived, ${ev.quorum_snapshot.completed ?? 0} completed`
+                        : "";
+                      return (
+                        <li key={ev.id} className="text-xs">
+                          <span className="text-muted-foreground">{fmtEst(ev.created_at)} — </span>
+                          <span className="font-medium">{(ev.from_status ?? "new").replace("_"," ")} → {ev.to_status.replace("_"," ")}</span>
+                          {ev.trigger_source && <span className="text-muted-foreground"> · {ev.trigger_source.replace("_"," ")}</span>}
+                          {actor && <span className="text-muted-foreground"> · by {actor}</span>}
+                          {snap && <span className="text-muted-foreground" title={JSON.stringify(ev.quorum_snapshot)}> · {snap}</span>}
+                          {ev.note && <span className="text-muted-foreground"> · {ev.note}</span>}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs text-muted-foreground">Force status:</span>
+                <Select value={overrideStatus} onValueChange={setOverrideStatus}>
+                  <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">{s.replace("_"," ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm" variant="outline" className="h-8"
+                  disabled={overrideBusy || overrideStatus === jobStatus}
+                  onClick={forceStatus}
+                >
+                  {overrideBusy && <Loader2 className="h-3 w-3 mr-1 animate-spin" />} Apply
+                </Button>
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Add movers</Label>
