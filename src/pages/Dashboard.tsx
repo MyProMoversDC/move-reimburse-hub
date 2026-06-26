@@ -222,8 +222,10 @@ const Dashboard = () => {
             </div>
           </div>
         </header>
+        )}
 
-        <main className="container mx-auto px-0 md:px-4 py-0 md:py-8 md:portrait:px-0 md:portrait:py-0">
+        <main className={isTouch ? "w-full" : "container mx-auto px-0 md:px-4 py-0 md:py-8"}>
+
           {userRole === "mover" && <MoverDashboard userId={userId} />}
           {userRole === "admin" && <AdminDashboard userId={userId} />}
           {userRole === "reviews_admin" && <ReviewsAdminDashboard userId={userId} />}
