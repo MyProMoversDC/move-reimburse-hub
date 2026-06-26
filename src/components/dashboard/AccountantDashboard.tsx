@@ -74,8 +74,7 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
       case "requests":
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-lg font-bold">{t.confirmedReimbursements}</h2>
+            <div className="flex items-center justify-end">
               <Button onClick={handleExport} disabled={exporting} size="sm">
                 <Download className="h-3.5 w-3.5 mr-1" />
                 Export
