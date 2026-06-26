@@ -232,8 +232,8 @@ const AdminCustomerRefundList = () => {
         </CardContent></Card>
       </div>
 
-      {/* Table */}
-      <Card>
+      {/* Desktop table (unchanged) */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -327,6 +327,74 @@ const AdminCustomerRefundList = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {filteredRefunds.length === 0 ? (
+          <Card><CardContent className="py-6 text-center text-sm text-muted-foreground">No customer refund forms found</CardContent></Card>
+        ) : (
+          filteredRefunds.map((refund) => {
+            const status = refund.status || "pending";
+            return (
+              <Card key={refund.id}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm truncate">{refund.customer_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">By {getSubmitterName(refund.submitted_by)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Req {format(new Date(refund.request_date), "MM/dd/yyyy")} · Sub {format(new Date(refund.created_at), "MM/dd/yyyy")}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-lg font-bold leading-tight">${Number(refund.amount).toFixed(2)}</p>
+                      <div className="mt-1">{statusBadge(status)}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <Badge variant="outline">
+                      {refund.payment_method_other || refund.payment_method.charAt(0).toUpperCase() + refund.payment_method.slice(1)}
+                    </Badge>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    <span className="font-medium text-foreground">Reason:</span> {refund.reimbursement_reason}
+                  </p>
+
+                  {status === "declined" && refund.decline_reason && (
+                    <p className="text-xs text-destructive line-clamp-2">
+                      <span className="font-medium">Declined:</span> {refund.decline_reason}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button size="sm" variant="outline" onClick={() => openDetails(refund)} className="flex-1 min-h-[44px]">
+                      <Eye className="h-4 w-4 mr-2" /> View
+                    </Button>
+                    {status === "pending" ? (
+                      <>
+                        <Button size="sm" onClick={() => markCompleted(refund)} disabled={actioning === refund.id} className="flex-1 min-h-[44px]">
+                          <CheckCircle2 className="h-4 w-4 mr-1" /> Complete
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => openDecline(refund)} disabled={actioning === refund.id} className="flex-1 min-h-[44px]">
+                          <XCircle className="h-4 w-4 mr-1" /> Decline
+                        </Button>
+                      </>
+                    ) : (
+                      refund.reviewed_at && (
+                        <span className="text-xs text-muted-foreground self-center">
+                          Reviewed {format(new Date(refund.reviewed_at), "MM/dd/yyyy hh:mm a")}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
 
       <Dialog open={declineOpen} onOpenChange={setDeclineOpen}>
         <DialogContent>

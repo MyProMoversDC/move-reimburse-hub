@@ -344,54 +344,67 @@ const ReimbursementReportingDashboard = ({ language }: ReimbursementReportingDas
           ) : summaries.length === 0 ? (
             <p className="text-center py-4 text-muted-foreground">No data found</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mover Name</TableHead>
-                  <TableHead className="text-center">Requests</TableHead>
-                  <TableHead className="text-right">Total Amount</TableHead>
-                  <TableHead className="text-right">Pending</TableHead>
-                  <TableHead className="text-right">Confirmed</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Mover Name</TableHead>
+                      <TableHead className="text-center">Requests</TableHead>
+                      <TableHead className="text-right">Total Amount</TableHead>
+                      <TableHead className="text-right">Pending</TableHead>
+                      <TableHead className="text-right">Confirmed</TableHead>
+                      <TableHead className="text-right">Paid</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {summaries.map((summary) => (
+                      <TableRow key={summary.moverId}>
+                        <TableCell className="font-medium">{summary.moverName}</TableCell>
+                        <TableCell className="text-center">
+                          <Button variant="link" className="p-0 h-auto" onClick={() => handleViewBreakdown(summary)}>
+                            {summary.totalRequests}
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">${summary.totalAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-yellow-600">${summary.pendingAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-blue-600">${summary.confirmedAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-green-600">${summary.paidAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-center">
+                          <Button variant="ghost" size="sm" onClick={() => handleViewBreakdown(summary)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3">
                 {summaries.map((summary) => (
-                  <TableRow key={summary.moverId}>
-                    <TableCell className="font-medium">{summary.moverName}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto"
-                        onClick={() => handleViewBreakdown(summary)}
-                      >
-                        {summary.totalRequests}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-right">${summary.totalAmount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right text-yellow-600">
-                      ${summary.pendingAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-blue-600">
-                      ${summary.confirmedAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-green-600">
-                      ${summary.paidAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewBreakdown(summary)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <button
+                    key={summary.moverId}
+                    type="button"
+                    onClick={() => handleViewBreakdown(summary)}
+                    className="w-full text-left rounded-lg border bg-card p-4 space-y-2 active:bg-muted/40 min-h-[44px]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-semibold text-sm truncate">{summary.moverName}</p>
+                      <p className="text-lg font-bold leading-tight">${summary.totalAmount.toFixed(2)}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{summary.totalRequests} request{summary.totalRequests === 1 ? "" : "s"}</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div><span className="text-yellow-600 font-semibold">${summary.pendingAmount.toFixed(2)}</span><br/><span className="text-muted-foreground">Pending</span></div>
+                      <div><span className="text-blue-600 font-semibold">${summary.confirmedAmount.toFixed(2)}</span><br/><span className="text-muted-foreground">Confirmed</span></div>
+                      <div><span className="text-green-600 font-semibold">${summary.paidAmount.toFixed(2)}</span><br/><span className="text-muted-foreground">Paid</span></div>
+                    </div>
+                  </button>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
