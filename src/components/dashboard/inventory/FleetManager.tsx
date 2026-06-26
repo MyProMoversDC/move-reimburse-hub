@@ -5,31 +5,77 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, Truck } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
+
+type ManualStatus = "active" | "under_maintenance" | "inactive" | "out_of_service";
+type ComputedStatus = ManualStatus | "reserved" | "in_use";
 
 interface TruckRow {
   id: string;
   truck_number: string;
   license_plate: string | null;
   capacity_notes: string | null;
-  is_active: boolean;
+  manual_status: ManualStatus;
+  maintenance_start_date: string | null;
+  maintenance_end_date: string | null;
+  maintenance_notes: string | null;
+  computed_status: ComputedStatus;
 }
+
+const MANUAL_STATUS_OPTIONS: { value: ManualStatus; label: string }[] = [
+  { value: "active", label: "Active" },
+  { value: "under_maintenance", label: "Under Maintenance" },
+  { value: "inactive", label: "Inactive" },
+  { value: "out_of_service", label: "Out of Service" },
+];
+
+export const STATUS_LABEL: Record<ComputedStatus, string> = {
+  active: "Active",
+  reserved: "Reserved",
+  in_use: "In Use",
+  under_maintenance: "Under Maintenance",
+  inactive: "Inactive",
+  out_of_service: "Out of Service",
+};
+
+export const StatusBadge = ({ status }: { status: ComputedStatus }) => {
+  const cls: Record<ComputedStatus, string> = {
+    active: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-300",
+    reserved: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300 border-orange-300",
+    in_use: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border-blue-300",
+    under_maintenance: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300",
+    inactive: "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-gray-300",
+    out_of_service: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-300",
+  };
+  return <Badge variant="outline" className={cls[status]}>{STATUS_LABEL[status]}</Badge>;
+};
 
 const FleetManager = () => {
   const [trucks, setTrucks] = useState<TruckRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TruckRow | null>(null);
-  const [form, setForm] = useState({ truck_number: "", license_plate: "", capacity_notes: "", is_active: true });
+  const [form, setForm] = useState({
+    truck_number: "",
+    license_plate: "",
+    capacity_notes: "",
+    manual_status: "active" as ManualStatus,
+    maintenance_start_date: "",
+    maintenance_end_date: "",
+    maintenance_notes: "",
+  });
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("trucks").select("*").order("truck_number");
+    const { data, error } = await supabase.rpc("list_trucks_with_status", {
+      _date: new Date().toISOString().slice(0, 10),
+    });
     if (error) toast.error(handleError(error));
     else setTrucks((data || []) as TruckRow[]);
     setLoading(false);
@@ -39,7 +85,10 @@ const FleetManager = () => {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ truck_number: "", license_plate: "", capacity_notes: "", is_active: true });
+    setForm({
+      truck_number: "", license_plate: "", capacity_notes: "",
+      manual_status: "active", maintenance_start_date: "", maintenance_end_date: "", maintenance_notes: "",
+    });
     setOpen(true);
   };
   const openEdit = (t: TruckRow) => {
@@ -48,18 +97,32 @@ const FleetManager = () => {
       truck_number: t.truck_number,
       license_plate: t.license_plate || "",
       capacity_notes: t.capacity_notes || "",
-      is_active: t.is_active,
+      manual_status: t.manual_status,
+      maintenance_start_date: t.maintenance_start_date || "",
+      maintenance_end_date: t.maintenance_end_date || "",
+      maintenance_notes: t.maintenance_notes || "",
     });
     setOpen(true);
   };
 
   const save = async () => {
     if (!form.truck_number.trim()) return toast.error("Truck number required");
-    const payload = {
+    if (form.manual_status === "under_maintenance") {
+      if (!form.maintenance_start_date || !form.maintenance_end_date) {
+        return toast.error("Maintenance start and end dates are required");
+      }
+      if (form.maintenance_end_date < form.maintenance_start_date) {
+        return toast.error("Maintenance end date must be on or after start date");
+      }
+    }
+    const payload: any = {
       truck_number: form.truck_number.trim(),
       license_plate: form.license_plate || null,
       capacity_notes: form.capacity_notes || null,
-      is_active: form.is_active,
+      manual_status: form.manual_status,
+      maintenance_start_date: form.manual_status === "under_maintenance" ? form.maintenance_start_date : null,
+      maintenance_end_date: form.manual_status === "under_maintenance" ? form.maintenance_end_date : null,
+      maintenance_notes: form.manual_status === "under_maintenance" ? (form.maintenance_notes || null) : null,
     };
     const { error } = editing
       ? await supabase.from("trucks").update(payload).eq("id", editing.id)
@@ -84,13 +147,47 @@ const FleetManager = () => {
         <CardTitle className="flex items-center gap-2"><Truck className="h-5 w-5" /> Fleet</CardTitle>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Add Truck</Button></DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>{editing ? "Edit Truck" : "Add Truck"}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto">
               <div><Label>Truck Number *</Label><Input value={form.truck_number} onChange={e => setForm({ ...form, truck_number: e.target.value })} /></div>
               <div><Label>License Plate</Label><Input value={form.license_plate} onChange={e => setForm({ ...form, license_plate: e.target.value })} /></div>
               <div><Label>Capacity / Notes</Label><Input value={form.capacity_notes} onChange={e => setForm({ ...form, capacity_notes: e.target.value })} /></div>
-              <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm({ ...form, is_active: v })} /><Label>Active</Label></div>
+              <div>
+                <Label>Truck Status *</Label>
+                <Select value={form.manual_status} onValueChange={(v) => setForm({ ...form, manual_status: v as ManualStatus })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {MANUAL_STATUS_OPTIONS.map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Reserved and In Use are computed automatically from job orders.
+                </p>
+              </div>
+              {form.manual_status === "under_maintenance" && (
+                <div className="space-y-2 rounded-md border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/30 p-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label>Maintenance Start *</Label>
+                      <Input type="date" value={form.maintenance_start_date} onChange={e => setForm({ ...form, maintenance_start_date: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Maintenance End *</Label>
+                      <Input type="date" value={form.maintenance_end_date} onChange={e => setForm({ ...form, maintenance_end_date: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Maintenance Notes</Label>
+                    <Textarea value={form.maintenance_notes} onChange={e => setForm({ ...form, maintenance_notes: e.target.value })} placeholder="Optional notes about the maintenance" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Truck cannot be assigned to jobs that overlap this period.
+                  </p>
+                </div>
+              )}
             </div>
             <DialogFooter><Button onClick={save}>{editing ? "Save" : "Add"}</Button></DialogFooter>
           </DialogContent>
@@ -98,14 +195,14 @@ const FleetManager = () => {
       </CardHeader>
       <CardContent className="p-0">
         <div className="bg-yellow-50 dark:bg-yellow-950/30 border-l-4 border-yellow-400 p-3 text-sm">
-          Shared with Operations Manager and Warehouse Keeper. Both roles can add, edit, or remove trucks.
+          Shared with Operations Manager and Warehouse Keeper. Status shown for today; Reserved/In Use are calculated automatically from scheduled and active jobs.
         </div>
         {loading ? <p className="p-4">Loading...</p> : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Truck</TableHead><TableHead>Plate</TableHead><TableHead>Notes</TableHead>
-                <TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+                <TableHead>Status (today)</TableHead><TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,7 +212,19 @@ const FleetManager = () => {
                   <TableCell className="font-medium">{t.truck_number}</TableCell>
                   <TableCell>{t.license_plate || "—"}</TableCell>
                   <TableCell>{t.capacity_notes || "—"}</TableCell>
-                  <TableCell><Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "Active" : "Inactive"}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <StatusBadge status={t.computed_status} />
+                      {t.computed_status !== t.manual_status && (
+                        <span className="text-[10px] text-muted-foreground">manual: {STATUS_LABEL[t.manual_status]}</span>
+                      )}
+                      {t.manual_status === "under_maintenance" && t.maintenance_start_date && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {t.maintenance_start_date} → {t.maintenance_end_date}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
