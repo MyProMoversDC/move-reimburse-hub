@@ -122,14 +122,14 @@ const MobileShell = ({
           >
             <Menu className="h-6 w-6" />
           </button>
-          <h1 className="flex-1 min-w-0 text-[15px] font-semibold text-center truncate px-1">
+          <h1 className="flex-1 min-w-0 text-[15px] font-semibold truncate px-1">
             {title}
           </h1>
           <div
             className={cn(
-              "flex items-center gap-1 shrink-0 justify-end max-w-[44vw] overflow-hidden",
+              "flex items-center gap-0.5 shrink-0 justify-end max-w-[38vw] overflow-hidden",
               // Compress whatever the dashboard passes in so it fits the native bar
-              "[&_button]:h-9 [&_button]:px-2 [&_button]:text-xs [&_button]:gap-1",
+              "[&_button]:h-9 [&_button]:px-1.5 [&_button]:text-[11px] [&_button]:gap-1",
               "[&_button>span]:truncate [&_svg]:h-4 [&_svg]:w-4",
             )}
           >
