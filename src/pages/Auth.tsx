@@ -32,8 +32,6 @@ const Auth = () => {
   
   const t = translations[language];
 
-  const getPasswordResetRedirectUrl = () => "https://mypromoversreimbursements.com/reset-password";
-
   const isPasswordRecoveryUrl = () => {
     if (typeof window === "undefined") return false;
     const searchParams = new URLSearchParams(window.location.search);
@@ -247,8 +245,8 @@ const Auth = () => {
 
       setLoading(true);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
-        redirectTo: getPasswordResetRedirectUrl(),
+      const { error } = await supabase.functions.invoke("send-password-reset", {
+        body: { email: validated.email },
       });
 
       if (error) throw error;
