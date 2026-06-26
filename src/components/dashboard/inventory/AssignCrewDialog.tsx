@@ -33,7 +33,7 @@ interface Props {
 
 interface Mover { id: string; first_name: string; last_name: string; }
 interface Crew { id: string; name: string; crew_date?: string | null; }
-interface Truck { id: string; truck_number: string; }
+interface Truck { id: string; truck_number: string; computed_status?: string; is_available?: boolean; }
 interface ExistingAssignment {
   mover_id: string;
   first_name: string;
@@ -71,7 +71,9 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
         const [roleRes, crewsRes, trucksRes, existingRes] = await Promise.all([
           supabase.from("user_roles").select("user_id").eq("role", "mover"),
           supabase.from("crews").select("id, name, crew_date").order("crew_date", { ascending: false }).limit(200),
-          supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
+          job.service_date
+            ? supabase.rpc("list_trucks_with_status", { _date: job.service_date })
+            : supabase.from("trucks").select("id, truck_number").eq("is_active", true).order("truck_number"),
           supabase
             .from("inv_job_orders")
             .select("id, truck_id, notes")
@@ -242,7 +244,9 @@ const AssignCrewDialog = ({ open, onOpenChange, job, userId, onSaved }: Props) =
                 <SearchableSelect
                   value={form.truck_id}
                   onValueChange={(v) => setForm({ ...form, truck_id: v })}
-                  options={trucks.map(t => ({ value: t.id, label: t.truck_number }))}
+                  options={trucks
+                    .filter(t => t.is_available === undefined || t.is_available || t.id === form.truck_id)
+                    .map(t => ({ value: t.id, label: t.truck_number }))}
                   placeholder="Select truck"
                   searchPlaceholder="Search trucks..."
                   emptyMessage="No trucks"

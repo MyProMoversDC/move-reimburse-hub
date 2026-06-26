@@ -31,7 +31,7 @@ interface Props { userId: string; }
 const JobOrdersManager = ({ userId }: Props) => {
   const [rows, setRows] = useState<Row[]>([]);
   const [jobTypes, setJobTypes] = useState<{ id: string; name: string }[]>([]);
-  const [trucks, setTrucks] = useState<{ id: string; truck_number: string }[]>([]);
+  const [trucks, setTrucks] = useState<{ id: string; truck_number: string; computed_status: string; is_available: boolean }[]>([]);
   const [open, setOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Row | null>(null);
   const [assignedCounts, setAssignedCounts] = useState<Record<string, { total: number; pending: number; confirmed: number; declined: number }>>({});
@@ -44,16 +44,20 @@ const JobOrdersManager = ({ userId }: Props) => {
     job_type_id: "", truck_id: "", pickup_address: "", dropoff_address: "", notes: "", status: "pending"
   });
 
+  const loadTrucksForDate = async (dateStr: string) => {
+    const { data, error } = await supabase.rpc("list_trucks_with_status", { _date: dateStr });
+    if (!error) setTrucks((data || []) as any);
+  };
+
   const load = async () => {
-    const [j, t, tr] = await Promise.all([
+    const [j, t] = await Promise.all([
       supabase.from("inv_job_orders").select("*").order("job_date", { ascending: true }).limit(2000),
       supabase.from("job_types").select("id,name").order("name"),
-      supabase.from("trucks").select("id,truck_number").eq("is_active", true).order("truck_number"),
     ]);
     if (j.error) toast.error(handleError(j.error)); else setRows((j.data || []) as Row[]);
     if (!t.error) setJobTypes(t.data || []);
-    if (!tr.error) setTrucks(tr.data || []);
     await loadAssignedCounts((j.data || []).map((x: any) => x.id));
+    await loadTrucksForDate(form.job_date);
   };
 
   const loadAssignedCounts = async (jobIds: string[]) => {
@@ -78,6 +82,7 @@ const JobOrdersManager = ({ userId }: Props) => {
 
   useEffect(() => { load(); }, []);
   useEffect(() => { setPage(1); }, [search, filterDate]);
+  useEffect(() => { if (open) loadTrucksForDate(form.job_date); }, [form.job_date, open]);
 
   const create = async () => {
     if (!form.job_number || !form.client_name || !form.job_date) return toast.error("Job number, client, date required");
@@ -126,8 +131,19 @@ const JobOrdersManager = ({ userId }: Props) => {
                   options={jobTypes.map(j => ({ value: j.id, label: j.name }))} placeholder="Select type" searchPlaceholder="Search..." emptyMessage="None" />
               </div>
               <div><Label>Truck</Label>
-                <SearchableSelect value={form.truck_id} onValueChange={v => setForm({ ...form, truck_id: v })}
-                  options={trucks.map(t => ({ value: t.id, label: t.truck_number }))} placeholder="Select truck" searchPlaceholder="Search..." emptyMessage="None" />
+                <SearchableSelect
+                  value={form.truck_id}
+                  onValueChange={v => setForm({ ...form, truck_id: v })}
+                  options={trucks
+                    .filter(t => t.is_available || t.id === form.truck_id)
+                    .map(t => ({ value: t.id, label: t.truck_number }))}
+                  placeholder="Select available truck"
+                  searchPlaceholder="Search..."
+                  emptyMessage="No trucks available on this date"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Only trucks available on {form.job_date} are shown (excludes maintenance, reserved, in use, inactive, out of service).
+                </p>
               </div>
               <div><Label>Pickup Address</Label><Input value={form.pickup_address} onChange={e => setForm({ ...form, pickup_address: e.target.value })} /></div>
               <div><Label>Dropoff Address</Label><Input value={form.dropoff_address} onChange={e => setForm({ ...form, dropoff_address: e.target.value })} /></div>
