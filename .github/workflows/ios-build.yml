@@ -127,6 +127,16 @@ jobs:
           sed -i '' "s|__APP_PROVISIONING_PROFILE__|${PROFILE_NAME}|g" App.xcodeproj/project.pbxproj
           echo "Injected DEVELOPMENT_TEAM=${APPLE_TEAM_ID} and PROVISIONING_PROFILE_SPECIFIER=${PROFILE_NAME} into App target only."
 
+      - name: Set build number (monotonically increasing)
+        working-directory: ios/App
+        run: |
+          # Use GitHub Actions run number offset by a base so the build number
+          # always increases across CI runs. Base 2 corresponds to the value
+          # currently committed in project.pbxproj (CURRENT_PROJECT_VERSION = 2).
+          BUILD_NUMBER=$((2 + GITHUB_RUN_NUMBER))
+          echo "Setting CFBundleVersion to ${BUILD_NUMBER}"
+          xcrun agvtool new-version -all "${BUILD_NUMBER}"
+
       - name: Build archive
         working-directory: ios/App
         run: |
