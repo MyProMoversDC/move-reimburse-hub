@@ -262,10 +262,58 @@ const ChatInterface = ({ conversation, userId, userRole, language, onBack, isUse
       )
       .subscribe();
 
+    // Presence heartbeat: mark this conversation as actively viewed so the push
+    // trigger suppresses notifications to this user for this conversation.
+    (window as any).__activeChatConversationId = conversation.id;
+    const platform =
+      typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent)
+        ? "ios"
+        : /Android/i.test(navigator.userAgent ?? "")
+        ? "android"
+        : "web";
+    const heartbeat = async () => {
+      if (document.visibilityState !== "visible") return;
+      await supabase
+        .from("conversation_participants")
+        .update({ active_viewed_at: new Date().toISOString(), active_device: platform })
+        .eq("conversation_id", conversation.id)
+        .eq("user_id", userId);
+    };
+    heartbeat();
+    const heartbeatTimer = window.setInterval(heartbeat, 25000);
+
+    // Clear any tray notifications for this conversation (per-conversation only).
+    window.dispatchEvent(
+      new CustomEvent("clear-chat-notifications", { detail: { conversationId: conversation.id } })
+    );
+
+    // If we got here via a push tap, scroll/highlight the target message.
+    try {
+      const raw = localStorage.getItem("pendingChatDeepLink");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { conversationId: string; messageId: string | null };
+        if (parsed.conversationId === conversation.id && parsed.messageId) {
+          setTimeout(() => scrollToMessage(parsed.messageId!), 600);
+        }
+        localStorage.removeItem("pendingChatDeepLink");
+      }
+    } catch {}
+
     return () => {
       supabase.removeChannel(channel);
+      window.clearInterval(heartbeatTimer);
+      if ((window as any).__activeChatConversationId === conversation.id) {
+        (window as any).__activeChatConversationId = null;
+      }
+      // Best-effort: clear presence so suppression expires immediately.
+      supabase
+        .from("conversation_participants")
+        .update({ active_viewed_at: null })
+        .eq("conversation_id", conversation.id)
+        .eq("user_id", userId)
+        .then(() => {});
     };
-  }, [conversation.id]);
+  }, [conversation.id, userId]);
 
   useEffect(() => {
     scrollToBottom();

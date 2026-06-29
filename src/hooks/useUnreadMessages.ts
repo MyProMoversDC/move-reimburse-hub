@@ -44,6 +44,18 @@ export const useUnreadMessages = (userId: string) => {
 
       setUnreadCount(totalUnread);
       setHasUnread(totalUnread > 0);
+
+      // Sync native app icon badge (iOS + Android where supported).
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor?.isNativePlatform?.()) {
+          const mod: any = await import(/* @vite-ignore */ '@capawesome/capacitor-badge' as string).catch(() => null);
+          const Badge: any = mod?.Badge;
+          if (Badge?.set) await Badge.set({ count: totalUnread });
+        }
+      } catch {
+        /* badge plugin optional */
+      }
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }

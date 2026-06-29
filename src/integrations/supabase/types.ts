@@ -403,6 +403,8 @@ export type Database = {
       }
       conversation_participants: {
         Row: {
+          active_device: string | null
+          active_viewed_at: string | null
           conversation_id: string
           id: string
           joined_at: string
@@ -410,6 +412,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_device?: string | null
+          active_viewed_at?: string | null
           conversation_id: string
           id?: string
           joined_at?: string
@@ -417,6 +421,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_device?: string | null
+          active_viewed_at?: string | null
           conversation_id?: string
           id?: string
           joined_at?: string
@@ -3041,6 +3047,7 @@ export type Database = {
           avatar_url: string | null
           birth_date: string | null
           branch: string | null
+          chat_notification_mode: string
           created_at: string | null
           custom_attributes: Json | null
           email: string
@@ -3070,6 +3077,7 @@ export type Database = {
           avatar_url?: string | null
           birth_date?: string | null
           branch?: string | null
+          chat_notification_mode?: string
           created_at?: string | null
           custom_attributes?: Json | null
           email: string
@@ -3099,6 +3107,7 @@ export type Database = {
           avatar_url?: string | null
           birth_date?: string | null
           branch?: string | null
+          chat_notification_mode?: string
           created_at?: string | null
           custom_attributes?: Json | null
           email?: string

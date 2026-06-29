@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
 import MoverPerformanceCard from "@/components/ratings/MoverPerformanceCard";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Bell } from "lucide-react";
 
 interface UserSettingsProps {
   userId: string;
@@ -202,6 +204,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const [medicalCardExpirationDateOpen, setMedicalCardExpirationDateOpen] = useState(false);
   const [birthDateOpen, setBirthDateOpen] = useState(false);
   const [originalBirthDate, setOriginalBirthDate] = useState<string | null>(null);
+  const [chatNotificationMode, setChatNotificationMode] = useState<"all" | "mentions">("all");
+  const [savingChatPref, setSavingChatPref] = useState(false);
 
   const t = translations[language];
 
@@ -437,7 +441,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires, birth_date")
+        .select("first_name, last_name, email, phone, address, hourly_rate, avatar_url, license_number, license_class, license_expires, physical_expires, birth_date, chat_notification_mode")
         .eq("id", userId)
         .single();
 
@@ -454,6 +458,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           birth_date: data.birth_date || null,
         });
         setOriginalBirthDate(data.birth_date || null);
+        setChatNotificationMode(((data as any).chat_notification_mode as "all" | "mentions") || "all");
         setDriversLicense({
           number: data.license_number || "",
           licenseClass: data.license_class || "",
@@ -1143,6 +1148,50 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
                 </CardContent>
               </Card>
             )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="h-4 w-4" /> Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Label className="text-sm font-medium">Chat notifications</Label>
+                <RadioGroup
+                  value={chatNotificationMode}
+                  onValueChange={async (v) => {
+                    const mode = (v as "all" | "mentions");
+                    setChatNotificationMode(mode);
+                    setSavingChatPref(true);
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({ chat_notification_mode: mode } as any)
+                      .eq("id", userId);
+                    setSavingChatPref(false);
+                    if (error) toast.error(handleError(error));
+                    else toast.success("Notification preference saved");
+                  }}
+                  disabled={savingChatPref}
+                  className="gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="all" id="chat-pref-all" />
+                    <Label htmlFor="chat-pref-all" className="font-normal cursor-pointer">
+                      All chat messages
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="mentions" id="chat-pref-mentions" />
+                    <Label htmlFor="chat-pref-mentions" className="font-normal cursor-pointer">
+                      Only when I'm mentioned
+                    </Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">
+                  Takes effect immediately — no app restart needed.
+                </p>
+              </CardContent>
+            </Card>
 
             <Button onClick={handleSave} disabled={saving} className="w-full">
               <Save className="h-4 w-4 mr-2" />

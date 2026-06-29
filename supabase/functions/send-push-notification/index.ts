@@ -61,7 +61,32 @@ async function getAccessToken(sa: any): Promise<string> {
   return cachedToken.token;
 }
 
-async function sendFcm(projectId: string, accessToken: string, token: string, title: string, body: string, data: Record<string,string>) {
+async function sendFcm(
+  projectId: string,
+  accessToken: string,
+  token: string,
+  title: string,
+  body: string,
+  data: Record<string,string>,
+  opts: { androidCollapseKey?: string; apnsThreadId?: string } = {},
+) {
+  const apnsHeaders: Record<string,string> = { "apns-priority": "10" };
+  if (opts.apnsThreadId) apnsHeaders["apns-collapse-id"] = opts.apnsThreadId;
+
+  const aps: Record<string, unknown> = {
+    alert: { title, body },
+    sound: "default",
+    "mutable-content": 1,
+    "content-available": 1,
+  };
+  if (opts.apnsThreadId) aps["thread-id"] = opts.apnsThreadId;
+
+  const android: Record<string, unknown> = {
+    priority: "HIGH",
+    notification: { sound: "default" },
+  };
+  if (opts.androidCollapseKey) android.collapse_key = opts.androidCollapseKey;
+
   const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -70,18 +95,8 @@ async function sendFcm(projectId: string, accessToken: string, token: string, ti
         token,
         notification: { title, body },
         data,
-        android: { priority: "HIGH", notification: { sound: "default" } },
-        apns: {
-          headers: { "apns-priority": "10" },
-          payload: {
-            aps: {
-              alert: { title, body },
-              sound: "default",
-              "mutable-content": 1,
-              "content-available": 1,
-            },
-          },
-        },
+        android,
+        apns: { headers: apnsHeaders, payload: { aps } },
       },
     }),
   });
@@ -93,7 +108,7 @@ Deno.serve(async (req) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    let { user_id, title, body, data, test } = payload as any;
+    let { user_id, title, body, data, test, android_collapse_key, apns_thread_id } = payload as any;
 
     // Admin test path requires JWT + admin role
     if (test) {
@@ -138,7 +153,10 @@ Deno.serve(async (req) => {
     for (const [k, v] of Object.entries(data ?? {})) stringData[k] = String(v);
 
     const results = await Promise.all(
-      tokens.map((t) => sendFcm(sa.project_id, accessToken, t.token, title, body, stringData))
+      tokens.map((t) => sendFcm(sa.project_id, accessToken, t.token, title, body, stringData, {
+        androidCollapseKey: android_collapse_key,
+        apnsThreadId: apns_thread_id,
+      }))
     );
 
     // Clean up invalid tokens
