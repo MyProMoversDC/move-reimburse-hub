@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>My Pro Movers</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+
+	<!-- Privacy usage descriptions (required by App Store review) -->
+	<key>NSCameraUsageDescription</key>
+	<string>My Pro Movers uses the camera so movers can scan shift QR codes to clock in and clock out and so users can attach photos to chats, incident reports, and reimbursement submissions.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>My Pro Movers needs access to your photo library so you can attach receipts, documents, and photos to reimbursements, chats, and reports.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>My Pro Movers saves signed forms and receipts to your photo library when you choose to download them.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>My Pro Movers uses the microphone so you can record and send voice messages inside the chat.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>My Pro Movers uses your location to confirm arrival at the parking lot and the job site and to share live progress with dispatch while you are on a job.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>My Pro Movers uses your location in the background to keep dispatch updated with your live position while you are traveling to and from a job site.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>My Pro Movers uses your location in the background to keep dispatch updated with your live position while you are traveling to and from a job site.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>My Pro Movers uses Face ID to keep your account secure.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>My Pro Movers does not track you across other apps or websites.</string>
+
+	<!-- Background capabilities required for live GPS pings + APNs/FCM push delivery -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+		<string>location</string>
+	</array>
+
+	<!-- Allow http content (default Capacitor behavior; tighten in future) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
+	<!-- ITS standard encryption disclosure: app only uses HTTPS, qualifies for exemption -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- Firebase: enable Messaging direct channel + APNs auto-registration -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+</dict>
+</plist>
