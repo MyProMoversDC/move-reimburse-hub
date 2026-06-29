@@ -1149,6 +1149,50 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
               </Card>
             )}
 
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="h-4 w-4" /> Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Label className="text-sm font-medium">Chat notifications</Label>
+                <RadioGroup
+                  value={chatNotificationMode}
+                  onValueChange={async (v) => {
+                    const mode = (v as "all" | "mentions");
+                    setChatNotificationMode(mode);
+                    setSavingChatPref(true);
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({ chat_notification_mode: mode } as any)
+                      .eq("id", userId);
+                    setSavingChatPref(false);
+                    if (error) toast.error(handleError(error));
+                    else toast.success("Notification preference saved");
+                  }}
+                  disabled={savingChatPref}
+                  className="gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="all" id="chat-pref-all" />
+                    <Label htmlFor="chat-pref-all" className="font-normal cursor-pointer">
+                      All chat messages
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="mentions" id="chat-pref-mentions" />
+                    <Label htmlFor="chat-pref-mentions" className="font-normal cursor-pointer">
+                      Only when I'm mentioned
+                    </Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">
+                  Takes effect immediately — no app restart needed.
+                </p>
+              </CardContent>
+            </Card>
+
             <Button onClick={handleSave} disabled={saving} className="w-full">
               <Save className="h-4 w-4 mr-2" />
               {saving ? t.saving : t.saveChanges}
