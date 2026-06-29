@@ -153,7 +153,10 @@ Deno.serve(async (req) => {
     for (const [k, v] of Object.entries(data ?? {})) stringData[k] = String(v);
 
     const results = await Promise.all(
-      tokens.map((t) => sendFcm(sa.project_id, accessToken, t.token, title, body, stringData))
+      tokens.map((t) => sendFcm(sa.project_id, accessToken, t.token, title, body, stringData, {
+        androidCollapseKey: android_collapse_key,
+        apnsThreadId: apns_thread_id,
+      }))
     );
 
     // Clean up invalid tokens
