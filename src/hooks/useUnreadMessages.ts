@@ -49,7 +49,8 @@ export const useUnreadMessages = (userId: string) => {
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (Capacitor?.isNativePlatform?.()) {
-          const mod: any = await import(/* @vite-ignore */ '@capawesome/capacitor-badge' as string).catch(() => null);
+          const badgePkg = '@capawesome/capacitor-badge';
+          const mod: any = await import(/* @vite-ignore */ badgePkg).catch(() => null);
           const Badge: any = mod?.Badge;
           if (Badge?.set) await Badge.set({ count: totalUnread });
         }
