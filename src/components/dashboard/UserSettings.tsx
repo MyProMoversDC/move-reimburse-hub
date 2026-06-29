@@ -456,6 +456,7 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
           birth_date: data.birth_date || null,
         });
         setOriginalBirthDate(data.birth_date || null);
+        setChatNotificationMode(((data as any).chat_notification_mode as "all" | "mentions") || "all");
         setDriversLicense({
           number: data.license_number || "",
           licenseClass: data.license_class || "",
