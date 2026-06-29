@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
 import MoverPerformanceCard from "@/components/ratings/MoverPerformanceCard";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Bell } from "lucide-react";
 
 interface UserSettingsProps {
   userId: string;
