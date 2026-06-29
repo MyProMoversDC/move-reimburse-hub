@@ -101,6 +101,19 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PROFILE_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
 
+      - name: Inject signing settings into App target only
+        working-directory: ios/App
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Scope DEVELOPMENT_TEAM and PROVISIONING_PROFILE_SPECIFIER to the App
+          # target's Release config only. Passing these via xcodebuild CLI applies
+          # them globally and breaks embedded frameworks (Capacitor, Firebase, Pods)
+          # which must not receive a provisioning profile.
+          sed -i '' "s|__APP_DEVELOPMENT_TEAM__|${APPLE_TEAM_ID}|g" App.xcodeproj/project.pbxproj
+          sed -i '' "s|__APP_PROVISIONING_PROFILE__|${PROFILE_NAME}|g" App.xcodeproj/project.pbxproj
+          echo "Injected DEVELOPMENT_TEAM=${APPLE_TEAM_ID} and PROVISIONING_PROFILE_SPECIFIER=${PROFILE_NAME} into App target only."
+
       - name: Build archive
         working-directory: ios/App
         run: |
@@ -109,10 +122,6 @@ jobs:
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
-            PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             archive
 
       - name: Export IPA
@@ -121,7 +130,7 @@ jobs:
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
-            <key>method</key><string>app-store</string>
+            <key>method</key><string>app-store-connect</string>
             <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
             <key>uploadSymbols</key><true/>
             <key>signingStyle</key><string>manual</string>
