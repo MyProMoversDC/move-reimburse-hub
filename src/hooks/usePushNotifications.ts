@@ -68,17 +68,38 @@ export const usePushNotifications = (userId: string | null | undefined) => {
 
         await PushNotifications.register();
 
-        const regHandle = await PushNotifications.addListener("registration", async (token) => {
-          if (!mounted) return;
-          const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
+        const isIOS = Capacitor.getPlatform() === "ios";
+        const platform: "ios" | "android" = isIOS ? "ios" : "android";
+
+        const saveToken = async (value: string) => {
+          if (!mounted || !value) return;
           await supabase
             .from("device_tokens")
             .upsert(
-              { user_id: userId, token: token.value, platform, updated_at: new Date().toISOString() },
+              { user_id: userId, token: value, platform, updated_at: new Date().toISOString() },
               { onConflict: "token" }
             );
-        });
-        listenerHandles.push(regHandle);
+        };
+
+        if (isIOS) {
+          // On iOS the FCM registration token is delivered by Firebase Messaging
+          // from the native AppDelegate via `window.dispatchEvent('fcm-token')`.
+          // We ignore Capacitor's raw APNs token because the existing
+          // `send-push-notification` edge function targets the FCM v1 API.
+          const existing = (window as any).__fcmToken as string | undefined;
+          if (existing) void saveToken(existing);
+          const fcmHandler = (e: Event) => {
+            const token = (e as CustomEvent).detail as string;
+            void saveToken(token);
+          };
+          window.addEventListener("fcm-token", fcmHandler);
+          listenerHandles.push({ remove: async () => window.removeEventListener("fcm-token", fcmHandler) });
+        } else {
+          const regHandle = await PushNotifications.addListener("registration", async (token) => {
+            await saveToken(token.value);
+          });
+          listenerHandles.push(regHandle);
+        }
 
         const errHandle = await PushNotifications.addListener("registrationError", (err) => {
           console.error("[push] registration error", err);
