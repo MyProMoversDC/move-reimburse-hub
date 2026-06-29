@@ -15,7 +15,9 @@ end
 
 target 'App' do
   capacitor_pods
-  # Add your Pods here
+  # Firebase iOS SDK for FCM push delivery (matches send-push-notification edge function)
+  pod 'FirebaseCore', '~> 11.0'
+  pod 'FirebaseMessaging', '~> 11.0'
 end
 
 post_install do |installer|
