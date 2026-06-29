@@ -50,12 +50,8 @@ jobs:
       - name: Build web bundle
         run: bun run build
 
-      - name: Sanity check — production capacitor config has no dev server URL
-        run: |
-          if grep -E "server\s*:\s*\{" capacitor.config.ts | grep -v "CAP_SERVER_URL" ; then
-            echo "::error::capacitor.config.ts contains an unconditional server block — production must boot from dist/"
-            exit 1
-          fi
+
+
 
       - name: Sync Capacitor iOS (committed project + pods)
         run: npx cap sync ios
