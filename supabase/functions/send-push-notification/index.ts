@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    let { user_id, title, body, data, test } = payload as any;
+    let { user_id, title, body, data, test, android_collapse_key, apns_thread_id } = payload as any;
 
     // Admin test path requires JWT + admin role
     if (test) {
