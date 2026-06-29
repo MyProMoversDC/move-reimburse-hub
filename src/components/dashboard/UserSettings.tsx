@@ -202,6 +202,8 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   const [medicalCardExpirationDateOpen, setMedicalCardExpirationDateOpen] = useState(false);
   const [birthDateOpen, setBirthDateOpen] = useState(false);
   const [originalBirthDate, setOriginalBirthDate] = useState<string | null>(null);
+  const [chatNotificationMode, setChatNotificationMode] = useState<"all" | "mentions">("all");
+  const [savingChatPref, setSavingChatPref] = useState(false);
 
   const t = translations[language];
 
