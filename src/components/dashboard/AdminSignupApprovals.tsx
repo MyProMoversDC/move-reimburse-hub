@@ -178,12 +178,16 @@ const AdminSignupApprovals = () => {
     }
   };
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (userId: string, role?: string) => {
     setProcessingId(userId);
     try {
+      const updates: Record<string, any> = { signup_status: "approved" };
+      if (role === "mover" && moverAttribute[userId]) {
+        updates.mover_attribute = moverAttribute[userId];
+      }
       const { error } = await supabase
         .from("profiles")
-        .update({ signup_status: "approved" } as any)
+        .update(updates as any)
         .eq("id", userId);
 
       if (error) throw error;
