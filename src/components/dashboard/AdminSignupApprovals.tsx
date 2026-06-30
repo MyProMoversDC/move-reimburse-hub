@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import { Check, X, Loader2, UserPlus, Send, Search } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { MOVER_ATTRIBUTE_OPTIONS } from "@/components/dashboard/MoverDocumentsTab";
 
 interface PendingUser {
   id: string;
