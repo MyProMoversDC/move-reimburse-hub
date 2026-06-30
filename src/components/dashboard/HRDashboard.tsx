@@ -588,11 +588,6 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
         <TabsContent value="mover-documents">
           <MoverDocumentsTab />
         </TabsContent>
-        </div>
-
-        <TabsContent value="mover-ratings">
-          <MoverRatingsPage readOnly />
-        </TabsContent>
 
 
         <TabsContent value="hr-cabinet">
