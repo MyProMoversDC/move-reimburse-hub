@@ -138,6 +138,7 @@ const AdminSignupApprovals = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [checkrProcessingId, setCheckrProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [moverAttribute, setMoverAttribute] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchPendingUsers();
