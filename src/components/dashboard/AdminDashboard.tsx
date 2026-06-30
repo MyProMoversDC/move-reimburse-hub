@@ -625,6 +625,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         );
       case "movers":
         return <MoversList language={language} />;
+      case "mover-documents":
+        return <MoverDocumentsTab />;
       case "mover-ratings":
         return <MoverRatingsPage />;
       case "roles":
