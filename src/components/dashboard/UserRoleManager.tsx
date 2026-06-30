@@ -190,6 +190,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
               <TableHead>Name</TableHead>
               <TableHead>Username</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Attribute (Movers)</TableHead>
               <TableHead>Current Roles</TableHead>
               <TableHead>Add Role</TableHead>
             </TableRow>
@@ -197,7 +198,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No users found
                 </TableCell>
               </TableRow>
