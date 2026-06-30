@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import { Check, X, Loader2, UserPlus, Send, Search } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { MOVER_ATTRIBUTE_OPTIONS } from "@/components/dashboard/MoverDocumentsTab";
 
 interface PendingUser {
   id: string;
@@ -135,6 +138,7 @@ const AdminSignupApprovals = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [checkrProcessingId, setCheckrProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [moverAttribute, setMoverAttribute] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchPendingUsers();
@@ -174,12 +178,16 @@ const AdminSignupApprovals = () => {
     }
   };
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (userId: string, role?: string) => {
     setProcessingId(userId);
     try {
+      const updates: Record<string, any> = { signup_status: "approved" };
+      if (role === "mover" && moverAttribute[userId]) {
+        updates.mover_attribute = moverAttribute[userId];
+      }
       const { error } = await supabase
         .from("profiles")
-        .update({ signup_status: "approved" } as any)
+        .update(updates as any)
         .eq("id", userId);
 
       if (error) throw error;
@@ -309,6 +317,26 @@ const AdminSignupApprovals = () => {
               </CardHeader>
               <CardContent>
                 <UserDetails user={user} t={t} />
+                {user.role === "mover" && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                    <Label className="sm:w-40 text-sm">Mover attribute</Label>
+                    <Select
+                      value={moverAttribute[user.id] || ""}
+                      onValueChange={(v) =>
+                        setMoverAttribute({ ...moverAttribute, [user.id]: v })
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[220px]">
+                        <SelectValue placeholder="Select attribute (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOVER_ATTRIBUTE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <Button
                     variant="outline"
@@ -326,7 +354,7 @@ const AdminSignupApprovals = () => {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => handleApprove(user.id)}
+                    onClick={() => handleApprove(user.id, user.role)}
                     disabled={processingId === user.id}
                   >
                     {processingId === user.id ? (

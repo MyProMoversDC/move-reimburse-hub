@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MoverDocumentsTab from "./MoverDocumentsTab";
 import { 
   Search, 
   Upload, 
@@ -573,6 +574,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
           <TabsList className="flex gap-1 h-auto p-1">
             <TabsTrigger value="hr-cabinet" className="text-sm px-3 py-1.5">HR Cabinet</TabsTrigger>
             <TabsTrigger value="mover-ratings" className="text-sm px-3 py-1.5">Mover Ratings</TabsTrigger>
+            <TabsTrigger value="mover-documents" className="text-sm px-3 py-1.5">Mover Documents</TabsTrigger>
             <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">Shift Schedule</TabsTrigger>
             <TabsTrigger value="knowledge-base" className="text-sm px-3 py-1.5">Knowledge Base</TabsTrigger>
 
@@ -581,6 +583,10 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
 
         <TabsContent value="mover-ratings">
           <MoverRatingsPage readOnly />
+        </TabsContent>
+
+        <TabsContent value="mover-documents">
+          <MoverDocumentsTab />
         </TabsContent>
 
 

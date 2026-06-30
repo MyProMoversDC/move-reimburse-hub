@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { UserPlus, Trash2 } from "lucide-react";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError } from "@/lib/errorHandler";
+import { MOVER_ATTRIBUTE_OPTIONS } from "@/components/dashboard/MoverDocumentsTab";
 
 interface User {
   id: string;
@@ -26,6 +28,7 @@ interface User {
   email: string;
   avatar_url: string | null;
   roles: string[];
+  mover_attribute: string | null;
 }
 
 interface UserRoleManagerProps {
@@ -85,8 +88,9 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
       if (rolesError) throw rolesError;
 
       // Map roles to users
-      const usersWithRoles = (profiles || []).map((profile) => ({
+      const usersWithRoles = (profiles || []).map((profile: any) => ({
         ...profile,
+        mover_attribute: profile.mover_attribute ?? null,
         roles: (roles || [])
           .filter((r) => r.user_id === profile.id)
           .map((r) => r.role),
@@ -154,6 +158,22 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
     }
   };
 
+  const handleAttributeChange = async (userId: string, value: string) => {
+    const newVal = value === "__none__" ? null : value;
+    const prev = users;
+    setUsers((arr) => arr.map((u) => (u.id === userId ? { ...u, mover_attribute: newVal } : u)));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ mover_attribute: newVal } as any)
+      .eq("id", userId);
+    if (error) {
+      setUsers(prev);
+      toast.error(handleError(error));
+    } else {
+      toast.success("Attribute updated");
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -170,6 +190,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
               <TableHead>Name</TableHead>
               <TableHead>Username</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Attribute (Movers)</TableHead>
               <TableHead>Current Roles</TableHead>
               <TableHead>Add Role</TableHead>
             </TableRow>
@@ -177,7 +198,7 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No users found
                 </TableCell>
               </TableRow>
@@ -197,6 +218,26 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
                   </TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.roles.includes("mover") ? (
+                      <Select
+                        value={user.mover_attribute || "__none__"}
+                        onValueChange={(v) => handleAttributeChange(user.id, v)}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Not set" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Not set</SelectItem>
+                          {MOVER_ATTRIBUTE_OPTIONS.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {user.roles.length === 0 ? (

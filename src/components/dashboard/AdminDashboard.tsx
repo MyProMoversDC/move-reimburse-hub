@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
+import MoverDocumentsTab from "./MoverDocumentsTab";
 import AdminReviewBonusList from "./AdminReviewBonusList";
 import AdminMissingPaymentList from "./AdminMissingPaymentList";
 import DateRangeFilter from "./DateRangeFilter";
@@ -624,6 +625,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         );
       case "movers":
         return <MoversList language={language} />;
+      case "mover-documents":
+        return <MoverDocumentsTab />;
       case "mover-ratings":
         return <MoverRatingsPage />;
       case "roles":
