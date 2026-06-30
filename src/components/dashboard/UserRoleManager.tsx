@@ -158,6 +158,22 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
     }
   };
 
+  const handleAttributeChange = async (userId: string, value: string) => {
+    const newVal = value === "__none__" ? null : value;
+    const prev = users;
+    setUsers((arr) => arr.map((u) => (u.id === userId ? { ...u, mover_attribute: newVal } : u)));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ mover_attribute: newVal } as any)
+      .eq("id", userId);
+    if (error) {
+      setUsers(prev);
+      toast.error(handleError(error));
+    } else {
+      toast.success("Attribute updated");
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
