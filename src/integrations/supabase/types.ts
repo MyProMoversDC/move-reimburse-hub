@@ -1995,6 +1995,61 @@ export type Database = {
         }
         Relationships: []
       }
+      mover_document_signatures: {
+        Row: {
+          created_at: string
+          document_id: string
+          file_url: string | null
+          id: string
+          marked_by: string | null
+          notes: string | null
+          signed_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          file_url?: string | null
+          id?: string
+          marked_by?: string | null
+          notes?: string | null
+          signed_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          file_url?: string | null
+          id?: string
+          marked_by?: string | null
+          notes?: string | null
+          signed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mover_document_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "mover_required_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mover_document_signatures_marked_by_fkey"
+            columns: ["marked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mover_document_signatures_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mover_feedback: {
         Row: {
           additional_notes: string | null
@@ -2310,6 +2365,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mover_required_documents: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          sort_order: number
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
       }
       mover_shift_qr_tokens: {
         Row: {
@@ -3062,6 +3150,7 @@ export type Database = {
           license_class: string | null
           license_expires: string | null
           license_number: string | null
+          mover_attribute: string | null
           nickname: string | null
           phone: string
           phone_type: string | null
@@ -3092,6 +3181,7 @@ export type Database = {
           license_class?: string | null
           license_expires?: string | null
           license_number?: string | null
+          mover_attribute?: string | null
           nickname?: string | null
           phone: string
           phone_type?: string | null
@@ -3122,6 +3212,7 @@ export type Database = {
           license_class?: string | null
           license_expires?: string | null
           license_number?: string | null
+          mover_attribute?: string | null
           nickname?: string | null
           phone?: string
           phone_type?: string | null
