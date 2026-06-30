@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { UserPlus, Trash2 } from "lucide-react";
 import { DashboardLanguage } from "@/lib/dashboardTranslations";
 import { handleError } from "@/lib/errorHandler";
+import { MOVER_ATTRIBUTE_OPTIONS } from "@/components/dashboard/MoverDocumentsTab";
 
 interface User {
   id: string;
@@ -26,6 +28,7 @@ interface User {
   email: string;
   avatar_url: string | null;
   roles: string[];
+  mover_attribute: string | null;
 }
 
 interface UserRoleManagerProps {
