@@ -88,8 +88,9 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
       if (rolesError) throw rolesError;
 
       // Map roles to users
-      const usersWithRoles = (profiles || []).map((profile) => ({
+      const usersWithRoles = (profiles || []).map((profile: any) => ({
         ...profile,
+        mover_attribute: profile.mover_attribute ?? null,
         roles: (roles || [])
           .filter((r) => r.user_id === profile.id)
           .map((r) => r.role),
