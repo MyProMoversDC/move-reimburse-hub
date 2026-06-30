@@ -317,6 +317,26 @@ const AdminSignupApprovals = () => {
               </CardHeader>
               <CardContent>
                 <UserDetails user={user} t={t} />
+                {user.role === "mover" && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                    <Label className="sm:w-40 text-sm">Mover attribute</Label>
+                    <Select
+                      value={moverAttribute[user.id] || ""}
+                      onValueChange={(v) =>
+                        setMoverAttribute({ ...moverAttribute, [user.id]: v })
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[220px]">
+                        <SelectValue placeholder="Select attribute (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOVER_ATTRIBUTE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <Button
                     variant="outline"
@@ -334,7 +354,7 @@ const AdminSignupApprovals = () => {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => handleApprove(user.id)}
+                    onClick={() => handleApprove(user.id, user.role)}
                     disabled={processingId === user.id}
                   >
                     {processingId === user.id ? (
@@ -345,6 +365,7 @@ const AdminSignupApprovals = () => {
                     {t.approve}
                   </Button>
                 </div>
+              </CardContent>
               </CardContent>
             </Card>
           ))}
