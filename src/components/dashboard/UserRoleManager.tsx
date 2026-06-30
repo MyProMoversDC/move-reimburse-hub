@@ -219,6 +219,26 @@ const UserRoleManager = ({ language }: UserRoleManagerProps) => {
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
+                    {user.roles.includes("mover") ? (
+                      <Select
+                        value={user.mover_attribute || "__none__"}
+                        onValueChange={(v) => handleAttributeChange(user.id, v)}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Not set" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Not set</SelectItem>
+                          {MOVER_ATTRIBUTE_OPTIONS.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {user.roles.length === 0 ? (
                         <span className="text-muted-foreground text-sm">No roles</span>
