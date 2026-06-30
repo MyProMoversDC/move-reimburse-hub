@@ -366,7 +366,6 @@ const AdminSignupApprovals = () => {
                   </Button>
                 </div>
               </CardContent>
-              </CardContent>
             </Card>
           ))}
 
