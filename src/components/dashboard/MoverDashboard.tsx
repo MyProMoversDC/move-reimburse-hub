@@ -760,13 +760,27 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                 onAcknowledge={() => {
                   setHandbookCompleted(true);
                   setShowHandbook(false);
-                  setShowFeedPosts(true);
+                  setShowAppInstructions(true);
                 }}
               />
             )}
-            
-            {/* Feed Posts Popup - Third Step (only shown after handbook is completed) */}
-            {handbookCompleted && showFeedPosts && (
+
+            {/* Application Instructions Popup - Third Step (24h reminder until completed) */}
+            {handbookCompleted && showAppInstructions && (
+              <ApplicationInstructionsPopup
+                userId={userId}
+                language={language}
+                onDone={() => {
+                  setShowAppInstructions(false);
+                  setAppInstructionsDone(true);
+                  setShowFeedPosts(true);
+                }}
+                onGoToTab={() => setActiveTab("application-instructions")}
+              />
+            )}
+
+            {/* Feed Posts Popup - Fourth Step (only shown after app instructions resolved) */}
+            {handbookCompleted && appInstructionsDone && showFeedPosts && (
               <FeedPostPopup
                 userId={userId}
                 language={language}
