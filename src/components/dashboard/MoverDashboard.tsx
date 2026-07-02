@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock, GraduationCap } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -50,6 +50,8 @@ import AnnualAddressDisclaimer from "./AnnualAddressDisclaimer";
 import DriverLicenseDisclaimer from "./DriverLicenseDisclaimer";
 import AddressDisclaimer from "./AddressDisclaimer";
 import FeedPostPopup from "./FeedPostPopup";
+import ApplicationInstructionsPopup from "./ApplicationInstructionsPopup";
+import MoverApplicationInstructions from "./MoverApplicationInstructions";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 import { EyeOff } from "lucide-react";
 
@@ -102,6 +104,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [handbookCompleted, setHandbookCompleted] = useState(false);
   const [feedPostsCompleted, setFeedPostsCompleted] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
+  const [showAppInstructions, setShowAppInstructions] = useState(false);
+  const [appInstructionsDone, setAppInstructionsDone] = useState(false);
   const [showFeedPosts, setShowFeedPosts] = useState(false);
 
   const handleNavigateToSettings = () => {
