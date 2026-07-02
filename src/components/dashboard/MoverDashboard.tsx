@@ -266,6 +266,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
       case "shift-clock":
         return <MoverShiftClock userId={userId} />;
 
+      case "application-instructions":
+        return <MoverApplicationInstructions userId={userId} language={language} />;
+
       
       case "reimbursements":
         return (
