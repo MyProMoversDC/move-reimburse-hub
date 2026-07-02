@@ -124,6 +124,15 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
   const checkForUnreadPosts = async () => {
     setLoading(true);
     try {
+      // Fetch the user's profile creation timestamp — feed popup should only
+      // enforce acknowledgment for posts created AFTER the user joined.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("created_at")
+        .eq("id", userId)
+        .maybeSingle();
+      const userJoinedAt = profile?.created_at ? new Date(profile.created_at).toISOString() : null;
+
       // Get all published posts
       const { data: posts, error: postsError } = await supabase
         .from("feed_posts")
@@ -137,22 +146,42 @@ const FeedPostPopup = ({ userId, language, onComplete, onAcknowledge }: FeedPost
         return;
       }
 
-      // Get user's acknowledgments
+      // Backfill acknowledgments for any post older than the user's account
+      // so the mandatory popup skips historical content on first login.
+      if (userJoinedAt) {
+        const legacyPostIds = posts
+          .filter((p) => new Date(p.created_at).toISOString() <= userJoinedAt)
+          .map((p) => p.id);
+        if (legacyPostIds.length > 0) {
+          const rows = legacyPostIds.map((post_id) => ({ user_id: userId, post_id }));
+          await supabase
+            .from("feed_post_acknowledgments")
+            .upsert(rows, { onConflict: "user_id,post_id", ignoreDuplicates: true });
+        }
+      }
+
+      // Get user's acknowledgments (after backfill above)
       const { data: acknowledgments } = await supabase
         .from("feed_post_acknowledgments")
         .select("post_id")
         .eq("user_id", userId);
 
       const acknowledgedIds = new Set(acknowledgments?.map(a => a.post_id) || []);
-      
-      // Filter unread posts
-      const unread = posts.filter(p => !acknowledgedIds.has(p.id));
-      
+
+      // Filter unread posts — only posts created after the user joined AND
+      // not yet acknowledged should trigger the mandatory popup.
+      const unread = posts.filter((p) => {
+        if (acknowledgedIds.has(p.id)) return false;
+        if (userJoinedAt && new Date(p.created_at).toISOString() <= userJoinedAt) return false;
+        return true;
+      });
+
       if (unread.length === 0) {
         setLoading(false);
         onComplete();
         return;
       }
+
 
       // Fetch attachments, polls, and author profiles
       const postIds = unread.map(p => p.id);
