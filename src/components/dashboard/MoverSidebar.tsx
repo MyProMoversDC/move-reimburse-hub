@@ -154,6 +154,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
     { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "my-jobs", label: t.myJobs, icon: Truck },
     { id: "shift-clock", label: t.shiftClock, icon: Clock },
+    { id: "application-instructions", label: t.appInstructions, icon: GraduationCap },
     { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
     { id: "reviews", label: t.reviews, icon: Star },
     { id: "missing-payments", label: t.missingPayments, icon: AlertTriangle },
