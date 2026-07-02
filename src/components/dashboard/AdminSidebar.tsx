@@ -153,6 +153,7 @@ export const groups: NavGroup[] = [
       { id: "feed", label: "Feed Management", icon: Newspaper },
       { id: "handbook", label: "Handbook Management", icon: BookOpen },
       { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+      { id: "application-instructions", label: "Application Instructions", icon: BookOpen },
       { id: "office-ai-knowledge", label: "AI Assistant Knowledge", icon: Sparkles },
       { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle, badgeKey: "moverFeedback", redDot: true },
     ],

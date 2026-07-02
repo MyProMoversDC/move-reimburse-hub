@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock, GraduationCap } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -50,6 +50,8 @@ import AnnualAddressDisclaimer from "./AnnualAddressDisclaimer";
 import DriverLicenseDisclaimer from "./DriverLicenseDisclaimer";
 import AddressDisclaimer from "./AddressDisclaimer";
 import FeedPostPopup from "./FeedPostPopup";
+import ApplicationInstructionsPopup from "./ApplicationInstructionsPopup";
+import MoverApplicationInstructions from "./MoverApplicationInstructions";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 import { EyeOff } from "lucide-react";
 
@@ -102,6 +104,8 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [handbookCompleted, setHandbookCompleted] = useState(false);
   const [feedPostsCompleted, setFeedPostsCompleted] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
+  const [showAppInstructions, setShowAppInstructions] = useState(false);
+  const [appInstructionsDone, setAppInstructionsDone] = useState(false);
   const [showFeedPosts, setShowFeedPosts] = useState(false);
 
   const handleNavigateToSettings = () => {
@@ -261,6 +265,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
       case "shift-clock":
         return <MoverShiftClock userId={userId} />;
+
+      case "application-instructions":
+        return <MoverApplicationInstructions userId={userId} language={language} />;
 
       
       case "reimbursements":
@@ -533,13 +540,27 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             onAcknowledge={() => {
               setHandbookCompleted(true);
               setShowHandbook(false);
-              setShowFeedPosts(true);
+              setShowAppInstructions(true);
             }}
           />
         )}
 
-        {/* Feed Posts Popup - Third Step (only shown after handbook is completed) */}
-        {handbookCompleted && showFeedPosts && (
+        {/* Application Instructions Popup - Third Step (24h reminder until completed) */}
+        {handbookCompleted && showAppInstructions && (
+          <ApplicationInstructionsPopup
+            userId={userId}
+            language={language}
+            onDone={() => {
+              setShowAppInstructions(false);
+              setAppInstructionsDone(true);
+              setShowFeedPosts(true);
+            }}
+            onGoToTab={() => setActiveTab("application-instructions")}
+          />
+        )}
+
+        {/* Feed Posts Popup - Fourth Step (only shown after app instructions resolved) */}
+        {handbookCompleted && appInstructionsDone && showFeedPosts && (
           <FeedPostPopup
             userId={userId}
             language={language}
@@ -551,6 +572,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
             }}
             onAcknowledge={fetchUnacknowledgedCount}
           />
+
         )}
         
         {/* Annual Address Disclaimer - Dec 31st */}
@@ -738,13 +760,27 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
                 onAcknowledge={() => {
                   setHandbookCompleted(true);
                   setShowHandbook(false);
-                  setShowFeedPosts(true);
+                  setShowAppInstructions(true);
                 }}
               />
             )}
-            
-            {/* Feed Posts Popup - Third Step (only shown after handbook is completed) */}
-            {handbookCompleted && showFeedPosts && (
+
+            {/* Application Instructions Popup - Third Step (24h reminder until completed) */}
+            {handbookCompleted && showAppInstructions && (
+              <ApplicationInstructionsPopup
+                userId={userId}
+                language={language}
+                onDone={() => {
+                  setShowAppInstructions(false);
+                  setAppInstructionsDone(true);
+                  setShowFeedPosts(true);
+                }}
+                onGoToTab={() => setActiveTab("application-instructions")}
+              />
+            )}
+
+            {/* Feed Posts Popup - Fourth Step (only shown after app instructions resolved) */}
+            {handbookCompleted && appInstructionsDone && showFeedPosts && (
               <FeedPostPopup
                 userId={userId}
                 language={language}
@@ -783,6 +819,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     { id: "todo", label: "To-Do List", icon: ClipboardList },
     { id: "my-jobs", label: "My Jobs", icon: Truck },
     { id: "shift-clock", label: "Shift Clock", icon: Clock },
+    { id: "application-instructions", label: "Application Instructions", icon: GraduationCap },
     { id: "reimbursements", label: "Reimbursements", icon: DollarSign },
     { id: "reviews", label: "Customer Reviews", icon: Star },
     { id: "missing-payments", label: "Missing Payments", icon: AlertTriangle },
