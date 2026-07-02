@@ -819,6 +819,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     { id: "todo", label: "To-Do List", icon: ClipboardList },
     { id: "my-jobs", label: "My Jobs", icon: Truck },
     { id: "shift-clock", label: "Shift Clock", icon: Clock },
+    { id: "application-instructions", label: "Application Instructions", icon: GraduationCap },
     { id: "reimbursements", label: "Reimbursements", icon: DollarSign },
     { id: "reviews", label: "Customer Reviews", icon: Star },
     { id: "missing-payments", label: "Missing Payments", icon: AlertTriangle },
