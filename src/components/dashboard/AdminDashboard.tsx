@@ -32,6 +32,7 @@ import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminMoverShifts from "./AdminMoverShifts";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
+import AdminApplicationInstructions from "./AdminApplicationInstructions";
 import AdminOfficeAIKnowledge from "./AdminOfficeAIKnowledge";
 import AdminTestPushButton from "./AdminTestPushButton";
 import AdminSignupApprovals from "./AdminSignupApprovals";
