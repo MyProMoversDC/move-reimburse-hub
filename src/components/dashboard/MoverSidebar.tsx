@@ -13,7 +13,9 @@ import {
   HelpCircle,
   UserPlus,
   Truck,
-  Clock
+  Clock,
+  GraduationCap
+
 } from "lucide-react";
 import {
   Sidebar,
