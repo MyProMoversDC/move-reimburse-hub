@@ -60,6 +60,7 @@ const translations = {
     paymentQuestions: "Payment Questions",
     referFriend: "Refer a Friend",
     shiftClock: "Shift Clock",
+    appInstructions: "Application Instructions",
   },
   es: {
     navigation: "Navegación",
@@ -77,6 +78,7 @@ const translations = {
     paymentQuestions: "Preguntas de Pago",
     referFriend: "Referir un Amigo",
     shiftClock: "Registro de Turno",
+    appInstructions: "Instrucciones de la Aplicación",
   },
   ru: {
     navigation: "Навигация",
@@ -94,6 +96,7 @@ const translations = {
     paymentQuestions: "Вопросы по Оплате",
     referFriend: "Порекомендовать Друга",
     shiftClock: "Учёт смены",
+    appInstructions: "Инструкции по приложению",
   },
 };
 
