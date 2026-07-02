@@ -611,6 +611,12 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
             <AdminKnowledgeBase userId={userId} />
           </div>
         );
+      case "application-instructions":
+        return (
+          <div className="space-y-6">
+            <AdminApplicationInstructions userId={userId} />
+          </div>
+        );
       case "office-ai-knowledge":
         return (
           <div className="space-y-6">
