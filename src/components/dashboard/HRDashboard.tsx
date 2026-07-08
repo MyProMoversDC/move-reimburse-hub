@@ -264,6 +264,7 @@ const hasLicenseAlert = (user: Profile): boolean => {
 const HRDashboard = ({ userId }: HRDashboardProps) => {
   const { language } = useLanguage();
   const t = hrTranslations[language];
+  const { t: ti18n } = useT();
 
   const [users, setUsers] = useState<Profile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<Profile[]>([]);
@@ -485,10 +486,10 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
   };
 
   const hrNavItems: MobileShellNavItem[] = [
-    { id: "hr-cabinet", label: "HR Cabinet", icon: UsersIcon },
-    { id: "mover-ratings", label: "Mover Ratings", icon: Star },
-    { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
-    { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+    { id: "hr-cabinet", label: ti18n("nav.hrCabinet"), icon: UsersIcon },
+    { id: "mover-ratings", label: ti18n("nav.moverRatings"), icon: Star },
+    { id: "shift-schedule", label: ti18n("nav.shiftSchedule"), icon: Clock },
+    { id: "knowledge-base", label: ti18n("nav.knowledgeBase"), icon: GraduationCap },
   ];
 
   const renderMobileTab = () => {
@@ -575,11 +576,11 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
       <Tabs value={activeTopTab} onValueChange={setActiveTopTab} className="w-full">
         <div>
           <TabsList className="flex gap-1 h-auto p-1">
-            <TabsTrigger value="hr-cabinet" className="text-sm px-3 py-1.5">HR Cabinet</TabsTrigger>
-            <TabsTrigger value="mover-ratings" className="text-sm px-3 py-1.5">Mover Ratings</TabsTrigger>
-            <TabsTrigger value="mover-documents" className="text-sm px-3 py-1.5">Mover Documents</TabsTrigger>
-            <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">Shift Schedule</TabsTrigger>
-            <TabsTrigger value="knowledge-base" className="text-sm px-3 py-1.5">Knowledge Base</TabsTrigger>
+            <TabsTrigger value="hr-cabinet" className="text-sm px-3 py-1.5">{ti18n("nav.hrCabinet")}</TabsTrigger>
+            <TabsTrigger value="mover-ratings" className="text-sm px-3 py-1.5">{ti18n("nav.moverRatings")}</TabsTrigger>
+            <TabsTrigger value="mover-documents" className="text-sm px-3 py-1.5">{ti18n("nav.moverDocuments")}</TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">{ti18n("nav.shiftSchedule")}</TabsTrigger>
+            <TabsTrigger value="knowledge-base" className="text-sm px-3 py-1.5">{ti18n("nav.knowledgeBase")}</TabsTrigger>
 
           </TabsList>
         </div>
