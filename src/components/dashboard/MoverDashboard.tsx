@@ -38,6 +38,7 @@ import MoverShiftClock from "./MoverShiftClock";
 import { MoverNotificationBell } from "./MoverNotificationBell";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useT } from "@/lib/i18n";
 import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { reviewBonusTranslations } from "@/lib/reviewBonusTranslations";
 import { missingPaymentTranslations } from "@/lib/missingPaymentTranslations";
@@ -95,6 +96,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [referralRefreshKey, setReferralRefreshKey] = useState(0);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
   const { language, setLanguage } = useLanguage();
+  const { t: ti18n } = useT();
   const [foremanName, setForemanName] = useState("");
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   
