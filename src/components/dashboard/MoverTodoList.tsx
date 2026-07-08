@@ -181,6 +181,12 @@ const MoverTodoList = ({ userId, language, onNavigateToSettings }: MoverTodoList
     );
   }
 
+  // noop marker
+        </CardContent>
+      </Card>
+    );
+  }
+
   const pendingTodos = todos.filter((t) => !t.completed);
 
   return (
