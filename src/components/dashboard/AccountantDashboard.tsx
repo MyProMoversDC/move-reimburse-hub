@@ -29,6 +29,7 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const { language, setLanguage } = useLanguage();
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   const [activeTab, setActiveTab] = useState<string>("requests");
+  useDeepLink("accountant", setActiveTab);
 
   const t = dashboardTranslations[language];
 

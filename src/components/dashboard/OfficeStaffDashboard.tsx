@@ -34,6 +34,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
   const { language, setLanguage } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>("feed");
+  useDeepLink("office_staff", setActiveTab);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   const renderContent = () => {

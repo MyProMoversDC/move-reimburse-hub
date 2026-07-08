@@ -277,6 +277,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
   const [documentNotes, setDocumentNotes] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTopTab, setActiveTopTab] = useState<string>("hr-cabinet");
+  useDeepLink("hr_manager", setActiveTopTab);
 
 
   useEffect(() => {

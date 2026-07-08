@@ -60,6 +60,7 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  useDeepLink("admin", setActiveTab);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showRefundForm, setShowRefundForm] = useState(false);
   const [exporting, setExporting] = useState(false);

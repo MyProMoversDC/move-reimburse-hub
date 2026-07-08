@@ -44,6 +44,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
   const { language, setLanguage } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>("reports");
+  useDeepLink("operations_manager", setActiveTab);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   const renderContent = () => {

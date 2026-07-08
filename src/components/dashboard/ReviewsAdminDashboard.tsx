@@ -41,6 +41,7 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
   const [exportingReviews, setExportingReviews] = useState(false);
   const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("reviews");
+  useDeepLink("reviews_admin", setActiveTab);
 
   const [reviewStartDate, setReviewStartDate] = useState<Date | undefined>();
   const [reviewEndDate, setReviewEndDate] = useState<Date | undefined>();

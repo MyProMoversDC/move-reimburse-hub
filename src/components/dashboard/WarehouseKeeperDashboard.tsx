@@ -30,6 +30,7 @@ const navItems = [
 const WarehouseKeeperDashboard = ({ userId }: Props) => {
   const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("warehouse");
+  useDeepLink("warehouse_keeper", setActiveTab);
   const { hasUnread } = useUnreadMessages(userId);
 
   const renderContent = () => {
