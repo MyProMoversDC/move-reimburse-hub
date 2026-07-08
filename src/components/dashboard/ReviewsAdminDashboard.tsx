@@ -180,7 +180,7 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <h2 className="text-2xl font-bold">Customer Review Bonus Submissions</h2>
+                  <h2 className="text-2xl font-bold">{ti18n("nav.reviewSubmissions")}</h2>
                   <div className="flex items-center gap-2">
                     <AddBonusDialog userId={userId} language={language} />
                     <Button onClick={handleExportReviews} disabled={exportingReviews} size="sm">
@@ -197,7 +197,7 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
           {activeTab === "missing-payments" && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
-                <h2 className="text-2xl font-bold">Missing Payment Submissions</h2>
+                <h2 className="text-2xl font-bold">{ti18n("nav.missingPayments")}</h2>
                 <DateRangeFilter startDate={missingPaymentStartDate} endDate={missingPaymentEndDate} onStartDateChange={setMissingPaymentStartDate} onEndDateChange={setMissingPaymentEndDate} onClear={() => { setMissingPaymentStartDate(undefined); setMissingPaymentEndDate(undefined); }} />
               </div>
               <AdminMissingPaymentList language={language} startDate={missingPaymentStartDate} endDate={missingPaymentEndDate} />
@@ -205,19 +205,19 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
           )}
           {activeTab === "reports" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Customer Review Analytics</h2>
+              <h2 className="text-2xl font-bold">{ti18n("nav.reviewReports")}</h2>
               <CustomerReviewReportingDashboard language={language} />
             </div>
           )}
           {activeTab === "deductibles" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Deductibles Report</h2>
+              <h2 className="text-2xl font-bold">{ti18n("nav.deductiblesReport")}</h2>
               <DeductiblesReport isAdmin={false} />
             </div>
           )}
           {activeTab === "chat" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Chat</h2>
+              <h2 className="text-2xl font-bold">{ti18n("nav.chat")}</h2>
               <ChatContainer userId={userId} userRole="reviews_admin" language={language} />
             </div>
           )}
