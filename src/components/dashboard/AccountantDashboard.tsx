@@ -57,12 +57,12 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   };
 
   const navItems = [
-    { id: "requests", label: t.confirmedReimbursements, icon: Receipt },
-    { id: "movers", label: t.moversDirectory, icon: Users },
-    { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
-    { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+    { id: "requests", label: ti18n("nav.confirmedReimbursements"), icon: Receipt },
+    { id: "movers", label: ti18n("nav.moversDirectory"), icon: Users },
+    { id: "payment-questions", label: ti18n("nav.paymentQuestions"), icon: HelpCircle },
+    { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare },
+    { id: "shift-schedule", label: ti18n("nav.shiftSchedule"), icon: Clock },
+    { id: "knowledge-base", label: ti18n("nav.knowledgeBase"), icon: GraduationCap },
   ];
 
   const shellNav: MobileShellNavItem[] = navItems.map((n) => ({
