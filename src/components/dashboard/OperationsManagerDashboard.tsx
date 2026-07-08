@@ -154,7 +154,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           )}
           {activeTab === "violence" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
+              <h2 className="text-2xl font-bold">{t("nav.violenceIncidents")}</h2>
               <AdminViolenceIncidentList userRole="operations_manager" />
             </div>
           )}
@@ -171,7 +171,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           )}
           {activeTab === "chat" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Chat</h2>
+              <h2 className="text-2xl font-bold">{t("nav.chat")}</h2>
               <ChatContainer userId={userId} userRole="operations_manager" language={language} />
             </div>
           )}
