@@ -260,17 +260,17 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                 <SidebarMenuButton
                   isActive={activeTab === "dashboard"}
                   onClick={() => onTabChange("dashboard")}
-                  tooltip="Dashboard"
+                  tooltip={t("common.dashboard")}
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  {!isCollapsed && <span className="flex-1">Dashboard</span>}
+                  {!isCollapsed && <span className="flex-1">{t("common.dashboard")}</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={activeTab === "chat"}
                   onClick={() => onTabChange("chat")}
-                  tooltip="Chat"
+                  tooltip={t("nav.chat")}
                 >
                   <div className="relative">
                     <MessageSquare className="h-4 w-4" />
@@ -278,7 +278,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                       <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
                     )}
                   </div>
-                  {!isCollapsed && <span className="flex-1">Chat</span>}
+                  {!isCollapsed && <span className="flex-1">{t("nav.chat")}</span>}
                   {!isCollapsed && hasUnreadMessages && (
                     <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
                   )}
