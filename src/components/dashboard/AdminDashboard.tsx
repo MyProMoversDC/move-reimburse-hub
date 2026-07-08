@@ -51,7 +51,8 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { LayoutDashboard, MessageSquare } from "lucide-react";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
-import { groups as adminGroups } from "./AdminSidebar";
+import { useAdminNavGroups } from "./AdminSidebar";
+import { useT } from "@/lib/i18n";
 
 
 interface AdminDashboardProps {
@@ -61,6 +62,8 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   useDeepLink("admin", setActiveTab);
+  const { t } = useT();
+  const adminGroups = useAdminNavGroups();
   const [refreshKey, setRefreshKey] = useState(0);
   const [showRefundForm, setShowRefundForm] = useState(false);
   const [exporting, setExporting] = useState(false);
