@@ -8,6 +8,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { QrCode, LogIn, LogOut, Clock } from "lucide-react";
 import { formatDateTimeEST } from "@/lib/dateUtils";
 import { differenceInMinutes } from "date-fns";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   userId: string;
@@ -16,6 +17,7 @@ interface Props {
 const SCANNER_ID = "mover-qr-scanner-region";
 
 const MoverShiftClock = ({ userId }: Props) => {
+  const { t } = useT();
   const [activeEntry, setActiveEntry] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [scannerOpen, setScannerOpen] = useState<null | "in" | "out">(null);
@@ -76,11 +78,11 @@ const MoverShiftClock = ({ userId }: Props) => {
       const action = url.searchParams.get("action");
       const token = url.searchParams.get("token");
       if (!action || !token) {
-        toast.error("Invalid QR code");
+        toast.error(t("mover.shiftClock.invalidQr"));
         return;
       }
       if (action !== expected) {
-        toast.error(`Wrong QR. Please scan the Clock-${expected === "in" ? "In" : "Out"} QR code.`);
+        toast.error(expected === "in" ? t("mover.shiftClock.wrongQrIn") : t("mover.shiftClock.wrongQrOut"));
         return;
       }
       const { data, error } = await supabase.rpc("redeem_mover_shift_qr" as any, { _action: action, _token: token });
@@ -88,19 +90,19 @@ const MoverShiftClock = ({ userId }: Props) => {
       const result = data as any;
       if (!result?.ok) {
         const map: Record<string, string> = {
-          not_authenticated: "Please sign in first",
-          not_a_mover: "Only movers can use this QR",
-          invalid_token: "QR code is no longer valid — ask admin to print the latest one",
-          already_clocked_in: "You are already clocked in",
-          not_clocked_in: "You are not clocked in",
+          not_authenticated: t("mover.shiftClock.notAuthenticated"),
+          not_a_mover: t("mover.shiftClock.notAMover"),
+          invalid_token: t("mover.shiftClock.qrExpired"),
+          already_clocked_in: t("mover.shiftClock.alreadyClockedIn"),
+          not_clocked_in: t("mover.shiftClock.notClockedInError"),
         };
-        toast.error(map[result?.error] || "Could not process QR scan");
+        toast.error(map[result?.error] || t("mover.shiftClock.couldNotProcess"));
       } else {
-        toast.success(action === "in" ? "Clocked in!" : "Clocked out!");
+        toast.success(action === "in" ? t("mover.shiftClock.clockedInToast") : t("mover.shiftClock.clockedOutToast"));
         fetchData();
       }
     } catch (e: any) {
-      toast.error(e.message || "Invalid QR code");
+      toast.error(e.message || t("mover.shiftClock.invalidQr"));
     }
   };
 
@@ -117,7 +119,7 @@ const MoverShiftClock = ({ userId }: Props) => {
           () => { /* ignore frame errors */ }
         );
       } catch (e: any) {
-        toast.error(e?.message || "Camera unavailable");
+        toast.error(e?.message || t("mover.shiftClock.cameraUnavailable"));
         setScannerOpen(null);
       }
     }, 100);
@@ -130,7 +132,7 @@ const MoverShiftClock = ({ userId }: Props) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" /> Shift Clock
+            <Clock className="h-5 w-5" /> {t("mover.shiftClock.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -138,20 +140,20 @@ const MoverShiftClock = ({ userId }: Props) => {
             {activeEntry ? (
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">On shift</Badge>
-                  <p className="text-sm mt-1">Clocked in at {formatDateTimeEST(activeEntry.clock_in)}</p>
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t("mover.shiftClock.onShift")}</Badge>
+                  <p className="text-sm mt-1">{t("mover.shiftClock.clockedInAt").replace("{time}", formatDateTimeEST(activeEntry.clock_in))}</p>
                 </div>
                 <div className="text-2xl font-bold">{elapsed}</div>
               </div>
             ) : (
-              <p className="text-muted-foreground">You are not currently clocked in.</p>
+              <p className="text-muted-foreground">{t("mover.shiftClock.notClockedIn")}</p>
             )}
           </div>
 
           {scannerOpen ? (
             <div className="space-y-2">
               <div id={SCANNER_ID} className="w-full max-w-md mx-auto rounded-lg overflow-hidden border" />
-              <Button variant="outline" className="w-full" onClick={stopScanner}>Cancel</Button>
+              <Button variant="outline" className="w-full" onClick={stopScanner}>{t("common.cancel")}</Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -161,7 +163,7 @@ const MoverShiftClock = ({ userId }: Props) => {
                 onClick={() => openScanner("in")}
                 disabled={!!activeEntry}
               >
-                <LogIn className="h-5 w-5 mr-2" /> Scan Clock-In QR
+                <LogIn className="h-5 w-5 mr-2" /> {t("mover.shiftClock.scanClockIn")}
               </Button>
               <Button
                 size="lg"
@@ -170,22 +172,22 @@ const MoverShiftClock = ({ userId }: Props) => {
                 onClick={() => openScanner("out")}
                 disabled={!activeEntry}
               >
-                <LogOut className="h-5 w-5 mr-2" /> Scan Clock-Out QR
+                <LogOut className="h-5 w-5 mr-2" /> {t("mover.shiftClock.scanClockOut")}
               </Button>
             </div>
           )}
 
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <QrCode className="h-3 w-3" /> Allow camera access when prompted. Find the printed QR codes posted at the office.
+            <QrCode className="h-3 w-3" /> {t("mover.shiftClock.cameraHint")}
           </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Last 30 days</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("mover.shiftClock.last30Days")}</CardTitle></CardHeader>
         <CardContent>
           {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No completed shifts yet.</p>
+            <p className="text-sm text-muted-foreground">{t("mover.shiftClock.noCompleted")}</p>
           ) : (
             <div className="space-y-2">
               {history.map((h) => {
