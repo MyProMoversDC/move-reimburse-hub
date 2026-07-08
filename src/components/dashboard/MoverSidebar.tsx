@@ -93,21 +93,21 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, userI
   };
 
   const menuItems = [
-    { id: "feed", label: t.feed, icon: Newspaper, badgeCount: unacknowledgedCount },
-    { id: "refer-friend", label: t.referFriend, icon: UserPlus },
-    { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
-    { id: "my-jobs", label: t.myJobs, icon: Truck },
-    { id: "shift-clock", label: t.shiftClock, icon: Clock },
-    { id: "application-instructions", label: t.appInstructions, icon: GraduationCap },
-    { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
-    { id: "reviews", label: t.reviews, icon: Star },
-    { id: "missing-payments", label: t.missingPayments, icon: AlertTriangle },
-    { id: "violence", label: t.incidents, icon: Shield },
-    { id: "misconduct", label: t.cases, icon: AlertTriangle },
-    { id: "feedback", label: t.feedback, icon: Lightbulb },
-    { id: "anonymous-feedback", label: t.anonymousFeedback, icon: EyeOff },
-    { id: "payment-questions", label: t.paymentQuestions, icon: HelpCircle },
-    { id: "chat", label: t.chat, icon: MessageSquare },
+    { id: "feed", label: t("nav.feed"), icon: Newspaper, badgeCount: unacknowledgedCount },
+    { id: "refer-friend", label: t("nav.referFriend"), icon: UserPlus },
+    { id: "todo", label: t("nav.todoList"), icon: ClipboardList, hasBadge: hasTodoItems },
+    { id: "my-jobs", label: t("nav.myJobs"), icon: Truck },
+    { id: "shift-clock", label: t("nav.shiftClock"), icon: Clock },
+    { id: "application-instructions", label: t("nav.applicationInstructions"), icon: GraduationCap },
+    { id: "reimbursements", label: t("nav.reimbursements"), icon: DollarSign },
+    { id: "reviews", label: t("nav.customerReviews"), icon: Star },
+    { id: "missing-payments", label: t("nav.missingPayments"), icon: AlertTriangle },
+    { id: "violence", label: t("nav.incidentReports"), icon: Shield },
+    { id: "misconduct", label: t("nav.myCases"), icon: AlertTriangle },
+    { id: "feedback", label: t("nav.feedback"), icon: Lightbulb },
+    { id: "anonymous-feedback", label: t("nav.anonymousFeedback"), icon: EyeOff },
+    { id: "payment-questions", label: t("nav.paymentQuestions"), icon: HelpCircle },
+    { id: "chat", label: t("nav.chat"), icon: MessageSquare },
   ];
 
   const renderBadge = (item: typeof menuItems[0], isCollapsed: boolean) => {
@@ -152,7 +152,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, userI
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t.navigation}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("common.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
