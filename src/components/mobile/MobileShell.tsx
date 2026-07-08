@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTouchShell } from "@/hooks/use-touch-shell";
 import { useAppShell } from "./AppShellContext";
+import { useT } from "@/lib/i18n";
 import logo from "@/assets/logo.png";
 
 export interface MobileShellNavItem {
@@ -57,6 +58,7 @@ const MobileShell = ({
   titleOverride,
 }: MobileShellProps) => {
   const isTouch = useTouchShell();
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const activeItemRef = useRef<HTMLButtonElement>(null);
   const shell = useAppShell();
