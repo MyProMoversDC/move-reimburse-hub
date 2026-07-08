@@ -28,6 +28,8 @@
 html, body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
+}
+
 
 /* Mobile-first polish applied globally below the md breakpoint (≤767px).
    Desktop layout (≥768px) is intentionally untouched. */
