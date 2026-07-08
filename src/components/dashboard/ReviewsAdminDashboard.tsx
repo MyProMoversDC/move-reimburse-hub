@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useT } from "@/lib/i18n";
 import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
@@ -27,19 +28,10 @@ interface ReviewsAdminDashboardProps {
   userId: string;
 }
 
-const navItems = [
-  { id: "reviews", label: "Review Submissions", icon: Star },
-  { id: "missing-payments", label: "Missing Payments", icon: DollarSign },
-  { id: "reports", label: "Review Reports", icon: FileBarChart },
-  { id: "deductibles", label: "Deductibles", icon: MinusCircle },
-  { id: "chat", label: "Chat", icon: MessageSquare },
-  { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
-  { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
-] as const;
-
 const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
   const [exportingReviews, setExportingReviews] = useState(false);
   const { language, setLanguage } = useLanguage();
+  const { t: ti18n } = useT();
   const [activeTab, setActiveTab] = useState<string>("reviews");
   useDeepLink("reviews_admin", setActiveTab);
 
@@ -52,6 +44,16 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   const t = dashboardTranslations[language];
+
+  const navItems = [
+    { id: "reviews", label: ti18n("nav.reviewSubmissions"), icon: Star },
+    { id: "missing-payments", label: ti18n("nav.missingPayments"), icon: DollarSign },
+    { id: "reports", label: ti18n("nav.reviewReports"), icon: FileBarChart },
+    { id: "deductibles", label: ti18n("nav.deductibles"), icon: MinusCircle },
+    { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare },
+    { id: "shift-schedule", label: ti18n("nav.shiftSchedule"), icon: Clock },
+    { id: "knowledge-base", label: ti18n("nav.knowledgeBase"), icon: GraduationCap },
+  ] as const;
 
   const handleExportReviews = async () => {
     setExportingReviews(true);
