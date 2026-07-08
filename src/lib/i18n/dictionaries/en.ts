@@ -113,8 +113,4 @@ export const en = {
   },
 };
 
-type Widen<T> = {
-  [K in keyof T]: T[K] extends string ? string : Widen<T[K]>;
-};
-
-export type Dictionary = Widen<typeof en>;
+export type Dictionary = typeof en;
