@@ -121,7 +121,7 @@ const MoverMisconductCases = ({ userId, language = "en" }: MoverMisconductCasesP
   const handleReply = async (reportTitle: string, originalMessage: Message) => {
     const reply = replyText[reportTitle]?.trim();
     if (!reply) {
-      toast.error("Please enter a reply message");
+      toast.error(language === 'ru' ? 'Пожалуйста, введите ответное сообщение' : language === 'es' ? 'Por favor ingrese un mensaje de respuesta' : 'Please enter a reply message');
       return;
     }
 
