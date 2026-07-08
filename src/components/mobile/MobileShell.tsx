@@ -110,7 +110,7 @@ const MobileShell = ({
   const groupKeys = Object.keys(groups);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background -mx-3 md:mx-0">
+    <div className="min-h-[100svh] flex flex-col bg-background w-full overflow-x-hidden">
       {/* Native mobile top bar */}
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b pt-safe">
         <div className="flex items-center h-14 px-2 gap-1">
@@ -125,14 +125,7 @@ const MobileShell = ({
           <h1 className="flex-1 min-w-0 text-[15px] font-semibold truncate px-1">
             {title}
           </h1>
-          <div
-            className={cn(
-              "flex items-center gap-0.5 shrink-0 justify-end max-w-[38vw] overflow-hidden",
-              // Compress whatever the dashboard passes in so it fits the native bar
-              "[&_button]:h-9 [&_button]:px-1.5 [&_button]:text-[11px] [&_button]:gap-1",
-              "[&_button>span]:truncate [&_svg]:h-4 [&_svg]:w-4",
-            )}
-          >
+          <div className="flex items-center gap-1 shrink-0 justify-end">
             {rightActions}
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { emitDeepLink } from "@/lib/notificationRouter";
 
 /**
  * Registers the current device with FCM/APNs and saves the token to `device_tokens`.
@@ -134,16 +135,19 @@ export const usePushNotifications = (userId: string | null | undefined) => {
           "pushNotificationActionPerformed",
           (action) => {
             const data = (action.notification.data ?? {}) as Record<string, string>;
+            // Hand off to the central notification router. It persists the
+            // payload (for cold start) AND broadcasts an event (for
+            // background resume / foreground). Dashboards call
+            // `useDeepLink(...)` to react — no per-type logic lives here.
+            emitDeepLink({
+              referenceType: data.reference_type,
+              referenceId: data.reference_id,
+              notificationType: data.notification_type,
+              messageId: data.message_id,
+            });
             if (data.reference_type === "chat" && data.reference_id) {
-              const detail = {
-                conversationId: String(data.reference_id),
-                messageId: data.message_id ? String(data.message_id) : null,
-              };
-              try {
-                localStorage.setItem("pendingChatDeepLink", JSON.stringify(detail));
-              } catch {}
-              window.dispatchEvent(new CustomEvent("open-chat", { detail }));
-              void clearForConversation(detail.conversationId);
+              // Legacy tray-clearing side effect for chat, unchanged.
+              void clearForConversation(String(data.reference_id));
             }
           }
         );

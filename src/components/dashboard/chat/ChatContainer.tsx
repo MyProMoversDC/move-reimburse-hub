@@ -40,40 +40,51 @@ const ChatContainer = ({ userId, userRole, language }: ChatContainerProps) => {
 
   const isAdmin = userRole === 'admin';
 
-  const handleChatCreated = async (conversationId: string) => {
-    // Fetch the newly created conversation
+  const loadConversation = async (conversationId: string) => {
     const { data: conv } = await supabase
       .from('conversations')
       .select('*')
       .eq('id', conversationId)
       .single();
+    if (!conv) return null;
+    const { data: participants } = await supabase
+      .from('conversation_participants')
+      .select('user_id, last_read_at')
+      .eq('conversation_id', conversationId);
+    const participantUserIds = (participants || []).map(p => p.user_id);
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .in('id', participantUserIds);
+    const participantsWithProfiles = (participants || []).map(p => ({
+      ...p,
+      profile: profiles?.find(pr => pr.id === p.user_id),
+    }));
+    return { ...conv, participants: participantsWithProfiles } as Conversation;
+  };
 
-    if (conv) {
-      // Fetch participants
-      const { data: participants } = await supabase
-        .from('conversation_participants')
-        .select('user_id')
-        .eq('conversation_id', conversationId);
-
-      const participantUserIds = (participants || []).map(p => p.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .in('id', participantUserIds);
-
-      const participantsWithProfiles = (participants || []).map(p => ({
-        ...p,
-        profile: profiles?.find(pr => pr.id === p.user_id)
-      }));
-
-      setSelectedConversation({
-        ...conv,
-        participants: participantsWithProfiles
-      });
-    }
-
+  const handleChatCreated = async (conversationId: string) => {
+    const conv = await loadConversation(conversationId);
+    if (conv) setSelectedConversation(conv);
     setRefreshKey(prev => prev + 1);
   };
+
+  // Push-notification deep link: when a chat notification is tapped, the
+  // router dispatches `open-chat`. Auto-select the target conversation so the
+  // user lands directly in the correct thread. `ChatInterface` handles the
+  // scroll-to-message once mounted.
+  useEffect(() => {
+    const onOpenChat = async (e: Event) => {
+      const detail = (e as CustomEvent).detail as { conversationId?: string } | undefined;
+      const id = detail?.conversationId;
+      if (!id) return;
+      if (selectedConversation?.id === id) return;
+      const conv = await loadConversation(id);
+      if (conv) setSelectedConversation(conv);
+    };
+    window.addEventListener("open-chat", onOpenChat);
+    return () => window.removeEventListener("open-chat", onOpenChat);
+  }, [selectedConversation?.id]);
 
   const handleBack = () => {
     setSelectedConversation(null);

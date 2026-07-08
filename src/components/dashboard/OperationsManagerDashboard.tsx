@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { FileText, Shield, MessageSquare, Wine, DollarSign, GraduationCap, Clock, Truck, ClipboardList, Map, MapPin, Users } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -43,6 +44,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
   const { language, setLanguage } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>("reports");
+  useDeepLink("operations_manager", setActiveTab);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   const renderContent = () => {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import ReimbursementHistory from "./ReimbursementHistory";
 import MoversList from "./MoversList";
 import ChatContainer from "./chat/ChatContainer";
@@ -28,6 +29,7 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const { language, setLanguage } = useLanguage();
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   const [activeTab, setActiveTab] = useState<string>("requests");
+  useDeepLink("accountant", setActiveTab);
 
   const t = dashboardTranslations[language];
 

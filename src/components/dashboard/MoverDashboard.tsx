@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ interface MoverDashboardProps {
 const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "feed");
+  useDeepLink("mover", setActiveTab);
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { Package, Map, Truck, ShoppingCart, BarChart3, MessageSquare, GraduationCap } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,6 +30,7 @@ const navItems = [
 const WarehouseKeeperDashboard = ({ userId }: Props) => {
   const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("warehouse");
+  useDeepLink("warehouse_keeper", setActiveTab);
   const { hasUnread } = useUnreadMessages(userId);
 
   const renderContent = () => {

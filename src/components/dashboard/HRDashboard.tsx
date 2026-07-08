@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -276,6 +277,7 @@ const HRDashboard = ({ userId }: HRDashboardProps) => {
   const [documentNotes, setDocumentNotes] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTopTab, setActiveTopTab] = useState<string>("hr-cabinet");
+  useDeepLink("hr_manager", setActiveTopTab);
 
 
   useEffect(() => {

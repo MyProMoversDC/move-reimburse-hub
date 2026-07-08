@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap, Bookmark, Sparkles } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -33,6 +34,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
   const { language, setLanguage } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>("feed");
+  useDeepLink("office_staff", setActiveTab);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
 
   const renderContent = () => {

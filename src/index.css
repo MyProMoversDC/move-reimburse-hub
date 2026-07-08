@@ -21,6 +21,16 @@
   .no-native-ptr { overscroll-behavior-y: contain; }
 }
 
+/* Global horizontal-overflow safety net.
+   Prevents the "few pixels of horizontal scroll" reported in the mobile audit
+   caused by nested containers with mismatched gutters or long inline content.
+   Vertical scrolling is untouched. */
+html, body {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+
 /* Mobile-first polish applied globally below the md breakpoint (≤767px).
    Desktop layout (≥768px) is intentionally untouched. */
 @media (max-width: 767px) {
