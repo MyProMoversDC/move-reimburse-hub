@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import logo from "@/assets/logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 interface MoverSidebarProps {
   activeTab: string;
@@ -43,67 +44,10 @@ interface MoverSidebarProps {
   unacknowledgedCount?: number;
 }
 
-const translations = {
-  en: {
-    navigation: "Navigation",
-    feed: "Feed",
-    todoList: "To-Do List",
-    myJobs: "My Jobs",
-    reimbursements: "Reimbursements",
-    reviews: "Customer Reviews",
-    missingPayments: "Missing Payments",
-    incidents: "Incident Reports",
-    cases: "My Cases",
-    feedback: "Feedback",
-    anonymousFeedback: "Anonymous Feedback",
-    chat: "Chat",
-    paymentQuestions: "Payment Questions",
-    referFriend: "Refer a Friend",
-    shiftClock: "Shift Clock",
-    appInstructions: "Application Instructions",
-  },
-  es: {
-    navigation: "Navegación",
-    feed: "Noticias",
-    todoList: "Lista de Tareas",
-    myJobs: "Mis Trabajos",
-    reimbursements: "Reembolsos",
-    reviews: "Reseñas de Clientes",
-    missingPayments: "Pagos Faltantes",
-    incidents: "Informes de Incidentes",
-    cases: "Mis Casos",
-    feedback: "Comentarios",
-    anonymousFeedback: "Comentarios Anónimos",
-    chat: "Chat",
-    paymentQuestions: "Preguntas de Pago",
-    referFriend: "Referir un Amigo",
-    shiftClock: "Registro de Turno",
-    appInstructions: "Instrucciones de la Aplicación",
-  },
-  ru: {
-    navigation: "Навигация",
-    feed: "Лента",
-    todoList: "Список Задач",
-    myJobs: "Мои Заказы",
-    reimbursements: "Возмещения",
-    reviews: "Отзывы клиентов",
-    missingPayments: "Пропущенные платежи",
-    incidents: "Отчёты об инцидентах",
-    cases: "Мои дела",
-    feedback: "Отзывы",
-    anonymousFeedback: "Анонимный отзыв",
-    chat: "Чат",
-    paymentQuestions: "Вопросы по Оплате",
-    referFriend: "Порекомендовать Друга",
-    shiftClock: "Учёт смены",
-    appInstructions: "Инструкции по приложению",
-  },
-};
-
-const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, language, userId, unacknowledgedCount = 0 }: MoverSidebarProps) => {
+const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, userId, unacknowledgedCount = 0 }: MoverSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const t = translations[language];
+  const { t } = useT();
   const [hasTodoItems, setHasTodoItems] = useState(false);
 
   useEffect(() => {
