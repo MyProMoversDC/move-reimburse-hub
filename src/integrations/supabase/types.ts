@@ -4263,6 +4263,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _admin_push_name: {
+        Args: { _fallback: string; _id: string }
+        Returns: string
+      }
       admin_list_active_mover_shifts: {
         Args: never
         Returns: {
@@ -4417,6 +4421,10 @@ export type Database = {
       ops_set_inv_job_status: {
         Args: { _inv_job_id: string; _new_status: string; _note?: string }
         Returns: string
+      }
+      push_admins_on_submission: {
+        Args: { _body: string; _data: Json; _title: string }
+        Returns: undefined
       }
       recompute_inv_job_status: {
         Args: {
