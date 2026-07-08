@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap, Bookmark, Sparkles } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";

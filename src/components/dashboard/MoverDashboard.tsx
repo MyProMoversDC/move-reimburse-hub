@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useDeepLink } from "@/hooks/useDeepLink";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
