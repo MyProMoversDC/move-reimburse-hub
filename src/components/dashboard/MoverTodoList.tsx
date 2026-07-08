@@ -181,6 +181,7 @@ const MoverTodoList = ({ userId, language, onNavigateToSettings }: MoverTodoList
     );
   }
 
+
   const pendingTodos = todos.filter((t) => !t.completed);
 
   return (
