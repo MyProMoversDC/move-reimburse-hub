@@ -62,7 +62,7 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   useDeepLink("admin", setActiveTab);
-  const { t } = useT();
+  const { t: ti18n } = useT();
   const adminGroups = useAdminNavGroups();
   const [refreshKey, setRefreshKey] = useState(0);
   const [showRefundForm, setShowRefundForm] = useState(false);
