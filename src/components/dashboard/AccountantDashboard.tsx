@@ -123,23 +123,23 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex gap-1 h-auto p-1">
-            <TabsTrigger value="requests" className="text-sm px-3 py-1.5">{t.confirmedReimbursements}</TabsTrigger>
-            <TabsTrigger value="movers" className="text-sm px-3 py-1.5">{t.moversDirectory}</TabsTrigger>
+            <TabsTrigger value="requests" className="text-sm px-3 py-1.5">{ti18n("nav.confirmedReimbursements")}</TabsTrigger>
+            <TabsTrigger value="movers" className="text-sm px-3 py-1.5">{ti18n("nav.moversDirectory")}</TabsTrigger>
             <TabsTrigger value="payment-questions" className="text-sm px-3 py-1.5">
               <HelpCircle className="h-4 w-4 mr-2" />
-              Payment Questions
+              {ti18n("nav.paymentQuestions")}
             </TabsTrigger>
             <TabsTrigger value="chat" className="relative text-sm px-3 py-1.5">
               <MessageSquare className="h-4 w-4 mr-2" />
-              Chat
+              {ti18n("nav.chat")}
               {hasUnreadMessages && (
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
-            <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">Shift Schedule</TabsTrigger>
+            <TabsTrigger value="shift-schedule" className="text-sm px-3 py-1.5">{ti18n("nav.shiftSchedule")}</TabsTrigger>
             <TabsTrigger value="knowledge-base" className="text-sm px-3 py-1.5">
               <GraduationCap className="h-4 w-4 mr-2" />
-              Knowledge Base
+              {ti18n("nav.knowledgeBase")}
             </TabsTrigger>
           </TabsList>
 
@@ -159,12 +159,12 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
           </TabsContent>
 
           <TabsContent value="payment-questions" className="space-y-6">
-            <h2 className="text-2xl font-bold">Payment Questions</h2>
+            <h2 className="text-2xl font-bold">{ti18n("nav.paymentQuestions")}</h2>
             <AdminPaymentQuestionList language={language} userId={userId} />
           </TabsContent>
 
           <TabsContent value="chat" className="space-y-6">
-            <h2 className="text-2xl font-bold">Chat</h2>
+            <h2 className="text-2xl font-bold">{ti18n("nav.chat")}</h2>
             <ChatContainer userId={userId} userRole="accountant" language={language} />
           </TabsContent>
 
