@@ -818,21 +818,21 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
   );
 
   const moverShellNav: MobileShellNavItem[] = [
-    { id: "feed", label: "Feed", icon: Newspaper, badgeCount: unacknowledgedCount },
-    { id: "refer-friend", label: "Refer a Friend", icon: UserPlus },
-    { id: "todo", label: "To-Do List", icon: ClipboardList },
-    { id: "my-jobs", label: "My Jobs", icon: Truck },
-    { id: "shift-clock", label: "Shift Clock", icon: Clock },
-    { id: "application-instructions", label: "Application Instructions", icon: GraduationCap },
-    { id: "reimbursements", label: "Reimbursements", icon: DollarSign },
-    { id: "reviews", label: "Customer Reviews", icon: Star },
-    { id: "missing-payments", label: "Missing Payments", icon: AlertTriangle },
-    { id: "violence", label: "Incident Reports", icon: Shield },
-    { id: "misconduct", label: "My Cases", icon: AlertTriangle },
-    { id: "feedback", label: "Feedback", icon: Lightbulb },
-    { id: "anonymous-feedback", label: "Anonymous Feedback", icon: EyeOff },
-    { id: "payment-questions", label: "Payment Questions", icon: HelpCircle },
-    { id: "chat", label: "Chat", icon: MessageSquare, dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
+    { id: "feed", label: ti18n("nav.feed"), icon: Newspaper, badgeCount: unacknowledgedCount },
+    { id: "refer-friend", label: ti18n("nav.referFriend"), icon: UserPlus },
+    { id: "todo", label: ti18n("nav.todoList"), icon: ClipboardList },
+    { id: "my-jobs", label: ti18n("nav.myJobs"), icon: Truck },
+    { id: "shift-clock", label: ti18n("nav.shiftClock"), icon: Clock },
+    { id: "application-instructions", label: ti18n("nav.applicationInstructions"), icon: GraduationCap },
+    { id: "reimbursements", label: ti18n("nav.reimbursements"), icon: DollarSign },
+    { id: "reviews", label: ti18n("nav.customerReviews"), icon: Star },
+    { id: "missing-payments", label: ti18n("nav.missingPayments"), icon: AlertTriangle },
+    { id: "violence", label: ti18n("nav.incidentReports"), icon: Shield },
+    { id: "misconduct", label: ti18n("nav.myCases"), icon: AlertTriangle },
+    { id: "feedback", label: ti18n("nav.feedback"), icon: Lightbulb },
+    { id: "anonymous-feedback", label: ti18n("nav.anonymousFeedback"), icon: EyeOff },
+    { id: "payment-questions", label: ti18n("nav.paymentQuestions"), icon: HelpCircle },
+    { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare, dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
   ];
 
   return (
