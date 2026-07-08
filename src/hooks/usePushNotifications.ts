@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { emitDeepLink } from "@/lib/notificationRouter";
 
 /**
  * Registers the current device with FCM/APNs and saves the token to `device_tokens`.
