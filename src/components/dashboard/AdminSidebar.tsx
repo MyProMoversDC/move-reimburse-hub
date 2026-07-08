@@ -180,6 +180,8 @@ const STORAGE_KEY = "adminSidebarOpenGroups";
 const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages = false }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { t } = useT();
+  const groups = useAdminNavGroups();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     try {
