@@ -667,9 +667,9 @@ const UserSettings = forwardRef<HTMLButtonElement, UserSettingsProps>(
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" ref={ref}>
-          <Settings className="h-4 w-4 mr-2" />
-          {t.settings}
+        <Button variant="outline" size="sm" ref={ref} aria-label={t.settings} className="px-2 md:px-3">
+          <Settings className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">{t.settings}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
