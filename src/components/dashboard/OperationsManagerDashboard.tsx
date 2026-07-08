@@ -3,6 +3,7 @@ import { useDeepLink } from "@/hooks/useDeepLink";
 import { FileText, Shield, MessageSquare, Wine, DollarSign, GraduationCap, Clock, Truck, ClipboardList, Map, MapPin, Users } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useT } from "@/lib/i18n";
 import PerformanceReportsList from "./PerformanceReportsList";
 import AdminViolenceIncidentList from "./AdminViolenceIncidentList";
 import AlcoholTestReportForm from "./AlcoholTestReportForm";
@@ -25,27 +26,32 @@ interface OperationsManagerDashboardProps {
   userId: string;
 }
 
-const navItems = [
-  { id: "reports", label: "Performance Reports", icon: FileText, group: "Operations" },
-  { id: "violence", label: "Violence Incidents", icon: Shield, group: "Operations" },
-  { id: "alcohol-test", label: "Alcohol Testing", icon: Wine, group: "Operations" },
-  { id: "customer-refund", label: "Customer Refund", icon: DollarSign, group: "Operations" },
-  { id: "shift-schedule", label: "Shift Schedule", icon: Clock, group: "Operations" },
-  { id: "fleet", label: "Fleet", icon: Truck, group: "Dispatch" },
-  { id: "job-orders", label: "Job Orders", icon: ClipboardList, group: "Dispatch" },
-  { id: "planning", label: "Planning", icon: Map, group: "Dispatch" },
-  { id: "crew-tracking", label: "Crew Tracking", icon: MapPin, group: "Dispatch" },
-  { id: "crews", label: "Crews", icon: Users, group: "Dispatch" },
-  { id: "chat", label: "Chat", icon: MessageSquare, group: "Communication" },
-  { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap, group: "Communication" },
-] as const;
-
 const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps) => {
   const { language, setLanguage } = useLanguage();
+  const { t } = useT();
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>("reports");
   useDeepLink("operations_manager", setActiveTab);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
+
+  const gOps = t("navGroups.operations");
+  const gDispatch = t("navGroups.dispatch");
+  const gComm = t("navGroups.communication");
+
+  const navItems = [
+    { id: "reports", label: t("nav.performanceReports"), icon: FileText, group: gOps },
+    { id: "violence", label: t("nav.violenceIncidents"), icon: Shield, group: gOps },
+    { id: "alcohol-test", label: t("nav.alcoholTesting"), icon: Wine, group: gOps },
+    { id: "customer-refund", label: t("nav.customerRefund"), icon: DollarSign, group: gOps },
+    { id: "shift-schedule", label: t("nav.shiftSchedule"), icon: Clock, group: gOps },
+    { id: "fleet", label: t("nav.fleet"), icon: Truck, group: gDispatch },
+    { id: "job-orders", label: t("nav.jobOrders"), icon: ClipboardList, group: gDispatch },
+    { id: "planning", label: t("nav.planning"), icon: Map, group: gDispatch },
+    { id: "crew-tracking", label: t("nav.crewTracking"), icon: MapPin, group: gDispatch },
+    { id: "crews", label: t("nav.crews"), icon: Users, group: gDispatch },
+    { id: "chat", label: t("nav.chat"), icon: MessageSquare, group: gComm },
+    { id: "knowledge-base", label: t("nav.knowledgeBase"), icon: GraduationCap, group: gComm },
+  ] as const;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -148,7 +154,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           )}
           {activeTab === "violence" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Violence Incident Reports</h2>
+              <h2 className="text-2xl font-bold">{t("nav.violenceIncidents")}</h2>
               <AdminViolenceIncidentList userRole="operations_manager" />
             </div>
           )}
@@ -165,7 +171,7 @@ const OperationsManagerDashboard = ({ userId }: OperationsManagerDashboardProps)
           )}
           {activeTab === "chat" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Chat</h2>
+              <h2 className="text-2xl font-bold">{t("nav.chat")}</h2>
               <ChatContainer userId={userId} userRole="operations_manager" language={language} />
             </div>
           )}

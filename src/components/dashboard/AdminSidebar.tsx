@@ -48,7 +48,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import logo from "@/assets/logo.png";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -86,93 +87,101 @@ type NavGroup = {
   items: NavItem[];
 };
 
-export const groups: NavGroup[] = [
-  {
-    id: "users",
-    label: "User Management",
-    icon: Users,
-    items: [
-      { id: "signup-approvals", label: "SignUp Approvals", icon: UserCheck, badgeKey: "signupApprovals", redDot: true },
-      { id: "roles", label: "User Management", icon: UserCog },
-      { id: "movers", label: "Movers Directory", icon: Users },
-      { id: "mover-documents", label: "Mover Documents", icon: Users },
-      { id: "mover-ratings", label: "Mover Ratings", icon: Star },
-      { id: "user-activity", label: "User Activity Log", icon: FileBarChart },
+export const useAdminNavGroups = (): NavGroup[] => {
+  const { t } = useT();
+  return useMemo<NavGroup[]>(
+    () => [
+      {
+        id: "users",
+        label: t("navGroups.userManagement"),
+        icon: Users,
+        items: [
+          { id: "signup-approvals", label: t("nav.signupApprovals"), icon: UserCheck, badgeKey: "signupApprovals", redDot: true },
+          { id: "roles", label: t("nav.userManagement"), icon: UserCog },
+          { id: "movers", label: t("nav.moversDirectory"), icon: Users },
+          { id: "mover-documents", label: t("nav.moverDocuments"), icon: Users },
+          { id: "mover-ratings", label: t("nav.moverRatings"), icon: Star },
+          { id: "user-activity", label: t("nav.userActivityLog"), icon: FileBarChart },
+        ],
+      },
+      {
+        id: "operations",
+        label: t("navGroups.operations"),
+        icon: Briefcase,
+        items: [
+          { id: "shift-schedule", label: t("nav.shiftSchedule"), icon: Clock },
+          { id: "mover-shifts", label: t("nav.moverShiftsQR"), icon: Clock },
+          { id: "referrals", label: t("nav.referralRequests"), icon: UserPlus, badgeKey: "referrals" },
+        ],
+      },
+      {
+        id: "compliance",
+        label: t("navGroups.complianceSafety"),
+        icon: ShieldAlert,
+        items: [
+          { id: "performance-reports", label: t("nav.misconductPerformanceSubmissions"), icon: AlertTriangle, badgeKey: "performanceReports", redDot: true },
+          { id: "misconduct-responses", label: t("nav.misconductResponses"), icon: MessageSquare, badgeKey: "misconductReplies" },
+          { id: "violence-incidents", label: t("nav.violenceIncidents"), icon: Shield, badgeKey: "violenceIncidents", redDot: true },
+          { id: "alcohol-tests", label: t("nav.alcoholTestReports"), icon: Shield, badgeKey: "alcoholTests", redDot: true },
+          { id: "consent-documents", label: t("nav.consentDocuments"), icon: FileText },
+        ],
+      },
+      {
+        id: "finance",
+        label: t("navGroups.financialManagement"),
+        icon: Wallet,
+        items: [
+          { id: "customer-refunds", label: t("nav.customerRefunds"), icon: DollarSign, badgeKey: "customerRefunds" },
+          { id: "deductibles", label: t("nav.deductiblesReport"), icon: DollarSign },
+          { id: "missing-payments", label: t("nav.missingPayments"), icon: DollarSign, badgeKey: "missingPayments" },
+          { id: "payment-questions", label: t("nav.paymentQuestions"), icon: HelpCircle, badgeKey: "paymentQuestions" },
+          { id: "requests", label: t("nav.reimbursements"), icon: FileText, badgeKey: "reimbursements" },
+        ],
+      },
+      {
+        id: "reports",
+        label: t("navGroups.reports"),
+        icon: BarChart3,
+        items: [
+          { id: "reimbursement-reports", label: t("nav.reimbursementReports"), icon: FileBarChart },
+          { id: "missing-payment-reports", label: t("nav.missingPaymentReports"), icon: FileBarChart },
+          { id: "review-reports", label: t("nav.customerReviewReports"), icon: Star },
+          { id: "reviews", label: t("nav.moverFormReports"), icon: ClipboardList, badgeKey: "reviews" },
+        ],
+      },
+      {
+        id: "content",
+        label: t("navGroups.contentKnowledge"),
+        icon: Library,
+        items: [
+          { id: "feed", label: t("nav.feedManagement"), icon: Newspaper },
+          { id: "handbook", label: t("nav.handbookManagement"), icon: BookOpen },
+          { id: "knowledge-base", label: t("nav.knowledgeBase"), icon: GraduationCap },
+          { id: "application-instructions", label: t("nav.applicationInstructions"), icon: BookOpen },
+          { id: "office-ai-knowledge", label: t("nav.aiAssistantKnowledge"), icon: Sparkles },
+          { id: "mover-feedback", label: t("nav.moverFeedback"), icon: MessageCircle, badgeKey: "moverFeedback", redDot: true },
+        ],
+      },
+      {
+        id: "comms",
+        label: t("navGroups.communicationLogs"),
+        icon: Megaphone,
+        items: [
+          { id: "email-logs", label: t("nav.emailLogs"), icon: Mail },
+        ],
+      },
     ],
-  },
-  {
-    id: "operations",
-    label: "Operations",
-    icon: Briefcase,
-    items: [
-      { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
-      { id: "mover-shifts", label: "Mover Shifts (QR)", icon: Clock },
-      { id: "referrals", label: "Referral Requests", icon: UserPlus, badgeKey: "referrals" },
-    ],
-  },
-  {
-    id: "compliance",
-    label: "Compliance & Safety",
-    icon: ShieldAlert,
-    items: [
-      { id: "performance-reports", label: "Misconduct/Performance Submissions", icon: AlertTriangle, badgeKey: "performanceReports", redDot: true },
-      { id: "misconduct-responses", label: "Misconduct Responses", icon: MessageSquare, badgeKey: "misconductReplies" },
-      { id: "violence-incidents", label: "Violence Incidents", icon: Shield, badgeKey: "violenceIncidents", redDot: true },
-      { id: "alcohol-tests", label: "Alcohol Test Reports", icon: Shield, badgeKey: "alcoholTests", redDot: true },
-      { id: "consent-documents", label: "Consent Documents", icon: FileText },
-    ],
-  },
-  {
-    id: "finance",
-    label: "Financial Management",
-    icon: Wallet,
-    items: [
-      { id: "customer-refunds", label: "Customer Refunds", icon: DollarSign, badgeKey: "customerRefunds" },
-      { id: "deductibles", label: "Deductibles Report", icon: DollarSign },
-      { id: "missing-payments", label: "Missing Payments", icon: DollarSign, badgeKey: "missingPayments" },
-      { id: "payment-questions", label: "Payment Questions", icon: HelpCircle, badgeKey: "paymentQuestions" },
-      { id: "requests", label: "Reimbursements", icon: FileText, badgeKey: "reimbursements" },
-    ],
-  },
-  {
-    id: "reports",
-    label: "Reports",
-    icon: BarChart3,
-    items: [
-      { id: "reimbursement-reports", label: "Reimbursement Reports", icon: FileBarChart },
-      { id: "missing-payment-reports", label: "Missing Payment Reports", icon: FileBarChart },
-      { id: "review-reports", label: "Customer Review Reports", icon: Star },
-      { id: "reviews", label: "Mover Form Reports", icon: ClipboardList, badgeKey: "reviews" },
-    ],
-  },
-  {
-    id: "content",
-    label: "Content & Knowledge",
-    icon: Library,
-    items: [
-      { id: "feed", label: "Feed Management", icon: Newspaper },
-      { id: "handbook", label: "Handbook Management", icon: BookOpen },
-      { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
-      { id: "application-instructions", label: "Application Instructions", icon: BookOpen },
-      { id: "office-ai-knowledge", label: "AI Assistant Knowledge", icon: Sparkles },
-      { id: "mover-feedback", label: "Mover Feedback", icon: MessageCircle, badgeKey: "moverFeedback", redDot: true },
-    ],
-  },
-  {
-    id: "comms",
-    label: "Communication & Logs",
-    icon: Megaphone,
-    items: [
-      { id: "email-logs", label: "Email Logs", icon: Mail },
-    ],
-  },
-];
+    [t],
+  );
+};
 
 const STORAGE_KEY = "adminSidebarOpenGroups";
 
 const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages = false }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { t } = useT();
+  const groups = useAdminNavGroups();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     try {
@@ -251,17 +260,17 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                 <SidebarMenuButton
                   isActive={activeTab === "dashboard"}
                   onClick={() => onTabChange("dashboard")}
-                  tooltip="Dashboard"
+                  tooltip={t("common.dashboard")}
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  {!isCollapsed && <span className="flex-1">Dashboard</span>}
+                  {!isCollapsed && <span className="flex-1">{t("common.dashboard")}</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={activeTab === "chat"}
                   onClick={() => onTabChange("chat")}
-                  tooltip="Chat"
+                  tooltip={t("nav.chat")}
                 >
                   <div className="relative">
                     <MessageSquare className="h-4 w-4" />
@@ -269,7 +278,7 @@ const AdminSidebar = ({ activeTab, onTabChange, pendingCounts, hasUnreadMessages
                       <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive" />
                     )}
                   </div>
-                  {!isCollapsed && <span className="flex-1">Chat</span>}
+                  {!isCollapsed && <span className="flex-1">{t("nav.chat")}</span>}
                   {!isCollapsed && hasUnreadMessages && (
                     <span className="ml-auto h-2.5 w-2.5 rounded-full bg-destructive" />
                   )}

@@ -3,6 +3,7 @@ import { useDeepLink } from "@/hooks/useDeepLink";
 import { Package, Map, Truck, ShoppingCart, BarChart3, MessageSquare, GraduationCap } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useT } from "@/lib/i18n";
 import UserSettings from "./UserSettings";
 import ChatContainer from "./chat/ChatContainer";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
@@ -17,21 +18,22 @@ import MobileShell, { type MobileShellNavItem } from "@/components/mobile/Mobile
 
 interface Props { userId: string; }
 
-const navItems = [
-  { id: "warehouse", label: "Warehouse", shortLabel: "Stock", icon: Package },
-  { id: "live-map", label: "Live Map", shortLabel: "Map", icon: Map },
-  { id: "fleet", label: "Fleet", shortLabel: "Fleet", icon: Truck },
-  { id: "purchases", label: "Purchases", shortLabel: "Buy", icon: ShoppingCart },
-  { id: "reports", label: "Reports", shortLabel: "Reports", icon: BarChart3 },
-  { id: "chat", label: "Chat", shortLabel: "Chat", icon: MessageSquare },
-  { id: "knowledge-base", label: "Knowledge Base", shortLabel: "KB", icon: GraduationCap },
-] as const;
-
 const WarehouseKeeperDashboard = ({ userId }: Props) => {
   const { language, setLanguage } = useLanguage();
+  const { t } = useT();
   const [activeTab, setActiveTab] = useState<string>("warehouse");
   useDeepLink("warehouse_keeper", setActiveTab);
   const { hasUnread } = useUnreadMessages(userId);
+
+  const navItems = [
+    { id: "warehouse", label: t("nav.warehouse"), icon: Package },
+    { id: "live-map", label: t("nav.liveMap"), icon: Map },
+    { id: "fleet", label: t("nav.fleet"), icon: Truck },
+    { id: "purchases", label: t("nav.purchases"), icon: ShoppingCart },
+    { id: "reports", label: t("nav.reports"), icon: BarChart3 },
+    { id: "chat", label: t("nav.chat"), icon: MessageSquare },
+    { id: "knowledge-base", label: t("nav.knowledgeBase"), icon: GraduationCap },
+  ] as const;
 
   const renderContent = () => {
     switch (activeTab) {

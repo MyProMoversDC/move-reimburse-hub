@@ -51,7 +51,8 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { LayoutDashboard, MessageSquare } from "lucide-react";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
-import { groups as adminGroups } from "./AdminSidebar";
+import { useAdminNavGroups } from "./AdminSidebar";
+import { useT } from "@/lib/i18n";
 
 
 interface AdminDashboardProps {
@@ -61,6 +62,8 @@ interface AdminDashboardProps {
 const AdminDashboard = ({ userId }: AdminDashboardProps) => {
   const [activeTab, setActiveTab] = useState("dashboard");
   useDeepLink("admin", setActiveTab);
+  const { t: ti18n } = useT();
+  const adminGroups = useAdminNavGroups();
   const [refreshKey, setRefreshKey] = useState(0);
   const [showRefundForm, setShowRefundForm] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -652,7 +655,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
 
   // Build the flat MobileShell nav list from the same AdminSidebar groups
   const adminShellNav: MobileShellNavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+    { id: "dashboard", label: ti18n("common.dashboard"), icon: LayoutDashboard, group: ti18n("navGroups.overview") },
     ...adminGroups.flatMap((g) =>
       g.items.map((it) => {
         const count = it.badgeKey ? (pendingCounts as any)[it.badgeKey] || 0 : 0;
@@ -666,7 +669,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         } as MobileShellNavItem;
       }),
     ),
-    { id: "chat", label: "Chat", icon: MessageSquare, group: "Communication & Logs", dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
+    { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare, group: ti18n("navGroups.communicationLogs"), dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
   ];
 
   const handleAdminTabChange = async (tab: string) => {

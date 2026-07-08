@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import logo from "@/assets/logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 interface MoverSidebarProps {
   activeTab: string;
@@ -43,67 +44,10 @@ interface MoverSidebarProps {
   unacknowledgedCount?: number;
 }
 
-const translations = {
-  en: {
-    navigation: "Navigation",
-    feed: "Feed",
-    todoList: "To-Do List",
-    myJobs: "My Jobs",
-    reimbursements: "Reimbursements",
-    reviews: "Customer Reviews",
-    missingPayments: "Missing Payments",
-    incidents: "Incident Reports",
-    cases: "My Cases",
-    feedback: "Feedback",
-    anonymousFeedback: "Anonymous Feedback",
-    chat: "Chat",
-    paymentQuestions: "Payment Questions",
-    referFriend: "Refer a Friend",
-    shiftClock: "Shift Clock",
-    appInstructions: "Application Instructions",
-  },
-  es: {
-    navigation: "Navegación",
-    feed: "Noticias",
-    todoList: "Lista de Tareas",
-    myJobs: "Mis Trabajos",
-    reimbursements: "Reembolsos",
-    reviews: "Reseñas de Clientes",
-    missingPayments: "Pagos Faltantes",
-    incidents: "Informes de Incidentes",
-    cases: "Mis Casos",
-    feedback: "Comentarios",
-    anonymousFeedback: "Comentarios Anónimos",
-    chat: "Chat",
-    paymentQuestions: "Preguntas de Pago",
-    referFriend: "Referir un Amigo",
-    shiftClock: "Registro de Turno",
-    appInstructions: "Instrucciones de la Aplicación",
-  },
-  ru: {
-    navigation: "Навигация",
-    feed: "Лента",
-    todoList: "Список Задач",
-    myJobs: "Мои Заказы",
-    reimbursements: "Возмещения",
-    reviews: "Отзывы клиентов",
-    missingPayments: "Пропущенные платежи",
-    incidents: "Отчёты об инцидентах",
-    cases: "Мои дела",
-    feedback: "Отзывы",
-    anonymousFeedback: "Анонимный отзыв",
-    chat: "Чат",
-    paymentQuestions: "Вопросы по Оплате",
-    referFriend: "Порекомендовать Друга",
-    shiftClock: "Учёт смены",
-    appInstructions: "Инструкции по приложению",
-  },
-};
-
-const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, language, userId, unacknowledgedCount = 0 }: MoverSidebarProps) => {
+const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, userId, unacknowledgedCount = 0 }: MoverSidebarProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const t = translations[language];
+  const { t } = useT();
   const [hasTodoItems, setHasTodoItems] = useState(false);
 
   useEffect(() => {
@@ -149,21 +93,21 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
   };
 
   const menuItems = [
-    { id: "feed", label: t.feed, icon: Newspaper, badgeCount: unacknowledgedCount },
-    { id: "refer-friend", label: t.referFriend, icon: UserPlus },
-    { id: "todo", label: t.todoList, icon: ClipboardList, hasBadge: hasTodoItems },
-    { id: "my-jobs", label: t.myJobs, icon: Truck },
-    { id: "shift-clock", label: t.shiftClock, icon: Clock },
-    { id: "application-instructions", label: t.appInstructions, icon: GraduationCap },
-    { id: "reimbursements", label: t.reimbursements, icon: DollarSign },
-    { id: "reviews", label: t.reviews, icon: Star },
-    { id: "missing-payments", label: t.missingPayments, icon: AlertTriangle },
-    { id: "violence", label: t.incidents, icon: Shield },
-    { id: "misconduct", label: t.cases, icon: AlertTriangle },
-    { id: "feedback", label: t.feedback, icon: Lightbulb },
-    { id: "anonymous-feedback", label: t.anonymousFeedback, icon: EyeOff },
-    { id: "payment-questions", label: t.paymentQuestions, icon: HelpCircle },
-    { id: "chat", label: t.chat, icon: MessageSquare },
+    { id: "feed", label: t("nav.feed"), icon: Newspaper, badgeCount: unacknowledgedCount },
+    { id: "refer-friend", label: t("nav.referFriend"), icon: UserPlus },
+    { id: "todo", label: t("nav.todoList"), icon: ClipboardList, hasBadge: hasTodoItems },
+    { id: "my-jobs", label: t("nav.myJobs"), icon: Truck },
+    { id: "shift-clock", label: t("nav.shiftClock"), icon: Clock },
+    { id: "application-instructions", label: t("nav.applicationInstructions"), icon: GraduationCap },
+    { id: "reimbursements", label: t("nav.reimbursements"), icon: DollarSign },
+    { id: "reviews", label: t("nav.customerReviews"), icon: Star },
+    { id: "missing-payments", label: t("nav.missingPayments"), icon: AlertTriangle },
+    { id: "violence", label: t("nav.incidentReports"), icon: Shield },
+    { id: "misconduct", label: t("nav.myCases"), icon: AlertTriangle },
+    { id: "feedback", label: t("nav.feedback"), icon: Lightbulb },
+    { id: "anonymous-feedback", label: t("nav.anonymousFeedback"), icon: EyeOff },
+    { id: "payment-questions", label: t("nav.paymentQuestions"), icon: HelpCircle },
+    { id: "chat", label: t("nav.chat"), icon: MessageSquare },
   ];
 
   const renderBadge = (item: typeof menuItems[0], isCollapsed: boolean) => {
@@ -208,7 +152,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, langu
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t.navigation}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("common.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (

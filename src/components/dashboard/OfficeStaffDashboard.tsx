@@ -3,6 +3,7 @@ import { useDeepLink } from "@/hooks/useDeepLink";
 import { Newspaper, MessageSquare, DollarSign, Clock, GraduationCap, Bookmark, Sparkles } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useT } from "@/lib/i18n";
 import CustomerRefundForm from "./CustomerRefundForm";
 import CustomerRefundHistory from "./CustomerRefundHistory";
 import ChatContainer from "./chat/ChatContainer";
@@ -20,22 +21,23 @@ interface OfficeStaffDashboardProps {
   userId: string;
 }
 
-const navItems = [
-  { id: "feed", label: "Feed", icon: Newspaper },
-  { id: "saved-posts", label: "Saved Feed Posts", icon: Bookmark },
-  { id: "customer-refund", label: "Customer Refund", icon: DollarSign },
-  { id: "chat", label: "Chat", icon: MessageSquare },
-  { id: "shift-schedule", label: "Shift Schedule", icon: Clock },
-  { id: "knowledge-base", label: "Knowledge Base", icon: GraduationCap },
-  { id: "ai-assistant", label: "AI Assistant", icon: Sparkles },
-] as const;
-
 const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
   const { language, setLanguage } = useLanguage();
+  const { t } = useT();
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>("feed");
   useDeepLink("office_staff", setActiveTab);
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
+
+  const navItems = [
+    { id: "feed", label: t("nav.feed"), icon: Newspaper },
+    { id: "saved-posts", label: t("nav.savedPosts"), icon: Bookmark },
+    { id: "customer-refund", label: t("nav.customerRefund"), icon: DollarSign },
+    { id: "chat", label: t("nav.chat"), icon: MessageSquare },
+    { id: "shift-schedule", label: t("nav.shiftSchedule"), icon: Clock },
+    { id: "knowledge-base", label: t("nav.knowledgeBase"), icon: GraduationCap },
+    { id: "ai-assistant", label: t("nav.aiAssistant"), icon: Sparkles },
+  ] as const;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -118,7 +120,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
 
           {activeTab === "feed" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Feed</h2>
+              <h2 className="text-2xl font-bold">{t("nav.feed")}</h2>
               <FeedList userId={userId} language={language} isAdmin={false} canSavePosts={true} />
             </div>
           )}
@@ -135,7 +137,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           )}
           {activeTab === "chat" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Chat</h2>
+              <h2 className="text-2xl font-bold">{t("nav.chat")}</h2>
               <ChatContainer userId={userId} userRole="office_staff" language={language} />
             </div>
           )}

@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTouchShell } from "@/hooks/use-touch-shell";
 import { useAppShell } from "./AppShellContext";
+import { useT } from "@/lib/i18n";
 import logo from "@/assets/logo.png";
 
 export interface MobileShellNavItem {
@@ -57,6 +58,7 @@ const MobileShell = ({
   titleOverride,
 }: MobileShellProps) => {
   const isTouch = useTouchShell();
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const activeItemRef = useRef<HTMLButtonElement>(null);
   const shell = useAppShell();
@@ -116,7 +118,7 @@ const MobileShell = ({
         <div className="flex items-center h-14 px-2 gap-1">
           <button
             type="button"
-            aria-label="Open navigation"
+            aria-label={t("common.openNavigation")}
             onClick={() => setOpen(true)}
             className="touch-target-lg flex items-center justify-center rounded-md hover:bg-muted active:scale-95 transition-transform"
           >
@@ -146,7 +148,7 @@ const MobileShell = ({
             <div className="flex items-center gap-2">
               <img src={logo} alt="MyProMovers" className="h-8" />
             </div>
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SheetTitle className="sr-only">{t("common.navigation")}</SheetTitle>
           </SheetHeader>
 
           <ScrollArea className="flex-1">
@@ -216,7 +218,7 @@ const MobileShell = ({
                         {shell.roleLabels[shell.currentRole]}
                       </span>
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        Switch
+                        {t("common.switch")}
                       </span>
                       <ChevronDown
                         className={cn(
@@ -257,7 +259,7 @@ const MobileShell = ({
                   className="w-full touch-target flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
                 >
                   <LogOut className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 text-left">Log out</span>
+                  <span className="flex-1 text-left">{t("common.logout")}</span>
                 </button>
                 <p className="text-[11px] text-muted-foreground px-3 pt-1 truncate">
                   {shell.userName}

@@ -1,5 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Languages } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 type Language = 'en' | 'es' | 'ru';
 
@@ -9,12 +10,13 @@ interface LanguageSelectorProps {
 }
 
 export const LanguageSelector = ({ language, onLanguageChange }: LanguageSelectorProps) => {
+  const { t } = useT();
   return (
     <Select value={language} onValueChange={(value) => onLanguageChange(value as Language)}>
       {/* Mobile: icon + 2-letter code (compact for the native top bar).
           Desktop (≥md): full label. Prevents header clipping on iPhone. */}
       <SelectTrigger
-        aria-label="Language"
+        aria-label={t("common.language")}
         className="w-auto md:w-[160px] bg-background gap-1.5 px-2 md:px-3"
       >
         <Languages className="h-4 w-4 shrink-0" />
