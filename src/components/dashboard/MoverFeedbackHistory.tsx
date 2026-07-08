@@ -125,7 +125,7 @@ export function MoverFeedbackHistory({ userId, language, refreshKey, anonymousOn
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
+    return <div className="text-center py-8 text-muted-foreground">{language === 'ru' ? 'Загрузка...' : language === 'es' ? 'Cargando...' : 'Loading...'}</div>;
   }
 
   if (feedbackList.length === 0) {
