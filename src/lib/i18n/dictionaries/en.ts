@@ -111,6 +111,10 @@ export const en = {
     communicationLogs: "Communication & Logs",
     overview: "Overview",
   },
-} as const;
+};
 
-export type Dictionary = typeof en;
+type Widen<T> = {
+  [K in keyof T]: T[K] extends string ? string : Widen<T[K]>;
+};
+
+export type Dictionary = Widen<typeof en>;
