@@ -70,8 +70,13 @@ async function sendFcm(
   data: Record<string,string>,
   opts: { androidCollapseKey?: string; apnsThreadId?: string } = {},
 ) {
-  const apnsHeaders: Record<string,string> = { "apns-priority": "10" };
-  if (opts.apnsThreadId) apnsHeaders["apns-collapse-id"] = opts.apnsThreadId;
+  // Isolation experiment: intentionally do NOT set apns-collapse-id (even when
+  // apnsThreadId is provided) to test whether APNs was silently coalescing
+  // chat pushes. thread-id is still set inside aps for Notification Center grouping.
+  const apnsHeaders: Record<string,string> = {
+    "apns-priority": "10",
+    "apns-push-type": "alert",
+  };
 
   const aps: Record<string, unknown> = {
     alert: { title, body },
