@@ -120,7 +120,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
 
           {activeTab === "feed" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Feed</h2>
+              <h2 className="text-2xl font-bold">{t("nav.feed")}</h2>
               <FeedList userId={userId} language={language} isAdmin={false} canSavePosts={true} />
             </div>
           )}
@@ -137,7 +137,7 @@ const OfficeStaffDashboard = ({ userId }: OfficeStaffDashboardProps) => {
           )}
           {activeTab === "chat" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Chat</h2>
+              <h2 className="text-2xl font-bold">{t("nav.chat")}</h2>
               <ChatContainer userId={userId} userRole="office_staff" language={language} />
             </div>
           )}
