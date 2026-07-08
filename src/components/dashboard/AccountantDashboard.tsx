@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useT } from "@/lib/i18n";
 import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import UserSettings from "./UserSettings";
@@ -27,6 +28,7 @@ const AccountantDashboard = ({ userId }: AccountantDashboardProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [exporting, setExporting] = useState(false);
   const { language, setLanguage } = useLanguage();
+  const { t: ti18n } = useT();
   const { hasUnread: hasUnreadMessages } = useUnreadMessages(userId);
   const [activeTab, setActiveTab] = useState<string>("requests");
   useDeepLink("accountant", setActiveTab);
