@@ -655,7 +655,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
 
   // Build the flat MobileShell nav list from the same AdminSidebar groups
   const adminShellNav: MobileShellNavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+    { id: "dashboard", label: ti18n("common.dashboard"), icon: LayoutDashboard, group: ti18n("navGroups.overview") },
     ...adminGroups.flatMap((g) =>
       g.items.map((it) => {
         const count = it.badgeKey ? (pendingCounts as any)[it.badgeKey] || 0 : 0;
@@ -669,7 +669,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         } as MobileShellNavItem;
       }),
     ),
-    { id: "chat", label: "Chat", icon: MessageSquare, group: "Communication & Logs", dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
+    { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare, group: ti18n("navGroups.communicationLogs"), dot: hasUnreadMessages, badgeCount: hasUnreadMessages ? 1 : 0 },
   ];
 
   const handleAdminTabChange = async (tab: string) => {
