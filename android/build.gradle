@@ -1,0 +1,28 @@
+// Top-level build file for the My Pro Movers Android app.
+// Committed and version-controlled — treated the same way as ios/App/.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.2'
+        // Google Services Gradle Plugin — processes google-services.json so
+        // Firebase Messaging can mint FCM tokens on Android. iOS equivalent
+        // is FirebaseApp.configure() inside AppDelegate.swift.
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply from: "variables.gradle"
+
+tasks.register('clean', Delete) {
+    delete rootProject.buildDir
+}

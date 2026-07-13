@@ -1,0 +1,17 @@
+# Android build artifacts — the native project itself IS committed.
+# Only build outputs, local machine config, and injected secrets are ignored.
+build/
+app/build/
+.gradle/
+local.properties
+captured/
+.idea/
+*.iml
+
+# Keystore and Firebase config are injected by CI from secrets — never commit.
+keystore/
+app/google-services.json
+app/release/
+app/src/main/assets/public/
+app/src/main/assets/capacitor.config.json
+app/src/main/assets/capacitor.plugins.json

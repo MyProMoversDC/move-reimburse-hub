@@ -1,0 +1,22 @@
+// DO NOT EDIT — rewritten by `npx cap sync android` from installed
+// @capacitor/* npm packages. Committed so Android Studio can open the project
+// without a prior sync; CI still runs `npx cap sync android` before building.
+android {
+  compileOptions {
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+apply from: "../capacitor.settings.gradle"
+
+dependencies {
+    implementation project(':capacitor-app')
+    implementation project(':capacitor-push-notifications')
+    implementation project(':capacitor-splash-screen')
+    implementation project(':capacitor-status-bar')
+}
+
+if (hasProperty('postBuildExtras')) {
+    postBuildExtras()
+}
