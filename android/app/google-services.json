@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "851914030778",
+    "project_id": "mypromovers-3f517",
+    "storage_bucket": "mypromovers-3f517.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:851914030778:android:831229d7c49d5b810c0c83",
+        "android_client_info": {
+          "package_name": "com.mypromovers.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATqo6ihq_RNgOALTYrHVXYbidYP4Z1DCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
