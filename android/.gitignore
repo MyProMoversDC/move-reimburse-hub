@@ -8,9 +8,8 @@ captured/
 .idea/
 *.iml
 
-# Keystore and Firebase config are injected by CI from secrets — never commit.
+# Keystore and release outputs are injected by CI from secrets / local config.
 keystore/
-app/google-services.json
 app/release/
 app/src/main/assets/public/
 app/src/main/assets/capacitor.config.json
