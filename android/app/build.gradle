@@ -1,5 +1,19 @@
 apply plugin: 'com.android.application'
 
+// Detect a release keystore before configuring the android { } block. Two modes:
+//   1. Local Android Studio without a keystore -> no signingConfigs.release is
+//      defined and buildTypes.release has no explicit signingConfig. Debug
+//      builds work as usual; Release builds produce an unsigned artifact (AS
+//      can still assemble it; it just cannot be uploaded to Play as-is).
+//   2. CI (or a local dev who provides env vars / drops a keystore at
+//      android/keystore/release.keystore) -> signingConfigs.release is defined
+//      from the env vars and wired into buildTypes.release, producing a
+//      Play-ready signed .aab. Matches the existing GitHub Actions workflow.
+def keystorePathEnv = System.getenv("ANDROID_KEYSTORE_PATH")
+def defaultKeystore = file("../keystore/release.keystore")
+def resolvedKeystore = keystorePathEnv ? file(keystorePathEnv) : (defaultKeystore.exists() ? defaultKeystore : null)
+def hasReleaseKeystore = resolvedKeystore != null && resolvedKeystore.exists()
+
 android {
     namespace "com.mypromovers.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -15,21 +29,25 @@ android {
              ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    signingConfigs {
-        release {
-            // CI supplies these env vars. Local Android Studio builds can override
-            // via ~/.gradle/gradle.properties or a local.properties keystore path.
-            storeFile file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "../keystore/release.keystore")
-            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
-            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: ""
-            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+    if (hasReleaseKeystore) {
+        signingConfigs {
+            release {
+                storeFile resolvedKeystore
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: ""
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+            }
         }
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            }
+            // Otherwise: no explicit signingConfig. Local Release builds are
+            // unsigned; CI provides the keystore via env vars.
         }
     }
     compileOptions {
