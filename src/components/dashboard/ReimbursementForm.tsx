@@ -459,12 +459,12 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
 
       {/* Receipt Attachments */}
       <div className="space-y-2">
-        <Label>Receipt Images * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
+        <Label>Receipts * (Max 10MB each — images, PDF, Word, Excel, TXT)</Label>
         <div className="relative">
           <input
             id="attachments"
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain"
             multiple
             onChange={handleFileChange}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -474,7 +474,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
             variant="outline"
             className="w-full pointer-events-none"
           >
-            {language === 'en' ? "Select Receipt Images" : language === 'es' ? "Seleccionar imágenes de recibos" : "Выбрать изображения квитанций"}
+            {language === 'en' ? "Select Receipts (Images, PDF, Documents)" : language === 'es' ? "Seleccionar recibos (imágenes, PDF, documentos)" : "Выбрать квитанции (изображения, PDF, документы)"}
           </Button>
         </div>
         
