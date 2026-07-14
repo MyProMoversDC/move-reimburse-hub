@@ -137,10 +137,14 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
-      return `File "${file.name}" is too large (max 5MB)`;
+      return `File "${file.name}" is too large (max 10MB)`;
     }
-    if (!VALID_FILE_TYPES.includes(file.type)) {
-      return `File "${file.name}" has invalid type. Please use JPEG, PNG, GIF, or WebP.`;
+    // Some mobile browsers (iOS/Android) report empty or generic MIME types,
+    // so also accept files whose extension matches our allowlist.
+    const typeOk = file.type && VALID_FILE_TYPES.includes(file.type);
+    const extOk = VALID_FILE_EXTENSIONS.test(file.name);
+    if (!typeOk && !extOk) {
+      return `File "${file.name}" has invalid type. Please use an image, PDF, Word, Excel, or text file.`;
     }
     return null;
   };
