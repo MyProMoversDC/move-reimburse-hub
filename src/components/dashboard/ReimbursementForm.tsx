@@ -12,8 +12,22 @@ import { handleError, handleUploadError } from "@/lib/errorHandler";
 import { X, AlertCircle, AlertTriangle } from "lucide-react";
 
 // File validation constants
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const VALID_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+];
+const VALID_FILE_EXTENSIONS = /\.(jpe?g|png|gif|webp|heic|heif|pdf|docx?|xlsx?|txt)$/i;
 
 const reimbursementSchema = z.object({
   moverFullName: z.string().trim().min(1, "Mover full name is required").max(200),
@@ -123,10 +137,14 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
 
   const validateFile = (file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) {
-      return `File "${file.name}" is too large (max 5MB)`;
+      return `File "${file.name}" is too large (max 10MB)`;
     }
-    if (!VALID_FILE_TYPES.includes(file.type)) {
-      return `File "${file.name}" has invalid type. Please use JPEG, PNG, GIF, or WebP.`;
+    // Some mobile browsers (iOS/Android) report empty or generic MIME types,
+    // so also accept files whose extension matches our allowlist.
+    const typeOk = file.type && VALID_FILE_TYPES.includes(file.type);
+    const extOk = VALID_FILE_EXTENSIONS.test(file.name);
+    if (!typeOk && !extOk) {
+      return `File "${file.name}" has invalid type. Please use an image, PDF, Word, Excel, or text file.`;
     }
     return null;
   };
@@ -441,12 +459,12 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
 
       {/* Receipt Attachments */}
       <div className="space-y-2">
-        <Label>Receipt Images * (Max 5MB each, JPEG/PNG/GIF/WebP)</Label>
+        <Label>Receipts * (Max 10MB each — images, PDF, Word, Excel, TXT)</Label>
         <div className="relative">
           <input
             id="attachments"
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain"
             multiple
             onChange={handleFileChange}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -456,7 +474,7 @@ const ReimbursementForm = ({ userId, onSuccess, onCancel, language }: Reimbursem
             variant="outline"
             className="w-full pointer-events-none"
           >
-            {language === 'en' ? "Select Receipt Images" : language === 'es' ? "Seleccionar imágenes de recibos" : "Выбрать изображения квитанций"}
+            {language === 'en' ? "Select Receipts (Images, PDF, Documents)" : language === 'es' ? "Seleccionar recibos (imágenes, PDF, documentos)" : "Выбрать квитанции (изображения, PDF, документы)"}
           </Button>
         </div>
         
