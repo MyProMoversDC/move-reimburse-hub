@@ -85,6 +85,7 @@ export const es: Dictionary = {
     reviewSubmissions: "Envíos de Reseñas",
     reviewReports: "Informes de Reseñas",
     deductibles: "Deducibles",
+    payStubs: "Recibos de Pago",
 
     warehouse: "Almacén",
     liveMap: "Mapa en Vivo",

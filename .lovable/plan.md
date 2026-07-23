@@ -1,117 +1,95 @@
-## Goal
 
-When any non-admin cabinet submits a form, every user with the `admin` role receives an iOS/Android push notification. Push infrastructure already works — this only adds new triggers that call the existing dispatcher. No existing rules, tables, or flows change.
+# Pay Stub Management — Reviews Admin Cabinet
 
-## Design
+Adapt the original brief to this stack: cron-driven pull from SmartMoving, auto-send to matched movers, hold unmatched for manual assignment. No manual upload flow, no in-app template editor, no open tracking.
 
-Reuse the exact same pattern already used by `dispatch_push_on_notification` (which fires on `mover_notifications`): a Postgres AFTER INSERT trigger calls `net.http_post` against the existing `send-push-notification` edge function, once per admin user_id.
+## User-facing behavior
 
-Everything is additive:
-- No changes to `send-push-notification` (already accepts `{ user_id, title, body, data }`).
-- No changes to `device_tokens`, `mover_notifications`, or existing triggers.
-- No new tables (user chose "Push only").
-- No frontend changes.
+- New "Pay Stubs" tab in the Customer Review Manager (Reviews Admin) cabinet — visible to `reviews_admin` and `admin`.
+- Every Thursday at **10:00 AM EST**, the system pulls the current week's pay stub PDFs from SmartMoving.
+- Each PDF is stored, matched to a mover by SmartMoving employee ID → `profiles`.
+- **Matched rows** are queued and emailed automatically with the pay stub PDF attached, using a 10–15s random cooldown per email.
+- **Unmatched rows** stay in a review table where the Reviews Admin can:
+  - Assign the correct mover from a dropdown (existing `SearchableSelect`, movers only).
+  - Preview the rendered email.
+  - Click **Send** to release the queued email.
+  - Or **Discard** the row if it doesn't apply.
+- Batch view shows: filename, extracted name, matched mover, pay period, net amount, status badge (`processing / ready / unmatched / sent / send_failed / discarded`), sent timestamp (EST), sent-by.
+- All sends write to the existing `email_logs` table plus a dedicated `pay_stub_send_log` for audit ("who told which person what, when").
 
-## Migration — single migration file
+## Data model (new tables in `public`)
 
-### 1. Shared helper
+Each table gets `GRANT` + RLS in the same migration, restricted to `admin` + `reviews_admin` via `has_role()`. `service_role` full access for the edge function.
 
-```sql
-CREATE OR REPLACE FUNCTION public.push_admins_on_submission(
-  _title text,
-  _body text,
-  _data jsonb
-) RETURNS void
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, net
-AS $$
-DECLARE r RECORD;
-BEGIN
-  FOR r IN SELECT user_id FROM public.user_roles WHERE role = 'admin'::app_role LOOP
-    BEGIN
-      PERFORM net.http_post(
-        url := 'https://qunbwlsgjrhayeqhgyce.supabase.co/functions/v1/send-push-notification',
-        headers := jsonb_build_object('Content-Type','application/json'),
-        body := jsonb_build_object(
-          'user_id', r.user_id,
-          'title', _title,
-          'body', _body,
-          'data', _data,
-          'source', 'admin_submission_alert'
-        )
-      );
-    EXCEPTION WHEN OTHERS THEN
-      RAISE WARNING 'push_admins_on_submission failed for admin %: % (%)', r.user_id, SQLERRM, SQLSTATE;
-    END;
-  END LOOP;
-END $$;
-```
+- `pay_stub_batches` — one row per weekly cron run. Fields: `run_date` (EST date), `source` (`smartmoving_cron` / `smartmoving_manual`), `status`, `created_by` (nullable for cron), totals.
+- `pay_stubs` — one row per PDF. Fields: `batch_id`, `file_path` (private storage), `smartmoving_employee_id`, `extracted_name`, `mover_id` (nullable), `pay_period_start`, `pay_period_end`, `net_total` (numeric), `status`, `error`, `sent_at`, `sent_by`, `discarded_at`, `discarded_by`.
+- `pay_stub_send_log` — append-only audit. Fields: `pay_stub_id`, `mover_id`, `email`, `sent_at`, `status`, `error`, `sent_by`.
 
-Failure inside the loop is swallowed per-admin so a bad token can never break a form submission.
+Storage: new **private** bucket `pay-stubs` with signed URLs (per existing "Secure Attachment Logic" memory). Objects keyed `batches/{batch_id}/{pay_stub_id}.pdf`.
 
-### 2. Per-table trigger functions + AFTER INSERT triggers
+## Edge functions (new)
 
-One tiny trigger function per table. Each just calls the helper with a table-specific title/body/data payload. Payload `data` includes `reference_type` and `reference_id` so the existing `notificationRouter` deep-links the admin to the right screen when they tap the push.
+1. `sync-smartmoving-paystubs` (`verify_jwt = false`, called only by cron).
+   - Discovery step in code: hit SmartMoving's paystub endpoint using the existing SmartMoving API key secret already used by `sync-smartmoving-jobs`. If the endpoint or contract is unknown at build time, function first logs a shape probe and returns a structured error — no partial writes.
+   - For each pay stub: upload PDF to `pay-stubs`, parse header for employee id / period / net (fallback to `pdf-parse` via `npm:` specifier if fields aren't in the API payload), insert `pay_stubs` row.
+   - Match `smartmoving_employee_id` → `profiles.smartmoving_employee_id`. (If that column doesn't exist yet, migration adds it as nullable — no backfill required; unmatched rows fall through to manual assignment.)
+   - Enqueue matched rows into the sender by invoking `send-paystub-batch` with the batch id.
 
-Tables covered (all "non-admin cabinet" form submissions):
+2. `send-paystub-batch` (`verify_jwt = true`).
+   - Background async loop: for each `status='ready'` row in the batch, send via **Resend** (existing `RESEND_API_KEY_1` connector per memory), PDF fetched from storage as attachment. 10–15s random sleep between sends. Per-send try/catch — a failed send sets `status='send_failed'` and logs the SMTP error; never marks as sent optimistically. Progress persisted on `pay_stub_batches` for polling.
+   - Same function handles single-row sends triggered from the UI (after manual assignment).
 
-| Table | Title (EN) | reference_type |
-|---|---|---|
-| `reimbursements` (INSERT) | "New Reimbursement Submitted" | `reimbursement` |
-| `reimbursements` (UPDATE when `appeal_count` increases) | "Reimbursement Appeal Filed" | `reimbursement` |
-| `review_bonuses` (INSERT) | "New Review Bonus Submitted" | `review_bonus` |
-| `review_bonuses` (UPDATE when `appeal_count` increases) | "Review Bonus Appeal Filed" | `review_bonus` |
-| `missing_payments` (INSERT) | "New Missing Payment Reported" | `missing_payment` |
-| `missing_payments` (UPDATE when `appeal_count` increases) | "Missing Payment Appeal Filed" | `missing_payment` |
-| `customer_refunds` (INSERT) | "New Customer Refund Submitted" | `customer_refund` |
-| `performance_reports` (INSERT) | "New Misconduct Report Filed" | `performance_report` |
-| `violence_incidents` (INSERT) | "New Violence Incident Reported" | `violence_incident` |
-| `payment_questions` (INSERT) | "New Payment Question" | `payment_question` |
-| `referral_requests` (INSERT) | "New Referral Submitted" | `referral` |
-| `day_off_requests` (INSERT) | "New Day-Off Request" | `day_off` |
-| `mover_feedback` (INSERT) | "New Mover Suggestion" | `mover_feedback` |
+3. `record-paystub-send` — small helper invoked from the UI to write audit rows with the authenticated user's id (satisfies "who sent it").
 
-Body text is short and generic (e.g., "Submitted by <first_name> <last_name>" resolved from `profiles` when a `user_id`/`mover_id`/`created_by` column is available; otherwise a fixed string). English only in the push text itself — matches the existing `send-critical-score-alert` / test-push behavior and keeps this iteration small; per-admin locale can be added later without schema changes.
+Email body: hardcoded HTML template with `{{mover_name}}`, `{{pay_period}}`, `{{net_amount}}` (EST-formatted), no links/buttons (per Core memory: emails contain no links). Subject: "Your MyProMovers pay stub — {{pay_period}}".
 
-Skeleton (one shown, others follow the same shape):
+## Cron
 
 ```sql
-CREATE OR REPLACE FUNCTION public.trg_admin_push_reimbursement_insert()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
-AS $$
-DECLARE v_name text;
-BEGIN
-  SELECT COALESCE(NULLIF(TRIM(first_name||' '||last_name),''), 'A mover')
-    INTO v_name FROM public.profiles WHERE id = NEW.mover_id;
-  PERFORM public.push_admins_on_submission(
-    'New Reimbursement Submitted',
-    v_name || ' submitted reimbursement #' || COALESCE(NEW.reimbursement_number,''),
-    jsonb_build_object('reference_type','reimbursement','reference_id', NEW.id,
-                       'notification_type','admin_new_submission')
-  );
-  RETURN NEW;
-END $$;
-
-CREATE TRIGGER admin_push_on_reimbursement_insert
-AFTER INSERT ON public.reimbursements
-FOR EACH ROW EXECUTE FUNCTION public.trg_admin_push_reimbursement_insert();
+select cron.schedule(
+  'smartmoving-paystubs-weekly',
+  '0 15 * * 4', -- 10 AM EST = 15 UTC Thursdays (EST, not EDT — see note)
+  $$ select net.http_post( ... /sync-smartmoving-paystubs ...) $$
+);
 ```
 
-Appeal triggers use `AFTER UPDATE` guarded by `WHEN (OLD.appeal_count IS DISTINCT FROM NEW.appeal_count AND COALESCE(NEW.appeal_count,0) > COALESCE(OLD.appeal_count,0))`.
+Note: user specified EST (not "Eastern Time"). Schedule uses fixed EST offset (UTC-5) per project convention. If DST-aware behavior is later desired, the cron expression is the only change needed.
 
-### 3. Safety guarantees
+## UI (new components under `src/components/dashboard/paystubs/`)
 
-- All triggers `SECURITY DEFINER` with `SET search_path = public` (matches project pattern).
-- Any HTTP failure is caught inside `push_admins_on_submission`; the INSERT/UPDATE that triggered it always succeeds.
-- No trigger reads or modifies data outside its own row + `user_roles`/`profiles`, so no RLS / recursion risk.
-- No existing trigger or function is dropped or altered.
+- `PayStubsDashboard.tsx` — batch selector + summary counts + tabs (All / Matched / Unmatched / Sent / Failed).
+- `PayStubBatchTable.tsx` — `ResponsiveCardTable`-based, mobile-friendly, shows every row's status.
+- `PayStubAssignDialog.tsx` — `SearchableSelect` of movers (auto-filters admins/accountants per memory), preview of rendered email, "Send now" and "Discard" actions.
+- Wire into `ReviewsAdminDashboard.tsx`:
+  - Add nav item `{ id: "paystubs", label: ti18n("nav.payStubs"), icon: FileText }`.
+  - Add case in `renderContent` + desktop panel.
+  - Add `nav.payStubs` + all new UI keys to `en.ts`, `es.ts`, `ru.ts` (per Core i18n rule).
+- Red-dot indicator on the nav item while `unmatched` or `send_failed` rows exist for the current batch (matches existing management red-dot pattern per memory).
 
-## Client / iOS side
+## Notification & compliance touches
 
-Nothing to change. Existing iOS APNs setup, `usePushNotifications`, `notificationRouter`, and `device_tokens` handling all remain untouched. The push arrives with `data.reference_type` / `data.reference_id`, and the already-shipped router opens the correct admin screen on tap.
+- Reuse existing admin submission push notification pattern only for `send_failed` rows (not for successful cron runs — avoid noise).
+- All times displayed in EST via `dateUtils.ts` (per Core rule).
+- Every sent email also written to `email_logs` so it appears in the Email Logs cabinet (existing feature).
 
-## Verification
+## Explicitly out of scope (this iteration)
 
-1. As an admin on iOS: submit a reimbursement from a mover test account → admin device receives the push.
-2. Repeat for one entry per table above (spot-check reimbursement, review bonus, missing payment, misconduct, violence incident, refund).
-3. Confirm existing mover_notifications push flow still works unchanged.
-4. Confirm submissions still succeed if push service is unreachable (temporarily point helper at bad URL, submit — the row must still insert; log shows a WARNING).
+- Manual multi-PDF upload flow.
+- In-app WYSIWYG template editor.
+- Open-tracking pixel and public `/track/:id.png` endpoint.
+- Bulk mover CSV import (movers already live in `profiles`).
+- Analytics dashboard beyond the flat filterable batch table.
+- Deduction notices / discrepancy reporting.
+
+## Rollout order
+
+1. Migration: `smartmoving_employee_id` column on `profiles`, three new tables + GRANTs + RLS, `pay-stubs` private bucket.
+2. Edge functions: `sync-smartmoving-paystubs`, `send-paystub-batch`, `record-paystub-send`.
+3. Cron schedule via `supabase--insert` (contains project-specific URL/key, per schedule-jobs guide).
+4. UI wiring into Reviews Admin cabinet + i18n keys.
+5. Verification: manual invoke of `sync-smartmoving-paystubs` in dev with a small test window before the first Thursday run; confirm unmatched-only path (no auto-sends) if all rows land unmatched.
+
+## Open items to confirm during build (won't block plan approval)
+
+- Exact SmartMoving paystub endpoint / auth shape — will be validated against the existing SmartMoving secret in step 2. If SmartMoving does not expose PDFs the way the user described, I'll surface that immediately and pause rather than pivot to raw-data PDF generation without approval.
+- Whether `profiles.smartmoving_employee_id` should be populated automatically from an existing SmartMoving sync or left for admins to fill on the mover profile page — will confirm once the ingestion is working.

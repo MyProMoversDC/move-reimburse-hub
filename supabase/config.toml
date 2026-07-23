@@ -71,3 +71,10 @@ verify_jwt = false
 
 [functions.send-password-reset]
 verify_jwt = false
+
+[functions.sync-smartmoving-paystubs]
+verify_jwt = false
+
+[functions.send-paystub-batch]
+verify_jwt = true
+

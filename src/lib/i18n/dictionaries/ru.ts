@@ -85,6 +85,7 @@ export const ru: Dictionary = {
     reviewSubmissions: "Отправленные Отзывы",
     reviewReports: "Отчёты по Отзывам",
     deductibles: "Удержания",
+    payStubs: "Расчётные Листы",
 
     warehouse: "Склад",
     liveMap: "Карта Онлайн",

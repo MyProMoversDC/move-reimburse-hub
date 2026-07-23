@@ -10,7 +10,7 @@ import ChatContainer from "./chat/ChatContainer";
 import AddBonusDialog from "./AddBonusDialog";
 import UserSettings from "./UserSettings";
 import { Button } from "@/components/ui/button";
-import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock, GraduationCap } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock, GraduationCap, FileText } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
+import PayStubsDashboard from "./PayStubsDashboard";
 import { cn } from "@/lib/utils";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 
@@ -50,6 +51,7 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
     { id: "missing-payments", label: ti18n("nav.missingPayments"), icon: DollarSign },
     { id: "reports", label: ti18n("nav.reviewReports"), icon: FileBarChart },
     { id: "deductibles", label: ti18n("nav.deductibles"), icon: MinusCircle },
+    { id: "paystubs", label: ti18n("nav.payStubs"), icon: FileText },
     { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare },
     { id: "shift-schedule", label: ti18n("nav.shiftSchedule"), icon: Clock },
     { id: "knowledge-base", label: ti18n("nav.knowledgeBase"), icon: GraduationCap },
@@ -116,6 +118,8 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
         return <CustomerReviewReportingDashboard language={language} />;
       case "deductibles":
         return <DeductiblesReport isAdmin={false} />;
+      case "paystubs":
+        return <PayStubsDashboard />;
       case "chat":
         return <ChatContainer userId={userId} userRole="reviews_admin" language={language} />;
       case "shift-schedule":
@@ -214,6 +218,9 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
               <h2 className="text-2xl font-bold">{ti18n("nav.deductiblesReport")}</h2>
               <DeductiblesReport isAdmin={false} />
             </div>
+          )}
+          {activeTab === "paystubs" && (
+            <PayStubsDashboard />
           )}
           {activeTab === "chat" && (
             <div className="space-y-6">

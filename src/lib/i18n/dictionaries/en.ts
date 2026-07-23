@@ -93,6 +93,7 @@ export const en = {
     reviewSubmissions: "Review Submissions",
     reviewReports: "Review Reports",
     deductibles: "Deductibles",
+    payStubs: "Pay Stubs",
 
     // Warehouse Keeper
     warehouse: "Warehouse",
