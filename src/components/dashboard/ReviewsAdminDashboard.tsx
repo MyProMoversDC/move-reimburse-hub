@@ -51,6 +51,7 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
     { id: "missing-payments", label: ti18n("nav.missingPayments"), icon: DollarSign },
     { id: "reports", label: ti18n("nav.reviewReports"), icon: FileBarChart },
     { id: "deductibles", label: ti18n("nav.deductibles"), icon: MinusCircle },
+    { id: "paystubs", label: ti18n("nav.payStubs"), icon: FileText },
     { id: "chat", label: ti18n("nav.chat"), icon: MessageSquare },
     { id: "shift-schedule", label: ti18n("nav.shiftSchedule"), icon: Clock },
     { id: "knowledge-base", label: ti18n("nav.knowledgeBase"), icon: GraduationCap },
