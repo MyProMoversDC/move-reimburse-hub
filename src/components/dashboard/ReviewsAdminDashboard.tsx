@@ -118,6 +118,8 @@ const ReviewsAdminDashboard = ({ userId }: ReviewsAdminDashboardProps) => {
         return <CustomerReviewReportingDashboard language={language} />;
       case "deductibles":
         return <DeductiblesReport isAdmin={false} />;
+      case "paystubs":
+        return <PayStubsDashboard />;
       case "chat":
         return <ChatContainer userId={userId} userRole="reviews_admin" language={language} />;
       case "shift-schedule":
