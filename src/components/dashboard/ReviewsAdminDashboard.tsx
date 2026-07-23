@@ -10,7 +10,7 @@ import ChatContainer from "./chat/ChatContainer";
 import AddBonusDialog from "./AddBonusDialog";
 import UserSettings from "./UserSettings";
 import { Button } from "@/components/ui/button";
-import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock, GraduationCap } from "lucide-react";
+import { Download, Star, FileBarChart, DollarSign, MinusCircle, MessageSquare, Clock, GraduationCap, FileText } from "lucide-react";
 import { exportReviewBonusesToExcel } from "@/lib/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
