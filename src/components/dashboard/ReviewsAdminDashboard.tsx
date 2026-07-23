@@ -21,6 +21,7 @@ import { dashboardTranslations } from "@/lib/dashboardTranslations";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import KnowledgeBaseViewer from "./KnowledgeBaseViewer";
+import PayStubsDashboard from "./PayStubsDashboard";
 import { cn } from "@/lib/utils";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 
