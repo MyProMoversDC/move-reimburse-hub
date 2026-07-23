@@ -192,7 +192,7 @@ export default function PayStubsDashboard() {
                     <Badge className={`${STATUS_COLORS[s.status] ?? "bg-slate-400"} text-white`}>{s.status}</Badge>
                     {s.error && <div className="text-xs text-red-600 mt-1 max-w-[240px] truncate" title={s.error}>{s.error}</div>}
                   </td>
-                  <td className="px-3 py-2 text-xs">{s.sent_at ? formatEasternDateTime(s.sent_at) : "—"}</td>
+                  <td className="px-3 py-2 text-xs">{s.sent_at ? formatDateTimeEST(s.sent_at) : "—"}</td>
                   <td className="px-3 py-2 text-right whitespace-nowrap">
                     {s.status !== "sent" && s.status !== "discarded" && (
                       <>
