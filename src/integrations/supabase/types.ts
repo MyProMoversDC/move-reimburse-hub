@@ -2761,6 +2761,177 @@ export type Database = {
           },
         ]
       }
+      pay_stub_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          failed_count: number
+          id: string
+          matched_count: number
+          run_date: string
+          sent_count: number
+          source: string
+          status: string
+          total_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          failed_count?: number
+          id?: string
+          matched_count?: number
+          run_date: string
+          sent_count?: number
+          source?: string
+          status?: string
+          total_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          failed_count?: number
+          id?: string
+          matched_count?: number
+          run_date?: string
+          sent_count?: number
+          source?: string
+          status?: string
+          total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pay_stub_send_log: {
+        Row: {
+          email: string
+          error: string | null
+          id: string
+          mover_id: string | null
+          pay_stub_id: string
+          sent_at: string
+          sent_by: string | null
+          status: string
+        }
+        Insert: {
+          email: string
+          error?: string | null
+          id?: string
+          mover_id?: string | null
+          pay_stub_id: string
+          sent_at?: string
+          sent_by?: string | null
+          status: string
+        }
+        Update: {
+          email?: string
+          error?: string | null
+          id?: string
+          mover_id?: string | null
+          pay_stub_id?: string
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_stub_send_log_mover_id_fkey"
+            columns: ["mover_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_stub_send_log_pay_stub_id_fkey"
+            columns: ["pay_stub_id"]
+            isOneToOne: false
+            referencedRelation: "pay_stubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pay_stubs: {
+        Row: {
+          batch_id: string
+          created_at: string
+          discarded_at: string | null
+          discarded_by: string | null
+          error: string | null
+          extracted_name: string | null
+          file_name: string
+          file_path: string
+          id: string
+          mover_id: string | null
+          net_total: number | null
+          pay_period_end: string | null
+          pay_period_start: string | null
+          sent_at: string | null
+          sent_by: string | null
+          smartmoving_employee_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          discarded_at?: string | null
+          discarded_by?: string | null
+          error?: string | null
+          extracted_name?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          mover_id?: string | null
+          net_total?: number | null
+          pay_period_end?: string | null
+          pay_period_start?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          smartmoving_employee_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          discarded_at?: string | null
+          discarded_by?: string | null
+          error?: string | null
+          extracted_name?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          mover_id?: string | null
+          net_total?: number | null
+          pay_period_end?: string | null
+          pay_period_start?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          smartmoving_employee_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_stubs_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "pay_stub_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_stubs_mover_id_fkey"
+            columns: ["mover_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_question_attachments: {
         Row: {
           created_at: string
@@ -3222,6 +3393,7 @@ export type Database = {
           phone_type: string | null
           physical_expires: string | null
           signup_status: string | null
+          smartmoving_employee_id: string | null
           termination_date: string | null
           title: string | null
           use_nickname_in_chat: boolean | null
@@ -3253,6 +3425,7 @@ export type Database = {
           phone_type?: string | null
           physical_expires?: string | null
           signup_status?: string | null
+          smartmoving_employee_id?: string | null
           termination_date?: string | null
           title?: string | null
           use_nickname_in_chat?: boolean | null
@@ -3284,6 +3457,7 @@ export type Database = {
           phone_type?: string | null
           physical_expires?: string | null
           signup_status?: string | null
+          smartmoving_employee_id?: string | null
           termination_date?: string | null
           title?: string | null
           use_nickname_in_chat?: boolean | null
