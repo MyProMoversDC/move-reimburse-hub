@@ -66,6 +66,8 @@ export const es: Dictionary = {
     referFriend: "Referir un Amigo",
     shiftClock: "Registro de Turno",
     applicationInstructions: "Instrucciones de la Aplicación",
+    dayOffRequest: "Solicitud de Día Libre",
+    dayOffRequests: "Solicitudes de Días Libres",
 
     savedPosts: "Publicaciones Guardadas",
     customerRefund: "Reembolso al Cliente",

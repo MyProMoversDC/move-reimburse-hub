@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock, GraduationCap } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock, GraduationCap, CalendarDays } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -56,6 +56,7 @@ import ApplicationInstructionsPopup from "./ApplicationInstructionsPopup";
 import MoverApplicationInstructions from "./MoverApplicationInstructions";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 import { EyeOff } from "lucide-react";
+import MoverDayOffRequest from "./MoverDayOffRequest";
 
 
 interface MoverDashboardProps {
@@ -269,6 +270,9 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
 
       case "shift-clock":
         return <MoverShiftClock userId={userId} />;
+
+      case "day-off":
+        return <MoverDayOffRequest userId={userId} language={language} />;
 
       case "application-instructions":
         return <MoverApplicationInstructions userId={userId} language={language} />;
@@ -511,7 +515,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     const showFormContent = activeTab !== "feed" && (
       showReimbursementForm || showReviewForm || showMissingPaymentForm || 
       showViolenceForm || showFeedbackForm || showAnonymousFeedbackForm || showPaymentQuestionForm || activeTab === "misconduct" || activeTab === "chat" ||
-      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "anonymous-feedback" || activeTab === "refer-friend" || activeTab === "my-jobs" || activeTab === "shift-clock"
+      activeTab === "payment-questions" || activeTab === "reimbursements" || activeTab === "reviews" || activeTab === "missing-payments" || activeTab === "violence" || activeTab === "feedback" || activeTab === "anonymous-feedback" || activeTab === "refer-friend" || activeTab === "my-jobs" || activeTab === "shift-clock" || activeTab === "day-off"
     );
 
     const handleBackToFeed = () => {
@@ -823,6 +827,7 @@ const MoverDashboard = ({ userId }: MoverDashboardProps) => {
     { id: "todo", label: ti18n("nav.todoList"), icon: ClipboardList },
     { id: "my-jobs", label: ti18n("nav.myJobs"), icon: Truck },
     { id: "shift-clock", label: ti18n("nav.shiftClock"), icon: Clock },
+    { id: "day-off", label: ti18n("nav.dayOffRequest"), icon: CalendarDays },
     { id: "application-instructions", label: ti18n("nav.applicationInstructions"), icon: GraduationCap },
     { id: "reimbursements", label: ti18n("nav.reimbursements"), icon: DollarSign },
     { id: "reviews", label: ti18n("nav.customerReviews"), icon: Star },

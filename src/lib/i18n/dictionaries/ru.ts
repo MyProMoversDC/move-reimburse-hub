@@ -66,6 +66,8 @@ export const ru: Dictionary = {
     referFriend: "Пригласить Друга",
     shiftClock: "Учёт Смены",
     applicationInstructions: "Инструкции по Приложению",
+    dayOffRequest: "Запрос на Выходной",
+    dayOffRequests: "Запросы на Выходной",
 
     savedPosts: "Сохранённые Посты",
     customerRefund: "Возврат Клиенту",

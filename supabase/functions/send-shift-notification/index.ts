@@ -43,6 +43,32 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "mover_day_off_request": {
+        const esc = (v: unknown) =>
+          String(v ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        toEmails = [
+          "Daniel@mypromoversdc.com",
+          "mark@mypromoversdc.com",
+          "management@mypromovers.com",
+        ];
+        subject = `Day Off Request from ${esc(body.userName)}`;
+        htmlContent = `
+          <h2>Mover Day Off Request</h2>
+          <p><strong>Mover:</strong> ${esc(body.userName)}</p>
+          <p><strong>Date(s):</strong> ${esc(body.startDate)}${body.startDate !== body.endDate ? ` to ${esc(body.endDate)}` : ""}</p>
+          <p><strong>Reason:</strong> ${esc(body.reason)}</p>
+          ${body.otherReason ? `<p><strong>Specified reason:</strong> ${esc(body.otherReason)}</p>` : ""}
+          <p><strong>Comment:</strong> ${esc(body.comment)}</p>
+          <p><strong>Submitted in:</strong> ${esc(body.submittedLanguage || "en")}</p>
+          <p>Please review this request in the Admin Dashboard under Day Off Requests.</p>
+        `;
+        break;
+      }
+
+
       case "shift_assigned": {
         if (!body.userEmail) break;
         toEmails = [body.userEmail];

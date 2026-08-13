@@ -14,8 +14,8 @@ import {
   UserPlus,
   Truck,
   Clock,
-  GraduationCap
-
+  GraduationCap,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,
@@ -98,6 +98,7 @@ const MoverSidebar = ({ activeTab, onTabChange, hasUnreadMessages = false, userI
     { id: "todo", label: t("nav.todoList"), icon: ClipboardList, hasBadge: hasTodoItems },
     { id: "my-jobs", label: t("nav.myJobs"), icon: Truck },
     { id: "shift-clock", label: t("nav.shiftClock"), icon: Clock },
+    { id: "day-off", label: t("nav.dayOffRequest"), icon: CalendarDays },
     { id: "application-instructions", label: t("nav.applicationInstructions"), icon: GraduationCap },
     { id: "reimbursements", label: t("nav.reimbursements"), icon: DollarSign },
     { id: "reviews", label: t("nav.customerReviews"), icon: Star },

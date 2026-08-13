@@ -773,6 +773,7 @@ export type Database = {
       }
       day_off_requests: {
         Row: {
+          comment: string | null
           created_at: string
           decline_reason: string | null
           end_date: string
@@ -781,14 +782,19 @@ export type Database = {
           partial_end_time: string | null
           partial_start_time: string | null
           reason: string | null
+          reason_category: string | null
+          reason_other: string | null
+          request_type: string
           reviewed_at: string | null
           reviewed_by: string | null
           start_date: string
           status: Database["public"]["Enums"]["day_off_status"]
+          submitted_language: string
           user_id: string
           user_name: string
         }
         Insert: {
+          comment?: string | null
           created_at?: string
           decline_reason?: string | null
           end_date: string
@@ -797,14 +803,19 @@ export type Database = {
           partial_end_time?: string | null
           partial_start_time?: string | null
           reason?: string | null
+          reason_category?: string | null
+          reason_other?: string | null
+          request_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["day_off_status"]
+          submitted_language?: string
           user_id: string
           user_name: string
         }
         Update: {
+          comment?: string | null
           created_at?: string
           decline_reason?: string | null
           end_date?: string
@@ -813,10 +824,14 @@ export type Database = {
           partial_end_time?: string | null
           partial_start_time?: string | null
           reason?: string | null
+          reason_category?: string | null
+          reason_other?: string | null
+          request_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["day_off_status"]
+          submitted_language?: string
           user_id?: string
           user_name?: string
         }

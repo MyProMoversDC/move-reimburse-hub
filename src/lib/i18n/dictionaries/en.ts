@@ -70,6 +70,8 @@ export const en = {
     referFriend: "Refer a Friend",
     shiftClock: "Shift Clock",
     applicationInstructions: "Application Instructions",
+    dayOffRequest: "Day Off Request",
+    dayOffRequests: "Day Off Requests",
 
     // Office staff
     savedPosts: "Saved Feed Posts",
