@@ -14,8 +14,7 @@ import {
   UserPlus,
   Truck,
   Clock,
-  GraduationCap
-
+  GraduationCap,
   CalendarDays,
 } from "lucide-react";
 import {
