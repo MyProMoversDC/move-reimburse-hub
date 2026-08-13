@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ResponsiveDialog } from "@/components/mobile/ResponsiveDialog";
+import ResponsiveDialog from "@/components/mobile/ResponsiveDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Eye, Check, X, Languages, Loader2 } from "lucide-react";
