@@ -22,7 +22,7 @@ const statusVariant = (status: string) =>
 
 const langLabel: Record<string, string> = { en: "English", es: "Spanish", ru: "Russian" };
 
-const AdminDayOffRequests = ({ userId }: AdminDayOffRequestsProps) => {
+const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => {
   const [requests, setRequests] = useState<any[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
@@ -119,6 +119,7 @@ const AdminDayOffRequests = ({ userId }: AdminDayOffRequestsProps) => {
       toast.success("Day off request approved");
       setSelected(null);
       fetchRequests();
+      onUpdate?.();
     } catch (e: any) {
       toast.error(handleError(e));
     } finally {
@@ -149,6 +150,7 @@ const AdminDayOffRequests = ({ userId }: AdminDayOffRequestsProps) => {
       setSelected(null);
       setDeclineReason("");
       fetchRequests();
+      onUpdate?.();
     } catch (e: any) {
       toast.error(handleError(e));
     } finally {
