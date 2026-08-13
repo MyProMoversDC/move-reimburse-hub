@@ -28,6 +28,7 @@ import {
   Briefcase,
   ClipboardList,
   Sparkles,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,

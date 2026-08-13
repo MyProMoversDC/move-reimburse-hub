@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock, GraduationCap } from "lucide-react";
+import { Plus, Star, DollarSign, AlertTriangle, Shield, Lightbulb, ChevronDown, LogOut, ClipboardList, Newspaper, MessageSquare, HelpCircle, UserPlus, Truck, Clock, GraduationCap, CalendarDays } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import MoverSidebar from "./MoverSidebar";
 import ReimbursementForm from "./ReimbursementForm";
@@ -56,6 +56,7 @@ import ApplicationInstructionsPopup from "./ApplicationInstructionsPopup";
 import MoverApplicationInstructions from "./MoverApplicationInstructions";
 import MobileShell, { type MobileShellNavItem } from "@/components/mobile/MobileShell";
 import { EyeOff } from "lucide-react";
+import MoverDayOffRequest from "./MoverDayOffRequest";
 
 
 interface MoverDashboardProps {

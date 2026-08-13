@@ -16,6 +16,7 @@ import {
   Clock,
   GraduationCap
 
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,
