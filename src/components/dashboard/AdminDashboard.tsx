@@ -621,7 +621,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
       case "mover-shifts":
         return <AdminMoverShifts />;
       case "day-off-requests":
-        return <AdminDayOffRequests userId={userId} />;
+        return <AdminDayOffRequests userId={userId} onUpdate={() => setRefreshKey((k) => k + 1)} />;
       case "knowledge-base":
         return (
           <div className="space-y-6">

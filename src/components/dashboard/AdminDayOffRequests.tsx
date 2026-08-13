@@ -14,6 +14,7 @@ import { getReasonLabel } from "@/lib/dayOffTranslations";
 
 interface AdminDayOffRequestsProps {
   userId: string;
+  onUpdate?: () => void;
 }
 
 const statusVariant = (status: string) =>
