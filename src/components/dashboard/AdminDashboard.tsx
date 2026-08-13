@@ -86,6 +86,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
     paymentQuestions: 0,
     referrals: 0,
     signupApprovals: 0,
+    dayOffRequests: 0,
   });
   
   // Date filters for reimbursements
@@ -192,6 +193,13 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .select("*", { count: "exact", head: true }) as any)
         .eq("signup_status", "pending");
 
+      // Count pending day off requests
+      const { count: dayOffCount } = await supabase
+        .from("day_off_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("request_type", "mover")
+        .eq("status", "pending");
+
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
         reviews: (reviewCount || 0) + (appealReviewCount || 0),
@@ -206,6 +214,7 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         paymentQuestions: paymentQuestionsCount || 0,
         referrals: referralsCount || 0,
         signupApprovals: signupApprovalsCount || 0,
+        dayOffRequests: dayOffCount || 0,
       });
     } catch (error) {
       console.error("Error fetching pending counts:", error);
