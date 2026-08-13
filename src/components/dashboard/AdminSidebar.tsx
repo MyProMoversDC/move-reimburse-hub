@@ -111,6 +111,7 @@ export const useAdminNavGroups = (): NavGroup[] => {
         items: [
           { id: "shift-schedule", label: t("nav.shiftSchedule"), icon: Clock },
           { id: "mover-shifts", label: t("nav.moverShiftsQR"), icon: Clock },
+          { id: "day-off-requests", label: t("nav.dayOffRequests"), icon: CalendarDays },
           { id: "referrals", label: t("nav.referralRequests"), icon: UserPlus, badgeKey: "referrals" },
         ],
       },

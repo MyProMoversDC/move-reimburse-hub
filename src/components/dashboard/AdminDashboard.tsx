@@ -32,6 +32,7 @@ import CustomerRefundForm from "./CustomerRefundForm";
 import AdminReferralList from "./AdminReferralList";
 import AdminShiftManagement from "./AdminShiftManagement";
 import AdminMoverShifts from "./AdminMoverShifts";
+import AdminDayOffRequests from "./AdminDayOffRequests";
 import AdminKnowledgeBase from "./AdminKnowledgeBase";
 import AdminApplicationInstructions from "./AdminApplicationInstructions";
 import AdminOfficeAIKnowledge from "./AdminOfficeAIKnowledge";
@@ -610,6 +611,8 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         return <AdminShiftManagement userId={userId} language={language} />;
       case "mover-shifts":
         return <AdminMoverShifts />;
+      case "day-off-requests":
+        return <AdminDayOffRequests userId={userId} />;
       case "knowledge-base":
         return (
           <div className="space-y-6">

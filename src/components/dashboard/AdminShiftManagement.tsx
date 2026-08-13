@@ -129,6 +129,7 @@ const AdminShiftManagement = ({ userId, language }: AdminShiftManagementProps) =
     const { data } = await supabase
       .from("day_off_requests")
       .select("*")
+      .eq("request_type", "staff")
       .order("created_at", { ascending: false });
     setDayOffRequests(data || []);
   };
