@@ -33,7 +33,7 @@ const langLabel: Record<string, string> = { en: "English", es: "Spanish", ru: "R
 const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => {
   const [requests, setRequests] = useState<any[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
-  const [filter, setFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
+  const [filter, setFilter] = useState<"pending" | "alternative_proposed" | "approved" | "declined" | "all">("pending");
   const [selected, setSelected] = useState<any>(null);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
