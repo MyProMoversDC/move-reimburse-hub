@@ -4,11 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResponsiveDialog from "@/components/mobile/ResponsiveDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Eye, Check, X, Languages, Loader2 } from "lucide-react";
+import { Eye, Check, X, Languages, Loader2, CalendarClock, Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { handleError } from "@/lib/errorHandler";
 import { getReasonLabel } from "@/lib/dayOffTranslations";
 
@@ -20,18 +25,29 @@ interface AdminDayOffRequestsProps {
 const statusVariant = (status: string) =>
   status === "approved" ? "default" : status === "declined" ? "destructive" : "secondary";
 
+const statusLabel = (status: string) =>
+  status === "alternative_proposed" ? "awaiting mover response" : status;
+
 const langLabel: Record<string, string> = { en: "English", es: "Spanish", ru: "Russian" };
 
 const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => {
   const [requests, setRequests] = useState<any[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
-  const [filter, setFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
+  const [filter, setFilter] = useState<"pending" | "alternative_proposed" | "approved" | "declined" | "all">("pending");
   const [selected, setSelected] = useState<any>(null);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [processing, setProcessing] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translated, setTranslated] = useState<{ reason: string; comment: string } | null>(null);
+  const [altOpen, setAltOpen] = useState(false);
+  const [altRange, setAltRange] = useState(false);
+  const [altStart, setAltStart] = useState<Date | undefined>();
+  const [altEnd, setAltEnd] = useState<Date | undefined>();
+  const [altStartOpen, setAltStartOpen] = useState(false);
+  const [altEndOpen, setAltEndOpen] = useState(false);
+  const [altNote, setAltNote] = useState("");
+
 
   const fetchRequests = useCallback(async () => {
     const { data } = await supabase
@@ -62,12 +78,22 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
     [requests, filter],
   );
   const pendingCount = requests.filter((r) => r.status === "pending").length;
+  const altCount = requests.filter((r) => r.status === "alternative_proposed").length;
 
-  const openDetails = (r: any) => {
+
+  const openDetails = async (r: any) => {
     setSelected(r);
     setTranslated(null);
     setDeclineReason("");
+    if (r.alt_response === "declined" && !r.alt_decline_reviewed_at) {
+      await (supabase.from("day_off_requests") as any)
+        .update({ alt_decline_reviewed_at: new Date().toISOString() })
+        .eq("id", r.id);
+      fetchRequests();
+      onUpdate?.();
+    }
   };
+
 
   const reasonText = (r: any) =>
     r.reason_category === "other" ? r.reason_other || r.reason : getReasonLabel(r.reason_category, "en") || r.reason;
@@ -158,6 +184,76 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
     }
   };
 
+  const openAltDialog = () => {
+    setAltRange(false);
+    setAltStart(undefined);
+    setAltEnd(undefined);
+    setAltNote("");
+    setAltOpen(true);
+  };
+
+  const handleProposeAlternative = async () => {
+    if (!selected) return;
+    const finalEnd = altRange ? altEnd : altStart;
+    if (!altStart || !finalEnd) {
+      toast.error("Please select the alternative date(s)");
+      return;
+    }
+    if (finalEnd < altStart) {
+      toast.error("End date cannot be before start date");
+      return;
+    }
+    setProcessing(true);
+    try {
+      const altStartStr = format(altStart, "yyyy-MM-dd");
+      const altEndStr = format(finalEnd, "yyyy-MM-dd");
+      const { error } = await supabase
+        .from("day_off_requests")
+        .update({
+          status: "alternative_proposed" as any,
+          alt_start_date: altStartStr,
+          alt_end_date: altEndStr,
+          alt_note: altNote.trim() || null,
+          alt_proposed_by: userId,
+          alt_proposed_at: new Date().toISOString(),
+          alt_response: null,
+          alt_decline_reason: null,
+          alt_responded_at: null,
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString(),
+        } as any)
+        .eq("id", selected.id);
+      if (error) throw error;
+
+      try {
+        await supabase.functions.invoke("send-shift-notification", {
+          body: {
+            type: "day_off_alternative_proposed",
+            userEmail: emails[selected.user_id],
+            userName: selected.user_name,
+            startDate: selected.start_date,
+            endDate: selected.end_date,
+            altStartDate: altStartStr,
+            altEndDate: altEndStr,
+            note: altNote.trim() || null,
+          },
+        });
+      } catch {
+        /* non-critical */
+      }
+
+      toast.success("Alternative dates submitted to the mover");
+      setAltOpen(false);
+      setSelected(null);
+      fetchRequests();
+      onUpdate?.();
+    } catch (e: any) {
+      toast.error(handleError(e));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -168,11 +264,13 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
         <TabsList className="flex flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
+          <TabsTrigger value="alternative_proposed">Alternative proposed ({altCount})</TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="declined">Declined</TabsTrigger>
           <TabsTrigger value="all">All</TabsTrigger>
         </TabsList>
       </Tabs>
+
 
       <Card>
         <CardHeader>
@@ -189,7 +287,7 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={statusVariant(r.status) as any}>{r.status}</Badge>
+                <Badge variant={statusVariant(r.status) as any}>{statusLabel(r.status)}</Badge>
                 <Button size="icon" variant="outline" onClick={() => openDetails(r)} aria-label="View details">
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -262,6 +360,32 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
               </div>
             )}
 
+            {selected.alt_start_date && (
+              <div className="rounded-md border border-primary/40 bg-primary/10 p-3 text-sm space-y-1">
+                <p className="font-medium">Alternative dates proposed</p>
+                <p>
+                  {selected.alt_start_date === selected.alt_end_date
+                    ? selected.alt_start_date
+                    : `${selected.alt_start_date} — ${selected.alt_end_date}`}
+                </p>
+                {selected.alt_note && <p className="whitespace-pre-wrap">Note: {selected.alt_note}</p>}
+                <p className="text-muted-foreground">
+                  Mover response:{" "}
+                  {selected.alt_response === "accepted"
+                    ? "Accepted"
+                    : selected.alt_response === "declined"
+                      ? "Declined"
+                      : "Awaiting response"}
+                </p>
+                {selected.alt_response === "declined" && selected.alt_decline_reason && (
+                  <p className="whitespace-pre-wrap text-destructive">
+                    <span className="font-medium">Mover's reason for declining: </span>
+                    {selected.alt_decline_reason}
+                  </p>
+                )}
+              </div>
+            )}
+
             {selected.status === "declined" && selected.decline_reason && (
               <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm whitespace-pre-wrap">
                 <span className="font-medium">Reason for decline: </span>
@@ -274,6 +398,10 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
                 <Button variant="destructive" onClick={() => setDeclineOpen(true)} disabled={processing}>
                   <X className="h-4 w-4 mr-2" />
                   Decline
+                </Button>
+                <Button variant="outline" onClick={openAltDialog} disabled={processing}>
+                  <CalendarClock className="h-4 w-4 mr-2" />
+                  Suggest Alternative Date
                 </Button>
                 <Button onClick={() => handleApprove(selected)} disabled={processing}>
                   <Check className="h-4 w-4 mr-2" />
@@ -309,6 +437,113 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
           maxLength={1000}
         />
       </ResponsiveDialog>
+
+      <ResponsiveDialog
+        open={altOpen}
+        onOpenChange={setAltOpen}
+        title="Suggest Alternative Date"
+        description="Select an alternative date or date range. The mover will be emailed and must accept or decline it."
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+            <Button variant="outline" onClick={() => setAltOpen(false)} disabled={processing}>
+              Cancel
+            </Button>
+            <Button onClick={handleProposeAlternative} disabled={processing || !altStart || (altRange && !altEnd)}>
+              Submit Alternative Date Range
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <Select
+              value={altRange ? "range" : "single"}
+              onValueChange={(v) => {
+                setAltRange(v === "range");
+                setAltEnd(undefined);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="single">Single day</SelectItem>
+                <SelectItem value="range">Date range</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className={cn("grid gap-4", altRange && "sm:grid-cols-2")}>
+            <div className="space-y-2">
+              <Label>{altRange ? "Start date" : "Date"} *</Label>
+              <Popover open={altStartOpen} onOpenChange={setAltStartOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal", !altStart && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {altStart ? format(altStart, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={altStart}
+                    onSelect={(d) => {
+                      setAltStart(d);
+                      setAltStartOpen(false);
+                    }}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {altRange && (
+              <div className="space-y-2">
+                <Label>End date *</Label>
+                <Popover open={altEndOpen} onOpenChange={setAltEndOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("w-full justify-start text-left font-normal", !altEnd && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {altEnd ? format(altEnd, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={altEnd}
+                      onSelect={(d) => {
+                        setAltEnd(d);
+                        setAltEndOpen(false);
+                      }}
+                      disabled={altStart ? { before: altStart } : undefined}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Note for the mover (optional)</Label>
+            <Textarea
+              value={altNote}
+              onChange={(e) => setAltNote(e.target.value.slice(0, 1000))}
+              placeholder="Explain why these dates are suggested"
+              rows={3}
+              maxLength={1000}
+            />
+          </div>
+        </div>
+      </ResponsiveDialog>
+
     </div>
   );
 };

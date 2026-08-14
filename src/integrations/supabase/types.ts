@@ -773,6 +773,15 @@ export type Database = {
       }
       day_off_requests: {
         Row: {
+          alt_decline_reason: string | null
+          alt_decline_reviewed_at: string | null
+          alt_end_date: string | null
+          alt_note: string | null
+          alt_proposed_at: string | null
+          alt_proposed_by: string | null
+          alt_responded_at: string | null
+          alt_response: string | null
+          alt_start_date: string | null
           comment: string | null
           created_at: string
           decline_reason: string | null
@@ -794,6 +803,15 @@ export type Database = {
           user_name: string
         }
         Insert: {
+          alt_decline_reason?: string | null
+          alt_decline_reviewed_at?: string | null
+          alt_end_date?: string | null
+          alt_note?: string | null
+          alt_proposed_at?: string | null
+          alt_proposed_by?: string | null
+          alt_responded_at?: string | null
+          alt_response?: string | null
+          alt_start_date?: string | null
           comment?: string | null
           created_at?: string
           decline_reason?: string | null
@@ -815,6 +833,15 @@ export type Database = {
           user_name: string
         }
         Update: {
+          alt_decline_reason?: string | null
+          alt_decline_reviewed_at?: string | null
+          alt_end_date?: string | null
+          alt_note?: string | null
+          alt_proposed_at?: string | null
+          alt_proposed_by?: string | null
+          alt_responded_at?: string | null
+          alt_response?: string | null
+          alt_start_date?: string | null
           comment?: string | null
           created_at?: string
           decline_reason?: string | null
@@ -4628,6 +4655,10 @@ export type Database = {
         Args: { _action: string; _token: string }
         Returns: Json
       }
+      respond_day_off_alternative: {
+        Args: { _accept: boolean; _reason?: string; _request_id: string }
+        Returns: Json
+      }
       rotate_mover_shift_qr: { Args: { _action: string }; Returns: string }
     }
     Enums: {
@@ -4648,7 +4679,11 @@ export type Database = {
         | "violence_incident"
         | "performance_report"
         | "deductible"
-      day_off_status: "pending" | "approved" | "declined"
+      day_off_status:
+        | "pending"
+        | "approved"
+        | "declined"
+        | "alternative_proposed"
       discrepancy_type:
         | "missing_hours"
         | "incorrect_hourly_rate"
@@ -4843,7 +4878,12 @@ export const Constants = {
         "performance_report",
         "deductible",
       ],
-      day_off_status: ["pending", "approved", "declined"],
+      day_off_status: [
+        "pending",
+        "approved",
+        "declined",
+        "alternative_proposed",
+      ],
       discrepancy_type: [
         "missing_hours",
         "incorrect_hourly_rate",

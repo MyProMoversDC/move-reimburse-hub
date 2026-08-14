@@ -125,6 +125,56 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "day_off_alternative_proposed": {
+        if (!body.userEmail) break;
+        toEmails = [body.userEmail];
+        subject = "Alternative Dates Proposed for Your Day Off Request";
+        htmlContent = `
+          <h2>Alternative Dates Proposed</h2>
+          <p>Hello ${body.userName},</p>
+          <p>Your day off request for ${body.startDate}${body.startDate !== body.endDate ? ` to ${body.endDate}` : ""} was reviewed and management proposed alternative dates:</p>
+          <p><strong>Proposed date(s):</strong> ${body.altStartDate}${body.altStartDate !== body.altEndDate ? ` to ${body.altEndDate}` : ""}</p>
+          ${body.note ? `<p><strong>Note:</strong> ${body.note}</p>` : ""}
+          <p>Please open your cabinet under Day Off Request to accept or decline the proposed dates. If you decline, a reason is required.</p>
+        `;
+        break;
+      }
+
+      case "day_off_alternative_accepted": {
+        toEmails = [
+          "Daniel@mypromoversdc.com",
+          "mark@mypromoversdc.com",
+          "management@mypromovers.com",
+        ];
+        subject = `Alternative Dates Accepted by ${body.userName}`;
+        htmlContent = `
+          <h2>Alternative Dates Accepted</h2>
+          <p><strong>Mover:</strong> ${body.userName}</p>
+          <p><strong>Approved date(s):</strong> ${body.altStartDate}${body.altStartDate !== body.altEndDate ? ` to ${body.altEndDate}` : ""}</p>
+          <p>The day off request is now approved for the alternative dates.</p>
+        `;
+        break;
+      }
+
+      case "day_off_alternative_declined": {
+        toEmails = [
+          "Daniel@mypromoversdc.com",
+          "mark@mypromoversdc.com",
+          "management@mypromovers.com",
+        ];
+        subject = `Alternative Dates Declined by ${body.userName}`;
+        htmlContent = `
+          <h2>Alternative Dates Declined</h2>
+          <p><strong>Mover:</strong> ${body.userName}</p>
+          <p><strong>Original request:</strong> ${body.startDate}${body.startDate !== body.endDate ? ` to ${body.endDate}` : ""}</p>
+          <p><strong>Proposed alternative:</strong> ${body.altStartDate}${body.altStartDate !== body.altEndDate ? ` to ${body.altEndDate}` : ""}</p>
+          <p><strong>Mover's reason for declining:</strong> ${body.reason || "—"}</p>
+          <p>The request is now marked as declined. Please review it in the Admin Dashboard under Day Off Requests.</p>
+        `;
+        break;
+      }
+
+
       default:
         return new Response(JSON.stringify({ error: "Unknown notification type" }), {
           status: 400,

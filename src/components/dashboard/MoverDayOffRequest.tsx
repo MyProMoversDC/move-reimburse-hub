@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ResponsiveDialog from "@/components/mobile/ResponsiveDialog";
 import { toast } from "sonner";
+
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Plus, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,6 +46,10 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
   const [otherReason, setOtherReason] = useState("");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [declineAltFor, setDeclineAltFor] = useState<any>(null);
+  const [altDeclineReason, setAltDeclineReason] = useState("");
+
 
   const moverName = profile ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() : "";
 
@@ -134,10 +140,49 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
   };
 
   const statusBadge = (status: string) => {
+    if (status === "alternative_proposed") return <Badge variant="secondary">{t.altPending}</Badge>;
     const label = status === "approved" ? t.approved : status === "declined" ? t.declined : t.pending;
     const variant = status === "approved" ? "default" : status === "declined" ? "destructive" : "secondary";
     return <Badge variant={variant as any}>{label}</Badge>;
   };
+
+  const respondToAlternative = async (request: any, accept: boolean, reason?: string) => {
+    setRespondingId(request.id);
+    try {
+      const { error } = await supabase.rpc("respond_day_off_alternative", {
+        _request_id: request.id,
+        _accept: accept,
+        _reason: reason ?? null,
+      } as any);
+      if (error) throw error;
+
+      try {
+        await supabase.functions.invoke("send-shift-notification", {
+          body: {
+            type: accept ? "day_off_alternative_accepted" : "day_off_alternative_declined",
+            userName: moverName || request.user_name,
+            startDate: request.start_date,
+            endDate: request.end_date,
+            altStartDate: request.alt_start_date,
+            altEndDate: request.alt_end_date,
+            reason: reason ?? null,
+          },
+        });
+      } catch {
+        /* non-critical */
+      }
+
+      toast.success(accept ? t.altAccepted : t.altDeclined);
+      setDeclineAltFor(null);
+      setAltDeclineReason("");
+      fetchRequests();
+    } catch (e: any) {
+      toast.error(handleError(e));
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -322,6 +367,47 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
                   {r.comment}
                 </p>
               )}
+              {r.alt_start_date && (
+                <div className="rounded-md border-2 border-primary/40 bg-primary/10 p-3 text-sm space-y-2">
+                  <p className="font-medium">{t.altProposedTitle}</p>
+                  <p>
+                    <span className="text-muted-foreground">{t.altDates}: </span>
+                    {r.alt_start_date === r.alt_end_date
+                      ? r.alt_start_date
+                      : `${r.alt_start_date} — ${r.alt_end_date}`}
+                  </p>
+                  {r.alt_note && (
+                    <p className="whitespace-pre-wrap">
+                      <span className="text-muted-foreground">{t.altNote}: </span>
+                      {r.alt_note}
+                    </p>
+                  )}
+                  {r.alt_response === "declined" && r.alt_decline_reason && (
+                    <p className="whitespace-pre-wrap text-destructive">
+                      <span className="font-medium">{t.altDeclineReasonLabel}: </span>
+                      {r.alt_decline_reason}
+                    </p>
+                  )}
+                  {r.status === "alternative_proposed" && (
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-1">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={respondingId === r.id}
+                        onClick={() => {
+                          setAltDeclineReason("");
+                          setDeclineAltFor(r);
+                        }}
+                      >
+                        {t.declineAlt}
+                      </Button>
+                      <Button size="sm" disabled={respondingId === r.id} onClick={() => respondToAlternative(r, true)}>
+                        {t.acceptAlt}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
               {r.status === "declined" && r.decline_reason && (
                 <p className="text-sm text-destructive whitespace-pre-wrap">
                   <span className="font-medium">{t.declineReason}: </span>
@@ -335,8 +421,52 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
           ))}
         </CardContent>
       </Card>
+
+      <ResponsiveDialog
+        open={!!declineAltFor}
+        onOpenChange={(o) => {
+          if (!o) {
+            setDeclineAltFor(null);
+            setAltDeclineReason("");
+          }
+        }}
+        title={t.declineAlt}
+        description={t.altDeclineReasonPlaceholder}
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+            <Button variant="outline" onClick={() => setDeclineAltFor(null)} disabled={!!respondingId}>
+              {t.cancel}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!!respondingId || !altDeclineReason.trim()}
+              onClick={() => {
+                if (!altDeclineReason.trim()) {
+                  toast.error(t.reasonRequired);
+                  return;
+                }
+                respondToAlternative(declineAltFor, false, altDeclineReason.trim());
+              }}
+            >
+              {t.submitResponse}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2">
+          <Label>{t.altDeclineReasonLabel} *</Label>
+          <Textarea
+            value={altDeclineReason}
+            onChange={(e) => setAltDeclineReason(e.target.value.slice(0, 1000))}
+            placeholder={t.altDeclineReasonPlaceholder}
+            rows={4}
+            maxLength={1000}
+          />
+        </div>
+      </ResponsiveDialog>
     </div>
   );
+
 };
 
 export default MoverDayOffRequest;
