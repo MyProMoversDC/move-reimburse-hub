@@ -352,6 +352,32 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
               </div>
             )}
 
+            {selected.alt_start_date && (
+              <div className="rounded-md border border-primary/40 bg-primary/10 p-3 text-sm space-y-1">
+                <p className="font-medium">Alternative dates proposed</p>
+                <p>
+                  {selected.alt_start_date === selected.alt_end_date
+                    ? selected.alt_start_date
+                    : `${selected.alt_start_date} — ${selected.alt_end_date}`}
+                </p>
+                {selected.alt_note && <p className="whitespace-pre-wrap">Note: {selected.alt_note}</p>}
+                <p className="text-muted-foreground">
+                  Mover response:{" "}
+                  {selected.alt_response === "accepted"
+                    ? "Accepted"
+                    : selected.alt_response === "declined"
+                      ? "Declined"
+                      : "Awaiting response"}
+                </p>
+                {selected.alt_response === "declined" && selected.alt_decline_reason && (
+                  <p className="whitespace-pre-wrap text-destructive">
+                    <span className="font-medium">Mover's reason for declining: </span>
+                    {selected.alt_decline_reason}
+                  </p>
+                )}
+              </div>
+            )}
+
             {selected.status === "declined" && selected.decline_reason && (
               <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm whitespace-pre-wrap">
                 <span className="font-medium">Reason for decline: </span>
@@ -364,6 +390,10 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
                 <Button variant="destructive" onClick={() => setDeclineOpen(true)} disabled={processing}>
                   <X className="h-4 w-4 mr-2" />
                   Decline
+                </Button>
+                <Button variant="outline" onClick={openAltDialog} disabled={processing}>
+                  <CalendarClock className="h-4 w-4 mr-2" />
+                  Suggest Alternative Date
                 </Button>
                 <Button onClick={() => handleApprove(selected)} disabled={processing}>
                   <Check className="h-4 w-4 mr-2" />
@@ -399,6 +429,113 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
           maxLength={1000}
         />
       </ResponsiveDialog>
+
+      <ResponsiveDialog
+        open={altOpen}
+        onOpenChange={setAltOpen}
+        title="Suggest Alternative Date"
+        description="Select an alternative date or date range. The mover will be emailed and must accept or decline it."
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+            <Button variant="outline" onClick={() => setAltOpen(false)} disabled={processing}>
+              Cancel
+            </Button>
+            <Button onClick={handleProposeAlternative} disabled={processing || !altStart || (altRange && !altEnd)}>
+              Submit Alternative Date Range
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <Select
+              value={altRange ? "range" : "single"}
+              onValueChange={(v) => {
+                setAltRange(v === "range");
+                setAltEnd(undefined);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="single">Single day</SelectItem>
+                <SelectItem value="range">Date range</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className={cn("grid gap-4", altRange && "sm:grid-cols-2")}>
+            <div className="space-y-2">
+              <Label>{altRange ? "Start date" : "Date"} *</Label>
+              <Popover open={altStartOpen} onOpenChange={setAltStartOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal", !altStart && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {altStart ? format(altStart, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={altStart}
+                    onSelect={(d) => {
+                      setAltStart(d);
+                      setAltStartOpen(false);
+                    }}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {altRange && (
+              <div className="space-y-2">
+                <Label>End date *</Label>
+                <Popover open={altEndOpen} onOpenChange={setAltEndOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("w-full justify-start text-left font-normal", !altEnd && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {altEnd ? format(altEnd, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={altEnd}
+                      onSelect={(d) => {
+                        setAltEnd(d);
+                        setAltEndOpen(false);
+                      }}
+                      disabled={altStart ? { before: altStart } : undefined}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Note for the mover (optional)</Label>
+            <Textarea
+              value={altNote}
+              onChange={(e) => setAltNote(e.target.value.slice(0, 1000))}
+              placeholder="Explain why these dates are suggested"
+              rows={3}
+              maxLength={1000}
+            />
+          </div>
+        </div>
+      </ResponsiveDialog>
+
     </div>
   );
 };
