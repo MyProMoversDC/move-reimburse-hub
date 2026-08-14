@@ -4,11 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResponsiveDialog from "@/components/mobile/ResponsiveDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Eye, Check, X, Languages, Loader2 } from "lucide-react";
+import { Eye, Check, X, Languages, Loader2, CalendarClock, Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { handleError } from "@/lib/errorHandler";
 import { getReasonLabel } from "@/lib/dayOffTranslations";
 
@@ -19,6 +24,9 @@ interface AdminDayOffRequestsProps {
 
 const statusVariant = (status: string) =>
   status === "approved" ? "default" : status === "declined" ? "destructive" : "secondary";
+
+const statusLabel = (status: string) =>
+  status === "alternative_proposed" ? "awaiting mover response" : status;
 
 const langLabel: Record<string, string> = { en: "English", es: "Spanish", ru: "Russian" };
 
@@ -32,6 +40,14 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
   const [processing, setProcessing] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translated, setTranslated] = useState<{ reason: string; comment: string } | null>(null);
+  const [altOpen, setAltOpen] = useState(false);
+  const [altRange, setAltRange] = useState(false);
+  const [altStart, setAltStart] = useState<Date | undefined>();
+  const [altEnd, setAltEnd] = useState<Date | undefined>();
+  const [altStartOpen, setAltStartOpen] = useState(false);
+  const [altEndOpen, setAltEndOpen] = useState(false);
+  const [altNote, setAltNote] = useState("");
+
 
   const fetchRequests = useCallback(async () => {
     const { data } = await supabase
