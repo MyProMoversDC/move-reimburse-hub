@@ -365,6 +365,47 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
                   {r.comment}
                 </p>
               )}
+              {r.alt_start_date && (
+                <div className="rounded-md border-2 border-primary/40 bg-primary/10 p-3 text-sm space-y-2">
+                  <p className="font-medium">{t.altProposedTitle}</p>
+                  <p>
+                    <span className="text-muted-foreground">{t.altDates}: </span>
+                    {r.alt_start_date === r.alt_end_date
+                      ? r.alt_start_date
+                      : `${r.alt_start_date} — ${r.alt_end_date}`}
+                  </p>
+                  {r.alt_note && (
+                    <p className="whitespace-pre-wrap">
+                      <span className="text-muted-foreground">{t.altNote}: </span>
+                      {r.alt_note}
+                    </p>
+                  )}
+                  {r.alt_response === "declined" && r.alt_decline_reason && (
+                    <p className="whitespace-pre-wrap text-destructive">
+                      <span className="font-medium">{t.altDeclineReasonLabel}: </span>
+                      {r.alt_decline_reason}
+                    </p>
+                  )}
+                  {r.status === "alternative_proposed" && (
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-1">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={respondingId === r.id}
+                        onClick={() => {
+                          setAltDeclineReason("");
+                          setDeclineAltFor(r);
+                        }}
+                      >
+                        {t.declineAlt}
+                      </Button>
+                      <Button size="sm" disabled={respondingId === r.id} onClick={() => respondToAlternative(r, true)}>
+                        {t.acceptAlt}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
               {r.status === "declined" && r.decline_reason && (
                 <p className="text-sm text-destructive whitespace-pre-wrap">
                   <span className="font-medium">{t.declineReason}: </span>
@@ -378,8 +419,52 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
           ))}
         </CardContent>
       </Card>
+
+      <ResponsiveDialog
+        open={!!declineAltFor}
+        onOpenChange={(o) => {
+          if (!o) {
+            setDeclineAltFor(null);
+            setAltDeclineReason("");
+          }
+        }}
+        title={t.declineAlt}
+        description={t.altDeclineReasonPlaceholder}
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end w-full">
+            <Button variant="outline" onClick={() => setDeclineAltFor(null)} disabled={!!respondingId}>
+              {t.cancel}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!!respondingId || !altDeclineReason.trim()}
+              onClick={() => {
+                if (!altDeclineReason.trim()) {
+                  toast.error(t.reasonRequired);
+                  return;
+                }
+                respondToAlternative(declineAltFor, false, altDeclineReason.trim());
+              }}
+            >
+              {t.submitResponse}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2">
+          <Label>{t.altDeclineReasonLabel} *</Label>
+          <Textarea
+            value={altDeclineReason}
+            onChange={(e) => setAltDeclineReason(e.target.value.slice(0, 1000))}
+            placeholder={t.altDeclineReasonPlaceholder}
+            rows={4}
+            maxLength={1000}
+          />
+        </div>
+      </ResponsiveDialog>
     </div>
   );
+
 };
 
 export default MoverDayOffRequest;
