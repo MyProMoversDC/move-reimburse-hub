@@ -174,6 +174,76 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
     }
   };
 
+  const openAltDialog = () => {
+    setAltRange(false);
+    setAltStart(undefined);
+    setAltEnd(undefined);
+    setAltNote("");
+    setAltOpen(true);
+  };
+
+  const handleProposeAlternative = async () => {
+    if (!selected) return;
+    const finalEnd = altRange ? altEnd : altStart;
+    if (!altStart || !finalEnd) {
+      toast.error("Please select the alternative date(s)");
+      return;
+    }
+    if (finalEnd < altStart) {
+      toast.error("End date cannot be before start date");
+      return;
+    }
+    setProcessing(true);
+    try {
+      const altStartStr = format(altStart, "yyyy-MM-dd");
+      const altEndStr = format(finalEnd, "yyyy-MM-dd");
+      const { error } = await supabase
+        .from("day_off_requests")
+        .update({
+          status: "alternative_proposed" as any,
+          alt_start_date: altStartStr,
+          alt_end_date: altEndStr,
+          alt_note: altNote.trim() || null,
+          alt_proposed_by: userId,
+          alt_proposed_at: new Date().toISOString(),
+          alt_response: null,
+          alt_decline_reason: null,
+          alt_responded_at: null,
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString(),
+        } as any)
+        .eq("id", selected.id);
+      if (error) throw error;
+
+      try {
+        await supabase.functions.invoke("send-shift-notification", {
+          body: {
+            type: "day_off_alternative_proposed",
+            userEmail: emails[selected.user_id],
+            userName: selected.user_name,
+            startDate: selected.start_date,
+            endDate: selected.end_date,
+            altStartDate: altStartStr,
+            altEndDate: altEndStr,
+            note: altNote.trim() || null,
+          },
+        });
+      } catch {
+        /* non-critical */
+      }
+
+      toast.success("Alternative dates submitted to the mover");
+      setAltOpen(false);
+      setSelected(null);
+      fetchRequests();
+      onUpdate?.();
+    } catch (e: any) {
+      toast.error(handleError(e));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -184,11 +254,13 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
         <TabsList className="flex flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
+          <TabsTrigger value="alternative_proposed">Alternative proposed ({altCount})</TabsTrigger>
           <TabsTrigger value="approved">Approved</TabsTrigger>
           <TabsTrigger value="declined">Declined</TabsTrigger>
           <TabsTrigger value="all">All</TabsTrigger>
         </TabsList>
       </Tabs>
+
 
       <Card>
         <CardHeader>
