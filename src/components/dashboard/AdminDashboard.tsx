@@ -194,11 +194,22 @@ const AdminDashboard = ({ userId }: AdminDashboardProps) => {
         .eq("signup_status", "pending");
 
       // Count pending day off requests
-      const { count: dayOffCount } = await supabase
+      const { count: dayOffPendingCount } = await supabase
         .from("day_off_requests")
         .select("*", { count: "exact", head: true })
         .eq("request_type", "mover")
         .eq("status", "pending");
+
+      // Count alternative dates declined by movers and not yet reviewed by an admin
+      const { count: dayOffAltDeclinedCount } = await (supabase
+        .from("day_off_requests")
+        .select("*", { count: "exact", head: true }) as any)
+        .eq("request_type", "mover")
+        .eq("alt_response", "declined")
+        .is("alt_decline_reviewed_at", null);
+
+      const dayOffCount = (dayOffPendingCount || 0) + (dayOffAltDeclinedCount || 0);
+
 
       setPendingCounts({
         reimbursements: (reimbCount || 0) + (appealReimbCount || 0),
