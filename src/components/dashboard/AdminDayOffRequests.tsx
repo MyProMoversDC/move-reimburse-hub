@@ -81,11 +81,19 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
   const altCount = requests.filter((r) => r.status === "alternative_proposed").length;
 
 
-  const openDetails = (r: any) => {
+  const openDetails = async (r: any) => {
     setSelected(r);
     setTranslated(null);
     setDeclineReason("");
+    if (r.alt_response === "declined" && !r.alt_decline_reviewed_at) {
+      await (supabase.from("day_off_requests") as any)
+        .update({ alt_decline_reviewed_at: new Date().toISOString() })
+        .eq("id", r.id);
+      fetchRequests();
+      onUpdate?.();
+    }
   };
+
 
   const reasonText = (r: any) =>
     r.reason_category === "other" ? r.reason_other || r.reason : getReasonLabel(r.reason_category, "en") || r.reason;
