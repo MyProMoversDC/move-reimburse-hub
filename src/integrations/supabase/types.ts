@@ -774,6 +774,7 @@ export type Database = {
       day_off_requests: {
         Row: {
           alt_decline_reason: string | null
+          alt_decline_reviewed_at: string | null
           alt_end_date: string | null
           alt_note: string | null
           alt_proposed_at: string | null
@@ -803,6 +804,7 @@ export type Database = {
         }
         Insert: {
           alt_decline_reason?: string | null
+          alt_decline_reviewed_at?: string | null
           alt_end_date?: string | null
           alt_note?: string | null
           alt_proposed_at?: string | null
@@ -832,6 +834,7 @@ export type Database = {
         }
         Update: {
           alt_decline_reason?: string | null
+          alt_decline_reviewed_at?: string | null
           alt_end_date?: string | null
           alt_note?: string | null
           alt_proposed_at?: string | null
