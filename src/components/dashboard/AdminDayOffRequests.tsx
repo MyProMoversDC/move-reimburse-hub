@@ -279,7 +279,7 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={statusVariant(r.status) as any}>{r.status}</Badge>
+                <Badge variant={statusVariant(r.status) as any}>{statusLabel(r.status)}</Badge>
                 <Button size="icon" variant="outline" onClick={() => openDetails(r)} aria-label="View details">
                   <Eye className="h-4 w-4" />
                 </Button>
