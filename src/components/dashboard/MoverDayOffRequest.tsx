@@ -134,10 +134,49 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
   };
 
   const statusBadge = (status: string) => {
+    if (status === "alternative_proposed") return <Badge variant="secondary">{t.altPending}</Badge>;
     const label = status === "approved" ? t.approved : status === "declined" ? t.declined : t.pending;
     const variant = status === "approved" ? "default" : status === "declined" ? "destructive" : "secondary";
     return <Badge variant={variant as any}>{label}</Badge>;
   };
+
+  const respondToAlternative = async (request: any, accept: boolean, reason?: string) => {
+    setRespondingId(request.id);
+    try {
+      const { error } = await supabase.rpc("respond_day_off_alternative", {
+        _request_id: request.id,
+        _accept: accept,
+        _reason: reason ?? null,
+      } as any);
+      if (error) throw error;
+
+      try {
+        await supabase.functions.invoke("send-shift-notification", {
+          body: {
+            type: accept ? "day_off_alternative_accepted" : "day_off_alternative_declined",
+            userName: moverName || request.user_name,
+            startDate: request.start_date,
+            endDate: request.end_date,
+            altStartDate: request.alt_start_date,
+            altEndDate: request.alt_end_date,
+            reason: reason ?? null,
+          },
+        });
+      } catch {
+        /* non-critical */
+      }
+
+      toast.success(accept ? t.altAccepted : t.altDeclined);
+      setDeclineAltFor(null);
+      setAltDeclineReason("");
+      fetchRequests();
+    } catch (e: any) {
+      toast.error(handleError(e));
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
