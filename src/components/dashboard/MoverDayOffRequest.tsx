@@ -44,6 +44,10 @@ const MoverDayOffRequest = ({ userId, language }: MoverDayOffRequestProps) => {
   const [otherReason, setOtherReason] = useState("");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [declineAltFor, setDeclineAltFor] = useState<any>(null);
+  const [altDeclineReason, setAltDeclineReason] = useState("");
+
 
   const moverName = profile ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() : "";
 
