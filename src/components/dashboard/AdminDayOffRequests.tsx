@@ -78,6 +78,8 @@ const AdminDayOffRequests = ({ userId, onUpdate }: AdminDayOffRequestsProps) => 
     [requests, filter],
   );
   const pendingCount = requests.filter((r) => r.status === "pending").length;
+  const altCount = requests.filter((r) => r.status === "alternative_proposed").length;
+
 
   const openDetails = (r: any) => {
     setSelected(r);
