@@ -189,6 +189,19 @@ export const dayOffTranslations = {
     declined: "Отклонено",
     declineReason: "Причина отклонения",
     submittedOn: "Отправлено",
+    altPending: "Ожидает подтверждения альтернативных дат",
+    altProposedTitle: "Руководство предложило альтернативные даты",
+    altDates: "Предложенные даты",
+    altNote: "Примечание руководства",
+    acceptAlt: "Принять альтернативные даты",
+    declineAlt: "Отклонить альтернативные даты",
+    altDeclineReasonLabel: "Причина отказа от альтернативных дат",
+    altDeclineReasonPlaceholder: "Объясните, почему предложенные даты вам не подходят",
+    altAccepted: "Альтернативные даты приняты",
+    altDeclined: "Альтернативные даты отклонены",
+    reasonRequired: "Пожалуйста, укажите причину",
+    submitResponse: "Отправить",
+
   },
 } as const;
 
